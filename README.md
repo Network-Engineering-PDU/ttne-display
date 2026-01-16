@@ -1,11 +1,11 @@
-# TycheTools Network Engineering Display
+# Network-Engineering-PDU Network Engineering Display
 
-This application is designed to run on the 240x320 LCD screen of a PDU designed by Network Enigneering and TycheTools.
+This application is designed to run on the 240x320 LCD screen of a PDU designed by Network Enigneering and Network-Engineering-PDU.
 
 ## Usage
 
 1. Clone this repositore with recursive option:
-    ```git clone --recursive git@bitbucket.org:tychetools/ttne-display.git```
+    ```git clone --recursive git@github.com:Network-Engineering-PDU/ttne-display.git```
 2. Go to the project folder and create a folder named ```build```
     ```cd ttne-display```
     ```mkdir build```
@@ -18,7 +18,7 @@ This application is designed to run on the 240x320 LCD screen of a PDU designed 
         ```make -j2```
         2.1. If the app is running from ```/usr/bin```, it is necessary to run cmake with this command:
             ```cmake -DASSET_PATH="\"A:/usr/share/cmdisplay/assets/\"" ..```
-4. It is necessary to run the [TycheTools NE firmware API](https://bitbucket.org/tychetools/ne-fw-api)
+4. It is necessary to run the [Network-Engineering-PDU NE firmware API](https://github.com/Network-Engineering-PDU/ne-fw-api)
     ```ttnedaemon restart```
 5. Run the application
     ```make run```
