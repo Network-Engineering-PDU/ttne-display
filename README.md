@@ -1,4 +1,4 @@
-# Network-Engineering-PDU Network Engineering Display
+# Network-Engineering-PDU Display
 
 This application is designed to run on the 240x320 LCD screen of a PDU designed by Network Enigneering and Network-Engineering-PDU.
 
