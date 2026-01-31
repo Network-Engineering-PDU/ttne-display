@@ -6,6 +6,9 @@
 
 #include "scr_settings.h"
 #include "scr_settings_nw.h"
+#include "scr_settings_vis.h"
+#include "scr_settings_sys.h"
+#include "scr_settings_upd.h"
 #include "scr_diagnose.h"
 #include "scr_keyboard.h"
 #include "scr_support.h"
@@ -545,9 +548,9 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {
 	menu = l_menu;
 
-	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"Settings");
-
+	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings");
+	
+	/*
 	diagnose_page = scr_diagnose_create(menu);
 	support_page = scr_support_create(menu);
 
@@ -592,4 +595,41 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	tt_obj_label_create(settings_diag_cont, "System diagnosis");
 	tt_obj_btn_std_create(settings_diag_cont, btn_diag_cb, "DIAGNOSE");
 	tt_obj_btn_std_create(settings_diag_cont, btn_support_cb, "SUPPORT");
+	*/
+
+    lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
+
+    lv_obj_t* cont = tt_obj_cont_create(settings_page);
+
+    /* Layout: center grid like Page 2 */
+    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(
+        cont,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER
+    );
+
+    /* HUB buttons */
+    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(
+        cont, NULL, "Visualisation", ASSET("display.png")
+    );
+
+    lv_obj_t* btn_nw = tt_obj_btn_mtx_create(
+        cont, NULL, "Networks", ASSET("network.png")
+    );
+
+    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(
+        cont, NULL, "System setup", ASSET("system.png")
+    );
+
+    lv_obj_t* btn_update = tt_obj_btn_mtx_create(
+        cont, NULL, "PDU update", ASSET("update.png")
+    );
+
+    /* Navigation (will be implemented step by step) */
+    scr_settings_vis_create(menu, btn_vis);
+    scr_settings_nw_create(menu, btn_nw);
+    scr_settings_sys_create(menu, btn_sys);
+    scr_settings_update_create(menu, btn_update);
 }
