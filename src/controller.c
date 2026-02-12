@@ -378,3 +378,19 @@ void controller_post_stop_modbus()
 	printf("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
+
+void controller_set_update_server(const char* server)
+{
+	// TODO: Implement update server configuration
+	// This should send the server address/URI to the backend
+	// Example endpoint: BASE_URL "settings/update-server"
+	LV_LOG_USER("Update server set to: %s", server);
+}
+
+void controller_set_auto_update(bool enabled)
+{
+	// TODO: Implement automatic update toggle
+	// This should enable/disable automatic updates on the backend
+	// Example endpoint: BASE_URL "settings/auto-update"
+	LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
+}

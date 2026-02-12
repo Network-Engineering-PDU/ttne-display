@@ -63,7 +63,7 @@ static void menu_cb(lv_event_t* e);
 static void rotate_cb(lv_event_t* e);
 static void loader_cb(lv_event_t* e);
 static void timer_rot_cb(lv_timer_t* timer);
-static void timer_check_update_cb(lv_timer_t* timer);
+//static void timer_check_update_cb(lv_timer_t* timer);
 
 static void btn_nw_reset_cb(lv_event_t* e);
 static void btn_ssh_cb(lv_event_t* e);
@@ -164,7 +164,7 @@ static void timer_rot_cb(lv_timer_t* timer)
 	lv_timer_del(timer);
 	revert_rot();
 }
-
+/*
 static void timer_check_update_cb(lv_timer_t* timer)
 {
 	int running;
@@ -182,7 +182,7 @@ static void timer_check_update_cb(lv_timer_t* timer)
 		runbg_check_wait(pid);
 	}
 }
-
+*/
 static void btn_nw_reset_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -236,7 +236,7 @@ static void btn_modbus_cb(lv_event_t* e)
 	}
 }
 
-
+/*
 static void btn_update_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -275,7 +275,7 @@ static void btn_update_cb(lv_event_t* e)
 		fclose(file);
 	}
 }
-
+*/
 static void btn_fact_reset_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -453,7 +453,7 @@ static void msg_box_reboot_cb(lv_event_t* e)
 		lv_msgbox_close(obj);
 	}
 }
-
+/**
 static void msg_box_update_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -476,7 +476,7 @@ static void msg_box_update_cb(lv_event_t* e)
 		lv_msgbox_close(obj);
 	}
 }
-
+*/
 static void txt_inactivity_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -612,19 +612,19 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
     /* HUB buttons */
     lv_obj_t* btn_vis = tt_obj_btn_mtx_create(
-        cont, NULL, "Visualisation", ASSET("display.png")
+        cont, NULL, "Visualisation", ASSET("menu.png")
     );
 
     lv_obj_t* btn_nw = tt_obj_btn_mtx_create(
-        cont, NULL, "Networks", ASSET("network.png")
+        cont, NULL, "Networks", ASSET("menu.png")
     );
 
     lv_obj_t* btn_sys = tt_obj_btn_mtx_create(
-        cont, NULL, "System setup", ASSET("system.png")
+        cont, NULL, "System setup", ASSET("menu.png")
     );
 
     lv_obj_t* btn_update = tt_obj_btn_mtx_create(
-        cont, NULL, "PDU update", ASSET("update.png")
+        cont, NULL, "PDU update", ASSET("menu.png")
     );
 
     /* Navigation (will be implemented step by step) */
