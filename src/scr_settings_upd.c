@@ -61,6 +61,22 @@ static void btn_factory_cb(lv_event_t* e);
 
 static void msg_box_update_cb(lv_event_t* e);
 
+/* Helper functions ***********************************************************/
+
+static char* get_last_element(const char* str)
+{
+	char *last_element = NULL;
+	char delimiter = '/';
+	char *token = strtok((char*)str, &delimiter);
+
+	while (token != NULL) {
+		last_element = token;
+		token = strtok(NULL, &delimiter);
+	}
+
+	return last_element;
+}
+
 /* Function definitions *******************************************************/
 
 void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
