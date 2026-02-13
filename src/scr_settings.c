@@ -548,25 +548,24 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {
 	menu = l_menu;
 
-    lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
+	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings");
 
     lv_obj_t* menu_header = lv_menu_get_main_header(menu);
     lv_obj_set_height(menu_header, 40);
     lv_obj_add_flag(menu_header, LV_OBJ_FLAG_CLICKABLE);
 
-    lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
-    lv_obj_set_size(menu_header_btn, 30, 30);
-    lv_obj_set_flex_flow(menu_header_btn, LV_FLEX_FLOW_COLUMN);
-    lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
-    lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_CLICKABLE);
-
-    lv_obj_t* icon = lv_obj_get_child(menu_header_btn, 0);
-    lv_obj_set_layout(menu_header_btn, 0);
+    lv_obj_t* settings_header_btn = lv_menu_get_main_header_back_btn(menu);
+    lv_obj_set_size(settings_header_btn, 30, 30);
+    lv_obj_set_flex_flow(settings_header_btn, LV_FLEX_FLOW_COLUMN);
+    lv_obj_clear_flag(settings_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_clear_flag(settings_header_btn, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t* icon = lv_obj_get_child(settings_header_btn, 0);
+    lv_obj_set_layout(settings_header_btn, 0);
     lv_obj_align(icon, LV_ALIGN_CENTER, 0, 0);
 
-    lv_menu_set_page_title_static(settings_page, "Settings");
+    lv_menu_set_page_title_static(settings_cont, "Settings");
 
-    lv_obj_t* cont = tt_obj_cont_create(settings_page);
+    lv_obj_t* cont = tt_obj_cont_create(settings_cont);
 
     /* Layout: center grid like Page 2 */
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
