@@ -549,23 +549,57 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	menu = l_menu;
 
 	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings");
+	
+	/*
+	diagnose_page = scr_diagnose_create(menu);
+	support_page = scr_support_create(menu);
 
-    lv_obj_t* menu_header = lv_menu_get_main_header(menu);
-    lv_obj_set_height(menu_header, 40);
-    lv_obj_add_flag(menu_header, LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_t* settings_cont1 = tt_obj_cont_create(settings_cont);
 
-    lv_obj_t* settings_header_btn = lv_menu_get_main_header_back_btn(menu);
-    lv_obj_set_size(settings_header_btn, 30, 30);
-    lv_obj_set_flex_flow(settings_header_btn, LV_FLEX_FLOW_COLUMN);
-    lv_obj_clear_flag(settings_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
-    lv_obj_clear_flag(settings_header_btn, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_t* icon = lv_obj_get_child(settings_header_btn, 0);
-    lv_obj_set_layout(settings_header_btn, 0);
-    lv_obj_align(icon, LV_ALIGN_CENTER, 0, 0);
+	tt_obj_label_create(settings_cont1, "Screen rotation");
+	char* options = "0 deg\n90 deg\n180 deg\n270 deg";
+	dd = tt_obj_dropdown_create(settings_cont1, options, rotate_cb);
+	int rotation = config_get_rotation();
+	lv_dropdown_set_selected(dd, rotation);
 
-    lv_menu_set_page_title_static(settings_cont, "Settings");
+	tt_obj_label_create(settings_cont1, "Screensaver time (min)");
+	txt_splash = tt_obj_txt_create(settings_cont1, "Time in minutes",
+			txt_inactivity_cb);
+	char inactivity_time_str[10];
+	sprintf(inactivity_time_str, "%d", config_get_inactivity_time());
+	lv_textarea_set_text(txt_splash, inactivity_time_str);
 
-    lv_obj_t* cont = tt_obj_cont_create(settings_cont);
+	lv_obj_t* settings_nw_cont = tt_obj_cont_create(settings_cont);
+	lv_obj_t* btn_nw = tt_obj_btn_std_create(settings_nw_cont, NULL,
+			"NETWORK SETUP");
+	scr_settings_nw_create(menu, btn_nw);
+	tt_obj_btn_std_create(settings_nw_cont, btn_nw_reset_cb, "RESET NETWORK");
+	btn_ssh = tt_obj_btn_toggle_create(settings_nw_cont, btn_ssh_cb, "SSH");
+	btn_snmp = tt_obj_btn_toggle_create(settings_nw_cont, btn_snmp_cb, "SNMP");
+	btn_modbus = tt_obj_btn_toggle_create(settings_nw_cont,
+			btn_modbus_cb, "MODBUS");
+
+	tt_obj_label_create(settings_nw_cont, "Modbus address");
+	txt_modbus_addr = tt_obj_txt_create(settings_nw_cont, "Modbus address",
+			txt_modbus_addr_cb);
+
+	lv_obj_t* settings_setup_cont = tt_obj_cont_create(settings_cont);
+	tt_obj_label_create(settings_setup_cont, "System setup");
+	tt_obj_btn_std_create(settings_setup_cont, btn_update_cb,
+			"UPDATE DEVICE");
+	tt_obj_btn_std_create(settings_setup_cont, btn_fact_reset_cb,
+			"FACTORY RESET");
+	tt_obj_btn_std_create(settings_setup_cont, btn_reboot_cb, "REBOOT SYSTEM");
+
+	lv_obj_t* settings_diag_cont = tt_obj_cont_create(settings_cont);
+	tt_obj_label_create(settings_diag_cont, "System diagnosis");
+	tt_obj_btn_std_create(settings_diag_cont, btn_diag_cb, "DIAGNOSE");
+	tt_obj_btn_std_create(settings_diag_cont, btn_support_cb, "SUPPORT");
+	*/
+
+    lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
+
+    lv_obj_t* cont = tt_obj_cont_create(settings_page);
 
     /* Layout: center grid like Page 2 */
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
