@@ -612,7 +612,7 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
     /* HUB buttons */
     lv_obj_t* btn_vis = tt_obj_btn_mtx_create(
-        cont, NULL, "Visualisation", ASSET("menu.png")
+        cont, NULL, "Visual", ASSET("menu.png")
     );
 
     lv_obj_t* btn_nw = tt_obj_btn_mtx_create(
@@ -620,11 +620,11 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
     );
 
     lv_obj_t* btn_sys = tt_obj_btn_mtx_create(
-        cont, NULL, "System setup", ASSET("menu.png")
+        cont, NULL, "Sys setup", ASSET("menu.png")
     );
 
     lv_obj_t* btn_update = tt_obj_btn_mtx_create(
-        cont, NULL, "PDU update", ASSET("menu.png")
+        cont, NULL, "Sys update", ASSET("menu.png")
     );
 
     /* Navigation (will be implemented step by step) */
