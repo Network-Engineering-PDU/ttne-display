@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "lvgl/lvgl.h"
 
@@ -65,8 +66,8 @@ static void rotate_cb(lv_event_t* e)
 	lv_event_code_t code = lv_event_get_code(e);
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
-		uint16_t rotation = lv_dropdown_get_selected(dd_rotation);
 		// TODO: Handle rotation change with confirmation dialog
+		(void)dd_rotation; // Avoid unused variable warning
 	}
 }
 
@@ -97,7 +98,7 @@ static void txt_pdu_info_cb(lv_event_t* e)
 	int field_id = (int)(uintptr_t)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_ALL);
+		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_ABC);
 		lv_scr_load(kb_scr);
 	}
 	if (code == LV_EVENT_READY) {
@@ -122,6 +123,8 @@ static void save_pdu_info_field(int field_id, const char* value)
 	// if (field_id == 0) config_set_pdu_company_name(value);
 	// if (field_id == 1) config_set_pdu_rack(value);
 	// ... repeat for other fields
+	(void)field_id;
+	(void)value;
 }
 
 /* Function definitions *******************************************************/
