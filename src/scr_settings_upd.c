@@ -22,8 +22,6 @@
 #define MOUNT_DIR "/run/mount"
 #endif
 
-extern void reset_program();
-
 /* Global variables ***********************************************************/
 
 static lv_obj_t* menu;
