@@ -46,6 +46,7 @@ static void save_pdu_info_field(int field_id, const char* value);
 static void revert_rot();
 static void msg_box_rot_cb(lv_event_t* e);
 static void timer_rot_cb(lv_timer_t* timer);
+static lv_obj_t* create_row(lv_obj_t* parent);
 
 /* Callbacks ******************************************************************/
 
@@ -181,6 +182,20 @@ static void save_pdu_info_field(int field_id, const char* value)
 }
 
 /* Function definitions *******************************************************/
+
+/* Helper: create one row (label left, input right) */
+static lv_obj_t* create_row(lv_obj_t* parent)
+{
+    lv_obj_t* row = tt_obj_cont_create(parent);
+
+    lv_obj_set_width(row, LV_PCT(100));
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+
+    /* spacing between label and input */
+    lv_obj_set_style_pad_column(row, 10, 0);
+
+    return row;
+}
 
 void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 {
