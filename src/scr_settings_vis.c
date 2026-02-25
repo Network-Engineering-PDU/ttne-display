@@ -184,15 +184,16 @@ static void save_pdu_info_field(int field_id, const char* value)
 
 void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 {
+    /*
 	lv_obj_t* vis_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Visualization");
 
 	lv_obj_t* cont = tt_obj_cont_create(vis_page);
 
-	/* Two-column layout: labels on left, inputs on right */
+	// Two-column layout: labels on left, inputs on right 
 	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_width(cont, LV_PCT(100));
 
-	/* Screen rotation setting */
+	// Screen rotation setting 
 	lv_obj_t* rot_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(rot_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(rot_cont, LV_PCT(100));
@@ -203,7 +204,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	int rotation = config_get_rotation();
 	lv_dropdown_set_selected(dd_rotation, rotation);
 
-	/* Screen saver timeout setting */
+	// Screen saver timeout setting 
 	lv_obj_t* saver_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(saver_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(saver_cont, LV_PCT(100));
@@ -215,11 +216,11 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	sprintf(inactivity_time_str, "%d", config_get_inactivity_time());
 	lv_textarea_set_text(txt_screen_saver, inactivity_time_str);
 
-	/* PDU Location Information Section */
+	// PDU Location Information Section 
 	lv_obj_t* pdu_info_label = tt_obj_label_create(cont, "PDU location information");
 	lv_obj_set_style_text_font(pdu_info_label, &lv_font_montserrat_14, 0);
 
-	/* Company name */
+	// Company name 
 	lv_obj_t* company_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(company_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(company_cont, LV_PCT(100));
@@ -227,7 +228,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_company = tt_obj_txt_create(company_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_company, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)0);
 
-	/* Rack */
+	// Rack 
 	lv_obj_t* rack_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(rack_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(rack_cont, LV_PCT(100));
@@ -235,7 +236,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_rack = tt_obj_txt_create(rack_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_rack, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)1);
 
-	/* System A - B */
+	// System A - B 
 	lv_obj_t* sys_ab_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(sys_ab_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(sys_ab_cont, LV_PCT(100));
@@ -243,7 +244,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_sys_ab = tt_obj_txt_create(sys_ab_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_sys_ab, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)2);
 
-	/* UPS A - B */
+	// UPS A - B 
 	lv_obj_t* ups_ab_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(ups_ab_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(ups_ab_cont, LV_PCT(100));
@@ -251,7 +252,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_ups_ab = tt_obj_txt_create(ups_ab_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_ups_ab, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)3);
 
-	/* Electrical board */
+	// Electrical board 
 	lv_obj_t* elec_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(elec_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(elec_cont, LV_PCT(100));
@@ -259,7 +260,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_elec = tt_obj_txt_create(elec_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_elec, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)4);
 
-	/* Circuit Breaker */
+	// Circuit Breaker 
 	lv_obj_t* circuit_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(circuit_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(circuit_cont, LV_PCT(100));
@@ -267,11 +268,180 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_circuit = tt_obj_txt_create(circuit_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_circuit, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)5);
 
-	/* Service */
+	// Service 
 	lv_obj_t* service_cont = tt_obj_cont_create(cont);
 	lv_obj_set_flex_flow(service_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_width(service_cont, LV_PCT(100));
 	tt_obj_label_create(service_cont, "Service");
 	txt_service = tt_obj_txt_create(service_cont, "", txt_pdu_info_cb);
 	lv_obj_add_event_cb(txt_service, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)6);
+    */
+
+    lv_obj_t* vis_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Visualization");
+
+    /* Main vertical container */
+    lv_obj_t* cont = tt_obj_cont_create(vis_page);
+    lv_obj_set_width(cont, LV_PCT(100));
+    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
+
+    /* vertical spacing between rows */
+    lv_obj_set_style_pad_row(cont, 12, 0);
+
+    /* enable vertical scroll */
+    lv_obj_set_scroll_dir(cont, LV_DIR_VER);
+
+
+
+    /* ========================= */
+    /* Screen rotation setting   */
+    /* ========================= */
+    lv_obj_t* rot_cont = create_row(cont);
+
+    tt_obj_label_create(rot_cont, "Screen rotation");
+
+    char* rotation_options = "0 deg\n90 deg\n180 deg\n270 deg";
+    dd_rotation = tt_obj_dropdown_create(rot_cont, rotation_options, rotate_cb);
+
+    /* Make dropdown expand */
+    lv_obj_set_flex_grow(dd_rotation, 1);
+
+    int rotation = config_get_rotation();
+    lv_dropdown_set_selected(dd_rotation, rotation);
+
+
+
+    /* ============================== */
+    /* Screen saver timeout setting   */
+    /* ============================== */
+    lv_obj_t* saver_cont = create_row(cont);
+
+    tt_obj_label_create(saver_cont, "Screen saver (s)");
+
+    txt_screen_saver = tt_obj_txt_create(saver_cont,"Time in seconds", txt_inactivity_cb);
+
+    /* Expand text area */
+    lv_obj_set_flex_grow(txt_screen_saver, 1);
+
+    char inactivity_time_str[10];
+    sprintf(inactivity_time_str, "%d", config_get_inactivity_time());
+    lv_textarea_set_text(txt_screen_saver, inactivity_time_str);
+
+
+
+    /* ============================== */
+    /* Section Header                 */
+    /* ============================== */
+    lv_obj_t* pdu_info_label = tt_obj_label_create(cont, "PDU location information");
+
+    lv_obj_set_style_text_font(pdu_info_label, &lv_font_montserrat_14, 0);
+
+    lv_obj_set_style_pad_top(pdu_info_label, 20, 0);
+    lv_obj_set_style_pad_bottom(pdu_info_label, 5, 0);
+
+
+
+    /* ============================== */
+    /* Company name                   */
+    /* ============================== */
+    lv_obj_t* company_cont = create_row(cont);
+
+    tt_obj_label_create(company_cont, "Company name");
+
+    txt_company = tt_obj_txt_create(company_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_company, 1);
+
+    lv_obj_add_event_cb(txt_company, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)0);
+
+
+
+    /* ============================== */
+    /* Rack                           */
+    /* ============================== */
+    lv_obj_t* rack_cont = create_row(cont);
+
+    tt_obj_label_create(rack_cont, "Rack");
+
+    txt_rack = tt_obj_txt_create(rack_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_rack, 1);
+
+    lv_obj_add_event_cb(txt_rack, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)1);
+
+
+
+    /* ============================== */
+    /* System A - B                   */
+    /* ============================== */
+    lv_obj_t* sys_ab_cont = create_row(cont);
+
+    tt_obj_label_create(sys_ab_cont, "System A - B");
+
+    txt_sys_ab = tt_obj_txt_create(sys_ab_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_sys_ab, 1);
+
+    lv_obj_add_event_cb(txt_sys_ab, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)2);
+
+
+
+    /* ============================== */
+    /* UPS A - B                      */
+    /* ============================== */
+    lv_obj_t* ups_ab_cont = create_row(cont);
+
+    tt_obj_label_create(ups_ab_cont, "UPS A - B");
+
+    txt_ups_ab = tt_obj_txt_create(ups_ab_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_ups_ab, 1);
+
+    lv_obj_add_event_cb(txt_ups_ab, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)3);
+
+
+
+    /* ============================== */
+    /* Electrical board               */
+    /* ============================== */
+    lv_obj_t* elec_cont = create_row(cont);
+
+    tt_obj_label_create(elec_cont, "Electrical board");
+
+    txt_elec = tt_obj_txt_create(elec_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_elec, 1);
+
+    lv_obj_add_event_cb(txt_elec, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)4);
+
+
+
+    /* ============================== */
+    /* Circuit Breaker                */
+    /* ============================== */
+    lv_obj_t* circuit_cont = create_row(cont);
+
+    tt_obj_label_create(circuit_cont, "Circuit Breaker");
+
+    txt_circuit = tt_obj_txt_create(circuit_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_circuit, 1);
+
+    lv_obj_add_event_cb(txt_circuit, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)5);
+
+
+
+    /* ============================== */
+    /* Service                        */
+    /* ============================== */
+    lv_obj_t* service_cont = create_row(cont);
+
+    tt_obj_label_create(service_cont, "Service");
+
+    txt_service = tt_obj_txt_create(service_cont, "", txt_pdu_info_cb);
+
+    lv_obj_set_flex_grow(txt_service, 1);
+
+    lv_obj_add_event_cb(txt_service, txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)6);
 }
+
+//}
