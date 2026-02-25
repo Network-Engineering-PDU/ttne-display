@@ -12,6 +12,7 @@
 #include "models.h"
 #include "controller.h"
 #include "config.h"
+#include "screen.h"
 
 #define TIMER_ROT 5000 // ms
 
