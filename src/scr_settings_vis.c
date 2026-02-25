@@ -72,14 +72,11 @@ static void menu_cb(lv_event_t* e)
 static void rotate_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
-	uint16_t rotation = 0;
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
-		rotation = lv_dropdown_get_selected(dd);
-		screen_set_rotation(rotation);
 		timer_rot = lv_timer_create(timer_rot_cb, TIMER_ROT, NULL);
 		char rot_str[5];
-		lv_dropdown_get_selected_str(dd, rot_str, 0);
+		lv_dropdown_get_selected_str(dd_rotation, rot_str, 0);
 		int rot_int = atoi(rot_str);
 		char msg[300];
 		sprintf(msg, "Are you sure you want to save screen rotation?\nRotation: "
@@ -142,8 +139,8 @@ static void msg_box_rot_cb(lv_event_t* e)
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		lv_timer_del(timer_rot);
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			config_set_rotation(lv_dropdown_get_selected(dd));
-			reset_program();
+			config_set_rotation(lv_dropdown_get_selected(dd_rotation));
+			/* TODO: Apply rotation to system */
 		} else {
 			revert_rot();
 		}
@@ -154,7 +151,7 @@ static void msg_box_rot_cb(lv_event_t* e)
 static void revert_rot()
 {
 	int rotation = config_get_rotation();
-	screen_set_rotation(rotation);
+	lv_dropdown_set_selected(dd_rotation, rotation);
 }
 
 static void update_pdu_info_display()
