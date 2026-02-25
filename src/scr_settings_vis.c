@@ -312,7 +312,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     /* ========================= */
     lv_obj_t* rot_cont = create_row(cont);
 
-    tt_obj_label_create(rot_cont, "Screen rotation");
+    tt_obj_label_create(rot_cont, "Screen rot");
 
     char* rotation_options = "0 deg\n90 deg\n180 deg\n270 deg";
     dd_rotation = tt_obj_dropdown_create(rot_cont, rotation_options, rotate_cb);
