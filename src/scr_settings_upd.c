@@ -39,6 +39,8 @@ static void btn_update_cb(lv_event_t* e);
 static void btn_reboot_cb(lv_event_t* e);
 static void btn_factory_cb(lv_event_t* e);
 static void msg_box_update_cb(lv_event_t* e);
+static void msg_box_reboot_cb(lv_event_t* e);
+static void msg_box_factory_cb(lv_event_t* e);
 
 static char* get_last_element(const char* str) {
     char *last_element = NULL;
@@ -185,10 +187,42 @@ static void timer_check_update_cb(lv_timer_t* timer) {
     }
 }
 
+static void msg_box_reboot_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        if (lv_msgbox_get_active_btn(obj) == 0) {
+            lv_obj_t* loader_scr = tt_obj_loader_create("Rebooting...", NULL);
+            lv_scr_load(loader_scr);
+            controller_post_reboot();
+        }
+        lv_msgbox_close(obj);
+    }
+}
+
+static void msg_box_factory_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        if (lv_msgbox_get_active_btn(obj) == 0) {
+            lv_obj_t* loader_scr = tt_obj_loader_create("Resetting to factory defaults...", NULL);
+            lv_scr_load(loader_scr);
+            controller_post_fact_reset();
+        }
+        lv_msgbox_close(obj);
+    }
+}
+
 static void btn_reboot_cb(lv_event_t* e) {
-    if (lv_event_get_code(e) == LV_EVENT_CLICKED) controller_post_reboot();
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        char msg[200];
+        sprintf(msg, "Are you sure you want to reboot the system?");
+        tt_obj_msg_box_create("System reboot", msg, "Rebooting...", msg_box_reboot_cb);
+    }
 }
 
 static void btn_factory_cb(lv_event_t* e) {
-    if (lv_event_get_code(e) == LV_EVENT_CLICKED) controller_post_fact_reset();
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        char msg[200];
+        sprintf(msg, "Are you sure you want to perform a factory reset?\nAll settings will be lost!");
+        tt_obj_msg_box_create("Factory reset", msg, "Resetting...", msg_box_factory_cb);
+    }
 }
