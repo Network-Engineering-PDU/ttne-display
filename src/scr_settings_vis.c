@@ -216,12 +216,12 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     // 1. Screen Rotation Row
     lv_obj_t* row_rot = create_setting_row(cont, "Screen rotation");
     dd_rotation = tt_obj_dropdown_create(row_rot, "0 deg\n90 deg\n180 deg\n270 deg", rotate_cb);
-    lv_obj_set_width(dd_rotation, 90); //180
+    lv_obj_set_width(dd_rotation, 100); //180
 
     // 2. Screen Saver Row
     lv_obj_t* row_saver = create_setting_row(cont, "Screen saver (s)");
     txt_screen_saver = tt_obj_txt_create(row_saver, "0", txt_inactivity_cb);
-    lv_obj_set_width(txt_screen_saver, 90); //180
+    lv_obj_set_width(txt_screen_saver, 100); //180
 
     // 3. Section Header
     lv_obj_t* pdu_header = tt_obj_label_create(cont, "PDU location information");
@@ -238,7 +238,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     for (int i = 0; i < 7; i++) {
         lv_obj_t* row = create_setting_row(cont, pdu_labels[i]);
         txt_fields[i] = tt_obj_txt_create(row, "Text", txt_pdu_info_cb);
-        lv_obj_set_width(txt_fields[i], 120); //180
+        lv_obj_set_width(txt_fields[i], 150); //180
         
         // Attach field ID to the event
         lv_obj_add_event_cb(txt_fields[i], txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)i);

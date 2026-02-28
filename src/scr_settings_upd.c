@@ -89,7 +89,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     btn_auto = lv_dropdown_create(auto_row);
     lv_dropdown_set_options(btn_auto, "ON\nOFF");
     lv_dropdown_set_selected(btn_auto, 0); // Default to ON
-    lv_obj_set_size(btn_auto, 60, 40);
+    lv_obj_set_size(btn_auto, 70, 40);
     lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_VALUE_CHANGED, NULL);
     
     // UI Styling for dropdown to match the "X" box style
@@ -103,14 +103,14 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "Update\nfrom USB", NULL);
-    lv_obj_set_size(b_upd, 90, 90);
+    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "  Update\nFrom USB", NULL);
+    lv_obj_set_size(b_upd, 85, 85);
 
     lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", NULL);
-    lv_obj_set_size(b_reb, 90, 90);
+    lv_obj_set_size(b_reb, 85, 85);
 
-    lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n  reset", NULL);
-    lv_obj_set_size(b_fac, 90, 90);
+    lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n   Reset", NULL);
+    lv_obj_set_size(b_fac, 85, 85);
 }
 
 /* Callbacks ******************************************************************/
