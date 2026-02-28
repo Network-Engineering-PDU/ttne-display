@@ -238,7 +238,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     for (int i = 0; i < 7; i++) {
         lv_obj_t* row = create_setting_row(cont, pdu_labels[i]);
         txt_fields[i] = tt_obj_txt_create(row, "Text", txt_pdu_info_cb);
-        lv_obj_set_width(txt_fields[i], 120); //180
+        lv_obj_set_width(txt_fields[i], 145); //180
         
         // Attach field ID to the event
         lv_obj_add_event_cb(txt_fields[i], txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)i);
