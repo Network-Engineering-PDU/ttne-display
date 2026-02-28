@@ -164,25 +164,7 @@ static void timer_rot_cb(lv_timer_t* timer)
 	lv_timer_del(timer);
 	revert_rot();
 }
-/*
-static void timer_check_update_cb(lv_timer_t* timer)
-{
-	int running;
-	int ret_code = runbg_check(update_pid, &running);
-	if (ret_code != 0) {
-		//TODO: handle
-		LV_LOG_USER("Update ERROR!");
-	}
-	if (running) {
-		return;
-	} else {
-		lv_timer_del(timer);
-		pid_t pid = runbg_run("/usr/bin/usb_autorun.sh", "remove", update_dev,
-				NULL);
-		runbg_check_wait(pid);
-	}
-}
-*/
+
 static void btn_nw_reset_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -236,46 +218,6 @@ static void btn_modbus_cb(lv_event_t* e)
 	}
 }
 
-/*
-static void btn_update_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-
-	if (code == LV_EVENT_CLICKED) {
-		FILE* file = fopen("/proc/mounts", "r");
-		if (file == NULL) {
-			LV_LOG_ERROR("Error opening file for reading.");
-			return;
-		}
-		char line[500];
-		char dev[50];
-		char path[50];
-		int n_devices = 0;
- 
-		while (fgets(line, 500, file) != NULL) {
-			sscanf(line, "%s %s %*s %*s %*s %*s", dev, path);
-			if (strstr(path, MOUNT_DIR) != NULL) {
-				n_devices++;
-				char* dev_name = get_last_element(path);
-				char msg[200];
-				sprintf(msg, "USB device " TT_COLOR_GREEN_NE_STR
-						" %s# detected. Do you want to update the device?",
-						dev_name);
-				strcpy(update_dev, get_last_element(dev));
-				tt_obj_msg_box_create("Device update", msg,
-						"Updating device...", msg_box_update_cb);
-				break;
-				// ./usb_autorun.sh add {dev+4} (thread)
-				// wait for thread finish (create_timer every 1s)
-			}
-		}
-		if (n_devices == 0) {
-			tt_obj_info_box_create("Device update", "No USB devices detected", 1);
-		}
-		fclose(file);
-	}
-}
-*/
 static void btn_fact_reset_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -453,30 +395,7 @@ static void msg_box_reboot_cb(lv_event_t* e)
 		lv_msgbox_close(obj);
 	}
 }
-/**
-static void msg_box_update_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_current_target(e);
 
-	if (code == LV_EVENT_VALUE_CHANGED) {
-		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			update_pid = runbg_run("/usr/bin/usb_autorun.sh", "add", update_dev,
-					NULL);
-			timer_check_update = lv_timer_create(timer_check_update_cb,
-					TIMER_CHECK_UPDATE, NULL);
-			char* txt = lv_event_get_user_data(e);
-			if (txt != NULL) {
-				lv_obj_t* loader_scr = tt_obj_loader_create(txt, NULL);
-				lv_obj_add_event_cb(loader_scr, loader_cb,
-						LV_EVENT_ALL, lv_scr_act());
-				lv_scr_load(loader_scr);
-			}
-		}
-		lv_msgbox_close(obj);
-	}
-}
-*/
 static void txt_inactivity_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -549,53 +468,6 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	menu = l_menu;
 
 	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings");
-	
-	/*
-	diagnose_page = scr_diagnose_create(menu);
-	support_page = scr_support_create(menu);
-
-	lv_obj_t* settings_cont1 = tt_obj_cont_create(settings_cont);
-
-	tt_obj_label_create(settings_cont1, "Screen rotation");
-	char* options = "0 deg\n90 deg\n180 deg\n270 deg";
-	dd = tt_obj_dropdown_create(settings_cont1, options, rotate_cb);
-	int rotation = config_get_rotation();
-	lv_dropdown_set_selected(dd, rotation);
-
-	tt_obj_label_create(settings_cont1, "Screensaver time (min)");
-	txt_splash = tt_obj_txt_create(settings_cont1, "Time in minutes",
-			txt_inactivity_cb);
-	char inactivity_time_str[10];
-	sprintf(inactivity_time_str, "%d", config_get_inactivity_time());
-	lv_textarea_set_text(txt_splash, inactivity_time_str);
-
-	lv_obj_t* settings_nw_cont = tt_obj_cont_create(settings_cont);
-	lv_obj_t* btn_nw = tt_obj_btn_std_create(settings_nw_cont, NULL,
-			"NETWORK SETUP");
-	scr_settings_nw_create(menu, btn_nw);
-	tt_obj_btn_std_create(settings_nw_cont, btn_nw_reset_cb, "RESET NETWORK");
-	btn_ssh = tt_obj_btn_toggle_create(settings_nw_cont, btn_ssh_cb, "SSH");
-	btn_snmp = tt_obj_btn_toggle_create(settings_nw_cont, btn_snmp_cb, "SNMP");
-	btn_modbus = tt_obj_btn_toggle_create(settings_nw_cont,
-			btn_modbus_cb, "MODBUS");
-
-	tt_obj_label_create(settings_nw_cont, "Modbus address");
-	txt_modbus_addr = tt_obj_txt_create(settings_nw_cont, "Modbus address",
-			txt_modbus_addr_cb);
-
-	lv_obj_t* settings_setup_cont = tt_obj_cont_create(settings_cont);
-	tt_obj_label_create(settings_setup_cont, "System setup");
-	tt_obj_btn_std_create(settings_setup_cont, btn_update_cb,
-			"UPDATE DEVICE");
-	tt_obj_btn_std_create(settings_setup_cont, btn_fact_reset_cb,
-			"FACTORY RESET");
-	tt_obj_btn_std_create(settings_setup_cont, btn_reboot_cb, "REBOOT SYSTEM");
-
-	lv_obj_t* settings_diag_cont = tt_obj_cont_create(settings_cont);
-	tt_obj_label_create(settings_diag_cont, "System diagnosis");
-	tt_obj_btn_std_create(settings_diag_cont, btn_diag_cb, "DIAGNOSE");
-	tt_obj_btn_std_create(settings_diag_cont, btn_support_cb, "SUPPORT");
-	*/
 
     lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
 
