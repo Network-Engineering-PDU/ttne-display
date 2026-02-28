@@ -102,13 +102,13 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "Update from\n    USB", NULL);
-    lv_obj_set_size(b_upd, 95, 95);
+    lv_obj_set_size(b_upd, 90, 90);
 
     lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", NULL);
-    lv_obj_set_size(b_reb, 95, 95);
+    lv_obj_set_size(b_reb, 90, 90);
 
     lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n reset", NULL);
-    lv_obj_set_size(b_fac, 95, 95);
+    lv_obj_set_size(b_fac, 90, 90);
 }
 
 /* Callbacks ******************************************************************/
