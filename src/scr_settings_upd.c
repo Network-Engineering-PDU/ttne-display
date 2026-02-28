@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "lvgl/lvgl.h"
 #include "scr_settings_upd.h"
+#include "scr_settings_nw.h"
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -13,7 +13,9 @@
 #include "controller.h"
 #include "runbg.h"
 
-#define TIMER_CHECK_UPDATE 1000 // ms
+#define TIMER_MSG_BOX_PERIOD 10000 
+#define TIMER_ROT 5000 
+#define TIMER_CHECK_UPDATE 1000 
 
 #ifdef SIMULATOR_ENABLED
 #define MOUNT_DIR "/home/guille"
@@ -22,120 +24,164 @@
 #endif
 
 /* Global variables ***********************************************************/
-
 static lv_obj_t* txt_server;
-static lv_obj_t* btn_auto;
-static pid_t update_pid;
-static char update_dev[20];
+static lv_obj_t* btn_auto; // This is now a dropdown
 static lv_timer_t* timer_check_update;
+static char update_dev[20];
+static pid_t update_pid;
 
 /* Function prototypes ********************************************************/
+static void timer_check_update_cb(lv_timer_t* timer);
+static void loader_cb(lv_event_t* e);
 static void txt_server_cb(lv_event_t* e);
 static void btn_auto_cb(lv_event_t* e);
 static void btn_update_cb(lv_event_t* e);
 static void btn_reboot_cb(lv_event_t* e);
 static void btn_factory_cb(lv_event_t* e);
 static void msg_box_update_cb(lv_event_t* e);
-static void timer_check_update_cb(lv_timer_t* timer);
-static void loader_cb(lv_event_t* e);
 
-/* Layout Helper **************************************************************/
-
-/**
- * Creates a centered, square-ish action button as seen in the mockup
- */
-static lv_obj_t* create_action_btn(lv_obj_t* parent, const char* text, lv_event_cb_t cb) {
-    lv_obj_t* btn = tt_obj_btn_mtx_create(parent, cb, text, NULL);
-    lv_obj_set_size(btn, LV_PCT(30), 120); // Make them large and proportional
-    lv_obj_set_style_radius(btn, 15, 0);   // Rounded corners
-    return btn;
+static char* get_last_element(const char* str) {
+    char *last_element = NULL;
+    char *token = strtok((char*)str, "/");
+    while (token != NULL) {
+        last_element = token;
+        token = strtok(NULL, "/");
+    }
+    return last_element;
 }
 
-/* Function definitions *******************************************************/
+/* Main Screen Creation *******************************************************/
 
 void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
-    /* Create page */
-    lv_obj_t* page = tt_obj_menu_page_create(menu, btn, NULL, "Sys update");
 
-    /* Main Container: Vertical layout */
-    lv_obj_t* cont = tt_obj_cont_create(page);
-    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_gap(cont, 15, 0);
+    /* 1. Create page and main container */
+    lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, "System update");
+    lv_obj_t* main = tt_obj_cont_create(cont);
+    lv_obj_set_flex_flow(main, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_pad_all(main, 15);
+    lv_obj_set_row_gap(main, 12);
 
-    // 1. Label: Server Location
-    tt_obj_label_create(cont, "Remote server update file location I.P / DNS");
+    /* 2. Remote update server Label */
+    tt_obj_label_create(main, "Remote server update file location I.P / DNS");
 
-    // 2. Row: Server Input + Auto Checkbox
-    lv_obj_t* row_top = lv_obj_create(cont);
-    lv_obj_set_size(row_top, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(row_top, 0, 0);
-    lv_obj_set_style_border_opa(row_top, 0, 0);
-    lv_obj_set_flex_flow(row_top, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row_top, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    /* 3. Large Text Area (Text VRB) */
+    txt_server = tt_obj_txt_create(main, "IP / DNS", txt_server_cb);
+    lv_obj_set_width(txt_server, LV_PCT(100));
+    lv_obj_set_height(txt_server, 45); // Height to match the boxy look
 
-    txt_server = tt_obj_txt_create(row_top, "IP ", txt_server_cb);
-    lv_obj_set_flex_grow(txt_server, 1); // Expand to fill space
+    /* 4. Automatic update row (Label + Dropdown) */
+    lv_obj_t* auto_row = lv_obj_create(main);
+    lv_obj_set_size(auto_row, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(auto_row, 0, 0); 
+    lv_obj_set_style_border_side(auto_row, LV_BORDER_SIDE_NONE, 0);
+    lv_obj_clear_flag(auto_row, LV_OBJ_FLAG_SCROLLABLE);
+    
+    lv_obj_set_flex_flow(auto_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(auto_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    btn_auto = tt_obj_btn_toggle_perc_create(row_top, btn_auto_cb, "X", 15);
-    lv_obj_set_size(btn_auto, 50, 50); // Small square checkbox/toggle
+    lv_obj_t* lbl_auto = lv_label_create(auto_row);
+    lv_label_set_text(lbl_auto, "Automatic updates");
+    lv_obj_set_flex_grow(lbl_auto, 1);
 
-    // 3. Label: Automatic Updates
-    lv_obj_t* lbl_auto = tt_obj_label_create(cont, "Automatic updates (no confirmation)");
-    lv_obj_set_style_text_font(lbl_auto, &lv_font_montserrat_14, 0);
+    // Create Dropdown for ON/OFF
+    btn_auto = lv_dropdown_create(auto_row);
+    lv_dropdown_set_options(btn_auto, "ON\nOFF");
+    lv_dropdown_set_selected(btn_auto, 0); // Default to ON
+    lv_obj_set_size(btn_auto, 85, 40);
+    lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    
+    // UI Styling for dropdown to match the "X" box style
+    lv_obj_set_style_bg_color(btn_auto, lv_color_black(), 0);
+    lv_obj_set_style_border_color(btn_auto, lv_color_white(), 0);
+    lv_obj_set_style_border_width(btn_auto, 2, 0);
 
-    // 4. Action Buttons Row (3-column grid)
-    lv_obj_t* row_btns = lv_obj_create(cont);
-    lv_obj_set_size(row_btns, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(row_btns, 0, 0);
-    lv_obj_set_style_border_opa(row_btns, 0, 0);
-    lv_obj_set_flex_flow(row_btns, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row_btns, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    /* 5. Bottom Buttons row (Three Square Buttons) */
+    lv_obj_t* row = tt_obj_cont_create(main);
+    lv_obj_set_width(row, LV_PCT(100));
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    create_action_btn(row_btns, "Update from\nUSB", btn_update_cb);
-    create_action_btn(row_btns, "Reboot", btn_reboot_cb);
-    create_action_btn(row_btns, "Factory reset", btn_factory_cb);
+    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "Update from\n    USB", NULL);
+    lv_obj_set_size(b_upd, 95, 95);
+
+    lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", NULL);
+    lv_obj_set_size(b_reb, 95, 95);
+
+    lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n reset", NULL);
+    lv_obj_set_size(b_fac, 95, 95);
 }
 
 /* Callbacks ******************************************************************/
 
-static void txt_server_cb(lv_event_t* e) {
-    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        lv_scr_load(scr_keyboard_create(lv_scr_act(), lv_event_get_target(e), KB_ABC));
-    }
-    if (lv_event_get_code(e) == LV_EVENT_READY) {
-        // controller_set_update_server(lv_textarea_get_text(txt_server));
+static void btn_auto_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_target(e);
+        uint16_t sel = lv_dropdown_get_selected(obj);
+        bool enabled = (sel == 0); // 0 is ON, 1 is OFF
+        // controller_set_auto_update(enabled);
     }
 }
 
-static void btn_auto_cb(lv_event_t* e) {
-    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
-        bool enabled = lv_obj_has_state(btn_auto, LV_STATE_CHECKED);
-        // controller_set_auto_update(enabled);
+static void txt_server_cb(lv_event_t* e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+        lv_obj_t* kb = scr_keyboard_create(lv_scr_act(), lv_event_get_target(e), KB_NUM);
+        lv_scr_load(kb);
     }
 }
 
 static void btn_update_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
         FILE* file = fopen("/proc/mounts", "r");
-        if (!file) return;
-
+        if (file == NULL) return;
+        
         char line[500], dev[50], path[50];
-        bool found = false;
-        while (fgets(line, sizeof(line), file)) {
-            if (sscanf(line, "%s %s", dev, path) == 2 && strstr(path, MOUNT_DIR)) {
-                found = true;
+        int n_devices = 0;
+        while (fgets(line, 500, file) != NULL) {
+            sscanf(line, "%s %s", dev, path);
+            if (strstr(path, MOUNT_DIR) != NULL) {
+                n_devices++;
+                char* dev_name = get_last_element(path);
                 char msg[200];
-                sprintf(msg, "USB device " TT_COLOR_GREEN_NE_STR " %s# detected. Update?", path);
-                // Copy device name (e.g., sda1)
-                char* last = strrchr(dev, '/');
-                strcpy(update_dev, last ? last + 1 : dev);
-                
+                sprintf(msg, "USB device " TT_COLOR_GREEN_NE_STR " %s detected. Update?", dev_name);
+                strcpy(update_dev, get_last_element(dev));
                 tt_obj_msg_box_create("Device update", msg, "Updating...", msg_box_update_cb);
                 break;
             }
         }
-        if (!found) tt_obj_info_box_create("Update", "No USB detected", 1);
+        if (n_devices == 0) tt_obj_info_box_create("Device update", "No USB detected", 1);
         fclose(file);
+    }
+}
+
+static void msg_box_update_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        if (lv_msgbox_get_active_btn(obj) == 0) {
+            update_pid = runbg_run("/usr/bin/usb_autorun.sh", "add", update_dev, NULL);
+            timer_check_update = lv_timer_create(timer_check_update_cb, TIMER_CHECK_UPDATE, NULL);
+            lv_obj_t* loader_scr = tt_obj_loader_create("Updating...", NULL);
+            lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
+            lv_scr_load(loader_scr);
+        }
+        lv_msgbox_close(obj);
+    }
+}
+
+static void loader_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        lv_scr_load(lv_event_get_user_data(e));
+        lv_obj_del(lv_event_get_current_target(e));
+    }
+}
+
+static void timer_check_update_cb(lv_timer_t* timer) {
+    int running;
+    if (runbg_check(update_pid, &running) != 0) return;
+    if (!running) {
+        lv_timer_del(timer);
+        pid_t pid = runbg_run("/usr/bin/usb_autorun.sh", "remove", update_dev, NULL);
+        runbg_check_wait(pid);
     }
 }
 
@@ -145,33 +191,4 @@ static void btn_reboot_cb(lv_event_t* e) {
 
 static void btn_factory_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) controller_post_fact_reset();
-}
-
-/* Background Process Handling ************************************************/
-
-static void msg_box_update_cb(lv_event_t* e) {
-    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED && lv_msgbox_get_active_btn(lv_event_get_current_target(e)) == 0) {
-        update_pid = runbg_run("/usr/bin/usb_autorun.sh", "add", update_dev, NULL);
-        timer_check_update = lv_timer_create(timer_check_update_cb, TIMER_CHECK_UPDATE, NULL);
-        
-        lv_obj_t* loader = tt_obj_loader_create("Applying Update...", NULL);
-        lv_obj_add_event_cb(loader, loader_cb, LV_EVENT_ALL, lv_scr_act());
-        lv_scr_load(loader);
-    }
-    lv_msgbox_close(lv_event_get_current_target(e));
-}
-
-static void timer_check_update_cb(lv_timer_t* timer) {
-    int is_running;
-    if (runbg_check(update_pid, &is_running) != 0 || !is_running) {
-        lv_timer_del(timer);
-        runbg_check_wait(runbg_run("/usr/bin/usb_autorun.sh", "remove", update_dev, NULL));
-    }
-}
-
-static void loader_cb(lv_event_t* e) {
-    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        lv_scr_load((lv_obj_t*)lv_event_get_user_data(e));
-        lv_obj_del(lv_event_get_target(e));
-    }
 }
