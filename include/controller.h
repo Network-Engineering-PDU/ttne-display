@@ -38,6 +38,7 @@ void controller_put_modbus(const models_modbus_t* modbus);
 void controller_get_modbus();
 void controller_set_update_server(const char* server);
 void controller_set_auto_update(bool enabled);
+void controller_post_auto_update_start();
 
 #ifdef __cplusplus
 } /* extern "C" */

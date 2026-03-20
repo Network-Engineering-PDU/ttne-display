@@ -389,8 +389,32 @@ void controller_set_update_server(const char* server)
 
 void controller_set_auto_update(bool enabled)
 {
-	// TODO: Implement automatic update toggle
-	// This should enable/disable automatic updates on the backend
-	// Example endpoint: BASE_URL "settings/auto-update"
-	LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
+	http_get_req_t req;
+	char url[256];
+	
+	snprintf(url, sizeof(url), 
+	         "%ssettings/auto-update-config?enabled=%d", 
+	         BASE_URL, 
+	         enabled ? 1 : 0);
+	
+	if (http_helper_get(&req, url) == 0) {
+		LV_LOG_USER("Auto update configured: %s", enabled ? "ENABLED" : "DISABLED");
+	} else {
+		LV_LOG_USER("Failed to configure auto update on backend");
+	}
+	
+	http_helper_free(&req);
+}
+
+void controller_post_auto_update_start()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/auto-update-start";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("Auto-update start error");
+	} else {
+		LV_LOG_USER("Auto-update started successfully");
+	}
+	http_helper_free(&req);
 }

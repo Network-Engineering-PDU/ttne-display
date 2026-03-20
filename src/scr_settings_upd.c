@@ -30,6 +30,14 @@ static lv_timer_t* timer_check_update;
 static char update_dev[20];
 static pid_t update_pid;
 
+/* Auto-update variables *****/
+static bool auto_update_enabled = false;
+static lv_timer_t* timer_auto_check = NULL;
+static char pending_update_version[20] = {0};
+static char current_version[20] = {0};
+static lv_timer_t* timer_auto_update_monitor = NULL;
+static bool auto_update_in_progress = false;
+
 /* Function prototypes ********************************************************/
 static void timer_check_update_cb(lv_timer_t* timer);
 static void loader_cb(lv_event_t* e);
@@ -41,6 +49,12 @@ static void btn_factory_cb(lv_event_t* e);
 static void msg_box_update_cb(lv_event_t* e);
 static void msg_box_reboot_cb(lv_event_t* e);
 static void msg_box_factory_cb(lv_event_t* e);
+
+/* Auto-update function prototypes */
+static void timer_auto_check_cb(lv_timer_t* timer);
+static void timer_auto_update_monitor_cb(lv_timer_t* timer);
+static void show_auto_update_dialog(const char* current, const char* new_version);
+static void auto_update_confirm_cb(lv_event_t* e);
 
 static char* get_last_element(const char* str) {
     char *last_element = NULL;
@@ -112,12 +126,108 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
 /* Callbacks ******************************************************************/
 
+/* Auto-update timer callback - checks for new firmware every 60 seconds */
+static void timer_auto_check_cb(lv_timer_t* timer) {
+    if (!auto_update_enabled) {
+        return;
+    }
+    
+    LV_LOG_USER("Auto-update: Checking for new firmware...");
+    
+    // TODO: In final implementation, this will:
+    // 1. HTTP GET /settings/auto-update-check from backend
+    // 2. Parse JSON response for version_available
+    // 3. If true, call show_auto_update_dialog() with versions
+    //
+    // For now, we log the check
+    // Backend will handle the actual version comparison
+}
+
+/* Dialog callback for auto-update confirmation */
+static void auto_update_confirm_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        int btn_id = lv_msgbox_get_active_btn(obj);
+        
+        if (btn_id == 0) {
+            // User clicked YES - start update
+            LV_LOG_USER("Auto-update: User confirmed update to version %s", pending_update_version);
+            
+            // Mark update as in progress and show "Updating..." screen
+            auto_update_in_progress = true;
+            lv_obj_t* loader_scr = tt_obj_loader_create("Updating...", NULL);
+            lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
+            lv_scr_load(loader_scr);
+            
+            // Start monitor timer - checks every 1 second if update is complete
+            // This will persist until system restarts
+            timer_auto_update_monitor = lv_timer_create(timer_auto_update_monitor_cb, 1000, NULL);
+            
+            // Call backend to start the update
+            // Backend will download firmware, apply update, and restart system
+            // The "Updating..." screen will remain visible throughout the process
+            controller_post_auto_update_start();
+        } else {
+            // User clicked NO - just hide dialog and continue checking
+            LV_LOG_USER("Auto-update: User skipped update");
+        }
+        
+        lv_msgbox_close(obj);
+    }
+}
+
+/* Monitor timer callback - waits for auto-update to complete and system to restart */
+static void timer_auto_update_monitor_cb(lv_timer_t* timer) {
+    // This timer runs every second while update is in progress
+    // It keeps the "Updating..." screen visible until the system restarts
+    // Once the backend completes the firmware update and triggers a restart,
+    // the system will reboot before this timer can be deleted
+    // 
+    // The presence of this timer and the auto_update_in_progress flag ensures
+    // that the loader screen with "Updating..." remains visible throughout
+    // the entire update and shutdown process
+    
+    LV_LOG_USER("Auto-update: Update in progress... waiting for system restart");
+}
+
+/* Show auto-update confirmation dialog */
+static void show_auto_update_dialog(const char* current, const char* new_version) {
+    char msg[256];
+    snprintf(msg, sizeof(msg), 
+             "Firmware Update Available!\n\n"
+             "Current: %s\n"
+             "New: %s\n\n"
+             "Update now?",
+             current, new_version);
+    
+    strcpy(pending_update_version, new_version);
+    
+    tt_obj_msg_box_create("Firmware Update", msg, "Updating...", auto_update_confirm_cb);
+}
+
 static void btn_auto_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t* obj = lv_event_get_target(e);
         uint16_t sel = lv_dropdown_get_selected(obj);
         bool enabled = (sel == 0); // 0 is ON, 1 is OFF
-        // controller_set_auto_update(enabled);
+        
+        auto_update_enabled = enabled;
+        
+        if (enabled) {
+            // Start checking every 60 seconds (60000 ms)
+            timer_auto_check = lv_timer_create(timer_auto_check_cb, 60000, NULL);
+            LV_LOG_USER("Auto-update: ENABLED - checking every 60 seconds");
+        } else {
+            // Stop checking
+            if (timer_auto_check != NULL) {
+                lv_timer_del(timer_auto_check);
+                timer_auto_check = NULL;
+            }
+            LV_LOG_USER("Auto-update: DISABLED");
+        }
+        
+        // Persist to backend config
+        controller_set_auto_update(enabled);
     }
 }
 
