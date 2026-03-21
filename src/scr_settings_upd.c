@@ -191,6 +191,17 @@ static void timer_remote_update_check_cb(lv_timer_t* timer) {
     
     time_t now = time(NULL);
     
+    // If auto-update is OFF, don't show any alerts
+    if (!auto_update_enabled) {
+        // Clean up any pending files
+        if (remote_update_pending) {
+            remote_update_pending = false;
+            memset(remote_update_filename, 0, sizeof(remote_update_filename));
+            unlink(REMOTE_UPDATE_PENDING_FILE);
+        }
+        return;
+    }
+    
     // Check if user declined within last 24 hours
     if (user_declined_until > 0 && now < user_declined_until) {
         // Still in snooze period - don't show dialog
@@ -510,6 +521,17 @@ static void btn_auto_cb(lv_event_t* e) {
                 timer_auto_check = NULL;
             }
             LV_LOG_USER("Auto-update: DISABLED");
+            
+            // IMPORTANT: Clear any pending firmware update when user disables auto-update
+            // This ensures that disabling the feature immediately stops showing update alerts
+            if (remote_update_pending) {
+                remote_update_pending = false;
+                memset(remote_update_filename, 0, sizeof(remote_update_filename));
+                LV_LOG_USER("Auto-update disabled: Cleared pending update");
+            }
+            // Remove the pending file  
+            unlink(REMOTE_UPDATE_PENDING_FILE);
+            unlink(REMOTE_UPDATE_DECLINED_FILE);
         }
         
         // Persist to backend config
