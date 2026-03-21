@@ -154,7 +154,7 @@ static void txt_server_cb(lv_event_t* e) {
     if (code == LV_EVENT_CLICKED) {
         lv_obj_t* kb = scr_keyboard_create(lv_scr_act(), lv_event_get_target(e), KB_NUM);
         lv_scr_load(kb);
-    } else if (code == LV_EVENT_DEFOCUS) {
+    } else if (code == LV_EVENT_DEFOCUSED) {
         // After keyboard closes, save the server address
         lv_obj_t* txt_obj = lv_event_get_target(e);
         const char* server_addr = lv_textarea_get_text(txt_obj);

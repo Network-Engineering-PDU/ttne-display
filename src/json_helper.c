@@ -580,9 +580,9 @@ int json_helper_update_update_status(const char* json_str)
 		return 1;
 	}
 
-	err = json_get_str((char**)(&update_status.update_server), json, "update_server");
-	if (err != 0) {
-		return 1;
+	const char* server_str = json_get_string(json, "update_server");
+	if (server_str != NULL) {
+		update_status.update_server = server_str;
 	}
 	
 	models_set_update_status(&update_status);
