@@ -69,6 +69,8 @@ lv_obj_t* scr_keyboard_create(lv_obj_t* prev_scr, lv_obj_t* prev_txt,
 
 	if (type == KB_NUM) {
 		lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_USER_1);
+	} else if (type == KB_IPADDR) {
+		lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_USER_2);
 	}
 	lv_obj_t* txt_kb = lv_textarea_create(obj);
 	lv_obj_align(txt_kb, LV_ALIGN_TOP_MID, 0, 10);

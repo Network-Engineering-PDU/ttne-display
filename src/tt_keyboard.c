@@ -39,6 +39,16 @@ static const char* num_kb_map[] = {
 	",", "0", ".", LV_SYMBOL_OK, NULL,
 };
 
+static const char* ip_kb_map[] = {
+	"a", "b", "c", "d", "e", "1", "\n",
+	"f", "g", "h", "i", "j", "2", "\n",
+	"k", "l", "m", "n", "o", "3", "\n",
+	"p", "q", "r", "s", "t", "4", "\n",
+	"u", "v", "w", "x", "y", "5", "\n",
+	"z", "0", "-", ".", ":", LV_SYMBOL_BACKSPACE, "\n",
+	LV_SYMBOL_CLOSE, LV_SYMBOL_LEFT, " ", LV_SYMBOL_RIGHT, LV_SYMBOL_OK, NULL
+};
+
 static const lv_btnmatrix_ctrl_t kb_ctrl[] = {
 	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1 ,
 	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1 ,
@@ -64,6 +74,16 @@ static const lv_btnmatrix_ctrl_t num_kb_ctrl[] = {
 	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_KEYBOARD_CTRL_BTN_FLAGS | 1,
 };
 
+static const lv_btnmatrix_ctrl_t ip_kb_ctrl[] = {
+	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1,
+	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1,
+	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1,
+	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1,
+	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1,
+	LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_BTNMATRIX_CTRL_POPOVER | 1, LV_KEYBOARD_CTRL_BTN_FLAGS | 1,
+	LV_KEYBOARD_CTRL_BTN_FLAGS | 1, LV_KEYBOARD_CTRL_BTN_FLAGS | 1, 3, LV_KEYBOARD_CTRL_BTN_FLAGS | 1, LV_KEYBOARD_CTRL_BTN_FLAGS | 1,
+};
+
 /* Function prototypes ********************************************************/
 /* Callbacks ******************************************************************/
 /* Function definitions *******************************************************/
@@ -77,6 +97,7 @@ lv_obj_t* tt_keyboard_create(lv_obj_t* parent)
 	lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_TEXT_UPPER, kb_map_uc, kb_ctrl);
 	lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_SPECIAL, kb_map_sym, kb_sym_ctrl);
 	lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_USER_1, num_kb_map, num_kb_ctrl);
+	lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_USER_2, ip_kb_map, ip_kb_ctrl);
 	lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_LOWER);
 	lv_keyboard_set_popovers(kb, true);
 

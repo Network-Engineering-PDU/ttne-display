@@ -37,6 +37,7 @@ void controller_post_stop_modbus();
 void controller_put_modbus(const models_modbus_t* modbus);
 void controller_get_modbus();
 void controller_set_update_server(const char* server);
+char* controller_get_update_server();
 void controller_set_auto_update(bool enabled);
 void controller_post_auto_update_start();
 
