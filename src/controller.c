@@ -413,14 +413,14 @@ char* controller_get_update_server()
 	}
 	
 	// Parse JSON response: {"server": "192.168.1.100:8000"}
-	cJSON* root = cJSON_Parse(req.response);
+	cJSON* root = cJSON_Parse(req.buffer);
 	if (!root) {
 		LV_LOG_WARN("Failed to parse server response JSON");
 		http_helper_free(&req);
 		return NULL;
 	}
 	
-	cJSON* server_item = cJSON_GetObjectItemCaseInsensitive(root, "server");
+	cJSON* server_item = cJSON_GetObjectItem(root, "server");
 	if (!server_item || server_item->type != cJSON_String) {
 		LV_LOG_WARN("Invalid server response format");
 		cJSON_Delete(root);

@@ -176,16 +176,16 @@ static void timer_auto_check_cb(lv_timer_t* timer) {
     //   "new_version": "1.0.1"
     // }
     
-    cJSON* root = cJSON_Parse(req.response);
+    cJSON* root = cJSON_Parse(req.buffer);
     if (!root) {
         LV_LOG_WARN("Auto-update: Failed to parse response JSON");
         http_helper_free(&req);
         return;
     }
     
-    cJSON* available = cJSON_GetObjectItemCaseInsensitive(root, "version_available");
-    cJSON* curr_ver = cJSON_GetObjectItemCaseInsensitive(root, "current_version");
-    cJSON* new_ver = cJSON_GetObjectItemCaseInsensitive(root, "new_version");
+    cJSON* available = cJSON_GetObjectItem(root, "version_available");
+    cJSON* curr_ver = cJSON_GetObjectItem(root, "current_version");
+    cJSON* new_ver = cJSON_GetObjectItem(root, "new_version");
     
     if (available && available->type == cJSON_True) {
         if (curr_ver && new_ver) {
@@ -264,8 +264,8 @@ static void timer_auto_update_monitor_cb(lv_timer_t* timer) {
         // Parse JSON
         cJSON* root = cJSON_Parse(buffer);
         if (root) {
-            cJSON* status_item = cJSON_GetObjectItemCaseInsensitive(root, "status");
-            cJSON* message_item = cJSON_GetObjectItemCaseInsensitive(root, "message");
+            cJSON* status_item = cJSON_GetObjectItem(root, "status");
+            cJSON* message_item = cJSON_GetObjectItem(root, "message");
             
             if (status_item && status_item->valuestring && 
                 message_item && message_item->valuestring) {
@@ -279,15 +279,15 @@ static void timer_auto_update_monitor_cb(lv_timer_t* timer) {
                 if (loader_screen && lv_obj_is_valid(loader_screen)) {
                     // Find the label inside the loader screen
                     // The label is created by tt_obj_spinner_create and is a child of loader_screen
-                    lv_obj_t* child = lv_obj_get_child(loader_screen, 0);
-                    while (child != NULL) {
+                    uint32_t child_count = lv_obj_get_child_cnt(loader_screen);
+                    for (uint32_t i = 0; i < child_count; i++) {
+                        lv_obj_t* child = lv_obj_get_child(loader_screen, i);
                         // Check if this object is a label
                         if (lv_obj_check_type(child, &lv_label_class)) {
                             lv_label_set_text(child, (char*)message);
                             LV_LOG_USER("Auto-update: Updated loader message to: %s", message);
                             break;
                         }
-                        child = lv_obj_get_sibling(child);
                     }
                 }
                 
