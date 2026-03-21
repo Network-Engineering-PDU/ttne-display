@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
+#include <stdlib.h>
 
 #include <cjson/cJSON.h>
 
@@ -20,10 +22,12 @@
 #define TIMER_MSG_BOX_PERIOD 10000 
 #define TIMER_ROT 5000 
 #define TIMER_CHECK_UPDATE 1000 
+#define TIMER_REMOTE_CHECK 30000  // Check for remote updates every 30 seconds (not every 1 second)
 #define BASE_URL "http://localhost:8001/"
 #define UPDATE_STATUS_FILE "/home/root/.ne/update_status"
 #define REMOTE_UPDATE_PENDING_FILE "/home/root/.ne/remote_update_pending"
 #define REMOTE_UPDATE_CONFIRMED_FILE "/home/root/.ne/remote_update_confirmed"
+#define REMOTE_UPDATE_DECLINED_FILE "/home/root/.ne/remote_update_declined"  // Track user decline with timestamp
 
 #ifdef SIMULATOR_ENABLED
 #define MOUNT_DIR "/home/guille"
@@ -51,6 +55,8 @@ static lv_obj_t* loader_screen = NULL;  // Track loader screen for updates
 static lv_timer_t* timer_remote_update_check = NULL;
 static bool remote_update_pending = false;
 static char remote_update_filename[256] = {0};
+static time_t last_dialog_shown_time = 0;  // Prevent duplicate dialogs
+static time_t user_declined_until = 0;     // 24-hour snooze when user clicks NO
 
 /* Function prototypes ********************************************************/
 static void timer_check_update_cb(lv_timer_t* timer);
@@ -97,6 +103,25 @@ static void load_update_server() {
     }
 }
 
+/* Load declined timestamp from file on screen init */
+static void load_declined_timestamp() {
+    FILE* fp = fopen(REMOTE_UPDATE_DECLINED_FILE, "r");
+    if (fp) {
+        char buffer[32] = {0};
+        if (fread(buffer, 1, sizeof(buffer) - 1, fp) > 0) {
+            user_declined_until = atol(buffer);
+            time_t now = time(NULL);
+            if (now < user_declined_until) {
+                LV_LOG_USER("Loaded 24-hour snooze: expires in %ld seconds", user_declined_until - now);
+            } else {
+                user_declined_until = 0;
+                unlink(REMOTE_UPDATE_DECLINED_FILE);
+            }
+        }
+        fclose(fp);
+    }
+}
+
 /* Remote update confirmation dialog callback */
 static void remote_update_confirm_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
@@ -134,7 +159,7 @@ static void remote_update_confirm_cb(lv_event_t* e) {
             
         } else {
             // User clicked NO - clean up and don't proceed
-            LV_LOG_USER("Remote update: User rejected update");
+            LV_LOG_USER("Remote update: User rejected update - snoozed for 24 hours");
             
             // Clear the pending flag
             remote_update_pending = false;
@@ -142,6 +167,17 @@ static void remote_update_confirm_cb(lv_event_t* e) {
             
             // Clean up pending file
             unlink(REMOTE_UPDATE_PENDING_FILE);
+            
+            // Set 24-hour snooze (86400 seconds = 24 hours)
+            user_declined_until = time(NULL) + 86400;
+            
+            // Write declined status with timestamp
+            FILE* fp = fopen(REMOTE_UPDATE_DECLINED_FILE, "w");
+            if (fp) {
+                fprintf(fp, "%ld", user_declined_until);
+                fclose(fp);
+                LV_LOG_USER("24-hour snooze activated until: %ld", user_declined_until);
+            }
         }
         
         lv_msgbox_close(obj);
@@ -152,6 +188,22 @@ static void remote_update_confirm_cb(lv_event_t* e) {
 static void timer_remote_update_check_cb(lv_timer_t* timer) {
     // Check if backend has signaled a pending remote update
     // The pending file will contain the firmware filename
+    
+    time_t now = time(NULL);
+    
+    // Check if user declined within last 24 hours
+    if (user_declined_until > 0 && now < user_declined_until) {
+        // Still in snooze period - don't show dialog
+        LV_LOG_USER("Remote update: Still in 24-hour snooze period");
+        return;
+    }
+    
+    // If snooze expired, clear it
+    if (user_declined_until > 0 && now >= user_declined_until) {
+        user_declined_until = 0;
+        unlink(REMOTE_UPDATE_DECLINED_FILE);
+        LV_LOG_USER("Remote update: 24-hour snooze period expired");
+    }
     
     if (remote_update_pending) {
         // Already showing or processing an update
@@ -169,9 +221,16 @@ static void timer_remote_update_check_cb(lv_timer_t* timer) {
     if (fread(buffer, 1, sizeof(buffer) - 1, fp) > 0) {
         fclose(fp);
         
+        // Prevent duplicate dialogs within 5 seconds
+        if (last_dialog_shown_time > 0 && (now - last_dialog_shown_time) < 5) {
+            LV_LOG_USER("Remote update: Dialog already shown recently, skipping duplicate");
+            return;
+        }
+        
         // Store filename and mark as pending
         strncpy(remote_update_filename, buffer, sizeof(remote_update_filename) - 1);
         remote_update_pending = true;
+        last_dialog_shown_time = now;
         
         LV_LOG_USER("Remote update: Pending file detected: %s", remote_update_filename);
         
@@ -210,6 +269,9 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     
     // Load update server from backend
     load_update_server();
+    
+    // Load declined timestamp from previous user rejection
+    load_declined_timestamp();
 
     /* 4. Automatic update row (Label + Dropdown) */
     lv_obj_t* auto_row = lv_obj_create(main);
@@ -228,7 +290,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     // Create Dropdown for ON/OFF
     btn_auto = lv_dropdown_create(auto_row);
     lv_dropdown_set_options(btn_auto, "ON\nOFF");
-    lv_dropdown_set_selected(btn_auto, 0); // Default to ON
+    lv_dropdown_set_selected(btn_auto, 1); // Default to OFF
     lv_obj_set_size(btn_auto, 70, 40);
     lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_VALUE_CHANGED, NULL);
     
@@ -250,8 +312,8 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n Reset", ASSET("menu.png"));
     
     /* Start monitoring for remote firmware updates (from web UI) */
-    timer_remote_update_check = lv_timer_create(timer_remote_update_check_cb, 1000, NULL);
-    LV_LOG_USER("Remote update monitoring started");
+    timer_remote_update_check = lv_timer_create(timer_remote_update_check_cb, TIMER_REMOTE_CHECK, NULL);
+    LV_LOG_USER("Remote update monitoring started (checking every 30 seconds)");
 }
 
 /* Callbacks ******************************************************************/
