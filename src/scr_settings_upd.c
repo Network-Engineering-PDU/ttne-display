@@ -132,6 +132,11 @@ static void remote_update_confirm_cb(lv_event_t* e) {
             // User clicked YES - signal backend and show updating screen
             LV_LOG_USER("Remote update: User confirmed, calling backend to start update...");
             
+            // Clear the pending flag immediately - update is now being processed
+            remote_update_pending = false;
+            memset(remote_update_filename, 0, sizeof(remote_update_filename));
+            unlink(REMOTE_UPDATE_PENDING_FILE);  // Delete pending file
+            
             // Call backend to start the actual update
             http_get_req_t req;
             char url[256];
@@ -148,7 +153,7 @@ static void remote_update_confirm_cb(lv_event_t* e) {
             http_helper_free(&req);
             LV_LOG_USER("Remote update: Backend notified to start update");
             
-            // Show updating screen
+            // Mark that an update is in progress - prevents duplicate alerts during extraction
             auto_update_in_progress = true;
             loader_screen = tt_obj_loader_create("Updating...", NULL);
             lv_obj_add_event_cb(loader_screen, loader_cb, LV_EVENT_ALL, lv_scr_act());
@@ -199,6 +204,12 @@ static void timer_remote_update_check_cb(lv_timer_t* timer) {
             memset(remote_update_filename, 0, sizeof(remote_update_filename));
             unlink(REMOTE_UPDATE_PENDING_FILE);
         }
+        return;
+    }
+    
+    // If an update is already in progress, don't show duplicate alerts
+    if (auto_update_in_progress) {
+        LV_LOG_USER("Remote update: Update already in progress, skipping check");
         return;
     }
     
@@ -472,10 +483,13 @@ static void timer_auto_update_monitor_cb(lv_timer_t* timer) {
                     }
                 }
                 
-                // Check if error occurred
+                // Check if error occurred - clear in-progress flag to allow retries
                 if (strcmp(status, "error") == 0) {
                     LV_LOG_WARN("Auto-update: Error occurred - %s", message);
-                    // Keep showing the error message, system should recover or user can retry
+                    // Clear the in-progress flag so new updates can be attempted
+                    // System will show error message for 10 seconds then allow new alerts
+                    auto_update_in_progress = false;
+                    LV_LOG_USER("Auto-update: Cleared in-progress flag to allow recovery");
                 }
             }
             cJSON_Delete(root);
