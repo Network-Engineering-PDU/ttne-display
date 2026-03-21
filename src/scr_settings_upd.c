@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <cjson/cJSON.h>
 
@@ -21,6 +22,8 @@
 #define TIMER_CHECK_UPDATE 1000 
 #define BASE_URL "http://localhost:8001/"
 #define UPDATE_STATUS_FILE "/home/root/.ne/update_status"
+#define REMOTE_UPDATE_PENDING_FILE "/home/root/.ne/remote_update_pending"
+#define REMOTE_UPDATE_CONFIRMED_FILE "/home/root/.ne/remote_update_confirmed"
 
 #ifdef SIMULATOR_ENABLED
 #define MOUNT_DIR "/home/guille"
@@ -44,6 +47,11 @@ static lv_timer_t* timer_auto_update_monitor = NULL;
 static bool auto_update_in_progress = false;
 static lv_obj_t* loader_screen = NULL;  // Track loader screen for updates
 
+/* Remote update variables *****/
+static lv_timer_t* timer_remote_update_check = NULL;
+static bool remote_update_pending = false;
+static char remote_update_filename[256] = {0};
+
 /* Function prototypes ********************************************************/
 static void timer_check_update_cb(lv_timer_t* timer);
 static void loader_cb(lv_event_t* e);
@@ -62,6 +70,10 @@ static void timer_auto_update_monitor_cb(lv_timer_t* timer);
 static void show_auto_update_dialog(const char* current, const char* new_version);
 static void auto_update_confirm_cb(lv_event_t* e);
 static void load_update_server();
+
+/* Remote update function prototypes */
+static void timer_remote_update_check_cb(lv_timer_t* timer);
+static void remote_update_confirm_cb(lv_event_t* e);
 
 
 static char* get_last_element(const char* str) {
@@ -82,6 +94,98 @@ static void load_update_server() {
         LV_LOG_USER("Update server loaded: %s", server);
     } else {
         lv_textarea_set_text(txt_server, "");
+    }
+}
+
+/* Remote update confirmation dialog callback */
+static void remote_update_confirm_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        int btn_id = lv_msgbox_get_active_btn(obj);
+        
+        if (btn_id == 0) {
+            // User clicked YES - signal backend and show updating screen
+            LV_LOG_USER("Remote update: User confirmed, calling backend to start update...");
+            
+            // Call backend to start the actual update
+            http_get_req_t req;
+            char url[256];
+            snprintf(url, sizeof(url), "%ssettings/manual-update-start", BASE_URL);
+            
+            int err = http_helper_get(&req, url);
+            if (err != 0) {
+                LV_LOG_WARN("Remote update: Failed to notify backend to start update");
+                http_helper_free(&req);
+                lv_msgbox_close(obj);
+                return;
+            }
+            
+            http_helper_free(&req);
+            LV_LOG_USER("Remote update: Backend notified to start update");
+            
+            // Show updating screen
+            auto_update_in_progress = true;
+            loader_screen = tt_obj_loader_create("Updating...", NULL);
+            lv_obj_add_event_cb(loader_screen, loader_cb, LV_EVENT_ALL, lv_scr_act());
+            lv_scr_load(loader_screen);
+            
+            // Start monitor timer - checks every 500ms for status updates
+            timer_auto_update_monitor = lv_timer_create(timer_auto_update_monitor_cb, 500, NULL);
+            
+        } else {
+            // User clicked NO - clean up and don't proceed
+            LV_LOG_USER("Remote update: User rejected update");
+            
+            // Clear the pending flag
+            remote_update_pending = false;
+            memset(remote_update_filename, 0, sizeof(remote_update_filename));
+            
+            // Clean up pending file
+            unlink(REMOTE_UPDATE_PENDING_FILE);
+        }
+        
+        lv_msgbox_close(obj);
+    }
+}
+
+/* Timer callback - checks for pending remote firmware updates */
+static void timer_remote_update_check_cb(lv_timer_t* timer) {
+    // Check if backend has signaled a pending remote update
+    // The pending file will contain the firmware filename
+    
+    if (remote_update_pending) {
+        // Already showing or processing an update
+        return;
+    }
+    
+    FILE* fp = fopen(REMOTE_UPDATE_PENDING_FILE, "r");
+    if (fp == NULL) {
+        // No pending update
+        return;
+    }
+    
+    // Read filename from pending file
+    char buffer[256] = {0};
+    if (fread(buffer, 1, sizeof(buffer) - 1, fp) > 0) {
+        fclose(fp);
+        
+        // Store filename and mark as pending
+        strncpy(remote_update_filename, buffer, sizeof(remote_update_filename) - 1);
+        remote_update_pending = true;
+        
+        LV_LOG_USER("Remote update: Pending file detected: %s", remote_update_filename);
+        
+        // Show confirmation dialog
+        char msg[300];
+        snprintf(msg, sizeof(msg), 
+                 "Device update\n\n"
+                 "File: %s\n\n"
+                 "Do you want to update\nthe device?",
+                 remote_update_filename);
+        
+        tt_obj_msg_box_create("Device update", msg, "Updating...", remote_update_confirm_cb);
+    } else {
+        fclose(fp);
     }
 }
 
@@ -139,11 +243,15 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, " Update\nFrom USB", ASSET("menu.png"));
+    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "  Update\nFrom USB", ASSET("menu.png"));
 
     lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("menu.png"));
 
     lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n Reset", ASSET("menu.png"));
+    
+    /* Start monitoring for remote firmware updates (from web UI) */
+    timer_remote_update_check = lv_timer_create(timer_remote_update_check_cb, 1000, NULL);
+    LV_LOG_USER("Remote update monitoring started");
 }
 
 /* Callbacks ******************************************************************/
@@ -331,7 +439,7 @@ static void btn_auto_cb(lv_event_t* e) {
         
         if (enabled) {
             // Start checking every 60 seconds (60000 ms)
-            timer_auto_check = lv_timer_create(timer_auto_check_cb, 60000, NULL);
+            timer_auto_check = lv_timer_create(timer_auto_check_cb, 10000, NULL);
             LV_LOG_USER("Auto-update: ENABLED - checking every 60 seconds");
         } else {
             // Stop checking
