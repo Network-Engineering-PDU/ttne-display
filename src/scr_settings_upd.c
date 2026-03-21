@@ -145,7 +145,7 @@ static void btn_auto_cb(lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_target(e);
         uint16_t sel = lv_dropdown_get_selected(obj);
         bool enabled = (sel == 0); // 0 is ON, 1 is OFF
-        // controller_set_auto_update(enabled);
+        controller_set_auto_update(enabled);
     }
 }
 
@@ -154,6 +154,13 @@ static void txt_server_cb(lv_event_t* e) {
     if (code == LV_EVENT_CLICKED) {
         lv_obj_t* kb = scr_keyboard_create(lv_scr_act(), lv_event_get_target(e), KB_NUM);
         lv_scr_load(kb);
+    } else if (code == LV_EVENT_DEFOCUS) {
+        // After keyboard closes, save the server address
+        lv_obj_t* txt_obj = lv_event_get_target(e);
+        const char* server_addr = lv_textarea_get_text(txt_obj);
+        if (server_addr && strlen(server_addr) > 0) {
+            controller_set_update_server(server_addr);
+        }
     }
 }
 

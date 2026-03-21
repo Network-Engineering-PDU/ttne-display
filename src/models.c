@@ -286,4 +286,3 @@ void models_set_update_status(const models_update_status_t* l_update_status)
 	update_status.auto_update = l_update_status->auto_update;
 	update_status.update_server = stralloc(l_update_status->update_server);
 }
-}

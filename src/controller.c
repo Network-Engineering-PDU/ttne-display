@@ -404,18 +404,33 @@ void controller_post_update_confirm(bool confirm)
 	http_helper_free(&req);
 }
 
+void controller_put_update_settings(bool auto_update, const char* update_server)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/update-settings";
+	cJSON *json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "auto_update", auto_update);
+	cJSON_AddStringToObject(json, "update_server", update_server ? update_server : "");
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err != 0) {
+		LV_LOG_ERROR("Update settings error");
+	}
+	printf("Buffer received: %s\n", req.buffer);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+}
+
 void controller_set_update_server(const char* server)
 {
-	// TODO: Implement update server configuration
-	// This should send the server address/URI to the backend
-	// Example endpoint: BASE_URL "settings/update-server"
+	const models_update_status_t* update_status = models_get_update_status();
+	controller_put_update_settings(update_status->auto_update, server);
 	LV_LOG_USER("Update server set to: %s", server);
 }
 
 void controller_set_auto_update(bool enabled)
 {
-	// TODO: Implement automatic update toggle
-	// This should enable/disable automatic updates on the backend
-	// Example endpoint: BASE_URL "settings/auto-update"
+	const models_update_status_t* update_status = models_get_update_status();
+	controller_put_update_settings(enabled, update_status->update_server);
 	LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
 }
