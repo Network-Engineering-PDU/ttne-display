@@ -10,7 +10,6 @@ extern "C" {
 typedef enum {
 	KB_ABC = 0,
 	KB_NUM = 1,
-	KB_IPADDR = 2,
 } keyboard_type_t;
 
 lv_obj_t* tt_keyboard_create(lv_obj_t* parent);
