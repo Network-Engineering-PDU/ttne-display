@@ -16,6 +16,7 @@
 #define TIMER_MSG_BOX_PERIOD 10000 
 #define TIMER_ROT 5000 
 #define TIMER_CHECK_UPDATE 1000 
+#define TIMER_POLL_UPDATE_STATUS 2000  // Poll every 2 seconds
 
 #ifdef SIMULATOR_ENABLED
 #define MOUNT_DIR "/home/guille"
@@ -27,11 +28,14 @@
 static lv_obj_t* txt_server;
 static lv_obj_t* btn_auto; // This is now a dropdown
 static lv_timer_t* timer_check_update;
+static lv_timer_t* timer_poll_update_status;  // Timer for polling update status
 static char update_dev[20];
 static pid_t update_pid;
+static bool update_confirmation_shown = false;  // Track if we've already shown the confirmation
 
 /* Function prototypes ********************************************************/
 static void timer_check_update_cb(lv_timer_t* timer);
+static void timer_poll_update_status_cb(lv_timer_t* timer);
 static void loader_cb(lv_event_t* e);
 static void txt_server_cb(lv_event_t* e);
 static void btn_auto_cb(lv_event_t* e);
@@ -39,6 +43,7 @@ static void btn_update_cb(lv_event_t* e);
 static void btn_reboot_cb(lv_event_t* e);
 static void btn_factory_cb(lv_event_t* e);
 static void msg_box_update_cb(lv_event_t* e);
+static void msg_box_update_confirmation_cb(lv_event_t* e);
 static void msg_box_reboot_cb(lv_event_t* e);
 static void msg_box_factory_cb(lv_event_t* e);
 
@@ -108,9 +113,32 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("menu.png"));
 
     lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\nReset", ASSET("menu.png"));
+    
+    /* Start polling for pending updates from remote server */
+    update_confirmation_shown = false;
+    timer_poll_update_status = lv_timer_create(timer_poll_update_status_cb, TIMER_POLL_UPDATE_STATUS, NULL);
 }
 
 /* Callbacks ******************************************************************/
+
+static void timer_poll_update_status_cb(lv_timer_t* timer) {
+    // Poll for pending updates from the remote server
+    controller_get_update_status();
+    
+    const models_update_status_t* update_status = models_get_update_status();
+    
+    // Only show confirmation once, when an update is pending and auto_update is enabled
+    if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {
+        update_confirmation_shown = true;
+        
+        // Stop polling while showing confirmation dialog
+        lv_timer_pause(timer);
+        
+        char msg[300];
+        sprintf(msg, "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
+        tt_obj_msg_box_create("Firmware Update", msg, "Updating device...", msg_box_update_confirmation_cb);
+    }
+}
 
 static void btn_auto_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
@@ -164,6 +192,29 @@ static void msg_box_update_cb(lv_event_t* e) {
             lv_scr_load(loader_scr);
         }
         lv_msgbox_close(obj);
+    }
+}
+
+static void msg_box_update_confirmation_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        if (lv_msgbox_get_active_btn(obj) == 0) {
+            // YES - confirm update
+            controller_post_update_confirm(true);
+            lv_obj_t* loader_scr = tt_obj_loader_create("Updating device...", NULL);
+            lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
+            lv_scr_load(loader_scr);
+        } else {
+            // NO - reject update
+            controller_post_update_confirm(false);
+            update_confirmation_shown = false;
+        }
+        lv_msgbox_close(obj);
+        
+        // Resume polling
+        if (timer_poll_update_status != NULL) {
+            lv_timer_resume(timer_poll_update_status);
+        }
     }
 }
 

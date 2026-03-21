@@ -379,6 +379,31 @@ void controller_post_stop_modbus()
 	http_helper_free(&req);
 }
 
+void controller_get_update_status()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/update-status";
+	http_helper_get(&req, url);
+	json_helper_update_update_status(req.buffer);
+	http_helper_free(&req);
+}
+
+void controller_post_update_confirm(bool confirm)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/update-confirm";
+	cJSON *json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "confirm", confirm);
+	char* post_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_post(&req, url, post_data);
+	if (err != 0) {
+		LV_LOG_ERROR("Update confirm error");
+	}
+	printf("Buffer received: %s\n", req.buffer);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+}
+
 void controller_set_update_server(const char* server)
 {
 	// TODO: Implement update server configuration
