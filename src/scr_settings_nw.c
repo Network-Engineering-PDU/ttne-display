@@ -333,6 +333,7 @@ static void update_data()
 
 void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 {
+	/*
 	const models_nw_if_t* nw_if = models_get_nw_if();
 
 	// Settings / Network
@@ -381,4 +382,5 @@ void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_textarea_set_text(txt_dns, nw_if->params.dns);
 
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
+	*/
 }
