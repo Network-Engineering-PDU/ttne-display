@@ -3,6 +3,12 @@
 #include "lvgl/lvgl.h"
 
 #include "scr_settings_nw.h"
+#include "scr_settings_nw_eth.h"
+#include "scr_settings_nw_snmp.h"
+#include "scr_settings_nw_modbus.h"
+#include "scr_settings_nw_ssh.h"
+#include "scr_settings_nw_blue.h"
+#include "scr_settings_nw_ntp_sntp.h"
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -333,54 +339,49 @@ static void update_data()
 
 void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	/*
-	const models_nw_if_t* nw_if = models_get_nw_if();
-
-	// Settings / Network
-	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"Settings / NW setup");
-
-	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
-
-	tt_obj_label_create(nw_cont2, "Conenction type");
-	char* options = "Ethernet\nWiFi";
-	dd = tt_obj_dropdown_create(nw_cont2, options, update_cb);
-	btn_dhcp = tt_obj_btn_toggle_create(nw_cont2, update_cb, "DHCP");
-	lv_obj_add_style(btn_dhcp, &btn_style, 0);
-	lv_obj_set_height(btn_dhcp, 36);
-
-	lbl_wifi_ssid = tt_obj_label_create(nw_cont2, "WiFi SSID");
-	txt_wifi_ssid = tt_obj_txt_create(nw_cont2, "WiFi SSID", txt_cb);
-	lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
-	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_wifi_pass = tt_obj_label_create(nw_cont2, "WiFi password");
-	txt_wifi_pass = tt_obj_txt_create(nw_cont2, "WiFi password", txt_cb);
-	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
-	cbx_pass = tt_obj_checkbox_create(nw_cont2,
-			"Show WiFi password", cbx_pass_cb);
-	lv_textarea_set_password_mode(txt_wifi_pass, true);
-	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_ip = tt_obj_label_create(nw_cont2, "IP Address");
-	txt_ip = tt_obj_txt_create(nw_cont2, "IP Address", txt_num_cb);
-	lv_textarea_set_text(txt_ip, nw_if->params.ip);
-
-	lbl_mask = tt_obj_label_create(nw_cont2, "Subnet Mask");
-	txt_mask = tt_obj_txt_create(nw_cont2, "Subnet Mask", txt_num_cb);
-	lv_textarea_set_text(txt_mask, nw_if->params.mask);
-
-	lbl_gw = tt_obj_label_create(nw_cont2, "Gateway IP");
-	txt_gw = tt_obj_txt_create(nw_cont2, "Gateway IP", txt_num_cb);
-	lv_textarea_set_text(txt_gw, nw_if->params.gw);
-
-	lbl_dns = tt_obj_label_create(nw_cont2, "DNS");
-	txt_dns = tt_obj_txt_create(nw_cont2, "DNS", txt_num_cb);
-	lv_textarea_set_text(txt_dns, nw_if->params.dns);
-
-	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
-	*/
+	lv_obj_t* nw_page = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
+	
+	lv_obj_t* cont = tt_obj_cont_create(nw_page);
+	
+	/* Layout: center grid */
+	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
+	lv_obj_set_flex_align(
+		cont,
+		LV_FLEX_ALIGN_CENTER,
+		LV_FLEX_ALIGN_CENTER,
+		LV_FLEX_ALIGN_CENTER
+	);
+	
+	/* Network option buttons */
+	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(
+		cont, NULL, "Ethernet", ASSET("menu.png")
+	);
+	
+	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(
+		cont, NULL, "SNMP", ASSET("menu.png")
+	);
+	
+	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(
+		cont, NULL, "Modbus", ASSET("menu.png")
+	);
+	
+	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(
+		cont, NULL, "SSH", ASSET("menu.png")
+	);
+	
+	lv_obj_t* btn_blue = tt_obj_btn_mtx_create(
+		cont, NULL, "Bluetooth", ASSET("menu.png")
+	);
+	
+	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(
+		cont, NULL, "NTP_SNTP", ASSET("menu.png")
+	);
+	
+	/* Navigation to individual network settings */
+	scr_settings_nw_eth_create(menu, btn_eth);
+	scr_settings_nw_snmp_create(menu, btn_snmp);
+	scr_settings_nw_modbus_create(menu, btn_modbus);
+	scr_settings_nw_ssh_create(menu, btn_ssh);
+	scr_settings_nw_blue_create(menu, btn_blue);
+	scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
 }
