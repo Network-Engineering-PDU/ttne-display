@@ -6,7 +6,7 @@ static lv_obj_t* ntp_enable_cbx;
 static lv_obj_t* ntp_offset_combo;
 static lv_obj_t* ntp_server_txt;
 
-lv_obj_t* scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
+void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 {
     lv_obj_t* ntp_page = tt_obj_menu_page_create(menu, btn, NULL, "NTP - SNTP");
     lv_obj_t* cont = tt_obj_cont_create(ntp_page);
@@ -34,6 +34,4 @@ lv_obj_t* scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
     
     tt_obj_btn_std_create(btn_row, NULL, "OK");
     tt_obj_btn_std_create(btn_row, NULL, "Cancel");
-    
-    return ntp_page;
 }

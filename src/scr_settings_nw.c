@@ -3,12 +3,6 @@
 #include "lvgl/lvgl.h"
 
 #include "scr_settings_nw.h"
-#include "scr_settings_nw_eth.h"
-#include "scr_settings_nw_snmp.h"
-#include "scr_settings_nw_modbus.h"
-#include "scr_settings_nw_ssh.h"
-#include "scr_settings_nw_blue.h"
-#include "scr_settings_nw_ntp_sntp.h"
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -337,62 +331,54 @@ static void update_data()
 
 /* Public functions ***********************************************************/
 
-static void protocol_btn_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	if (code == LV_EVENT_CLICKED) {
-		lv_obj_t* btn = lv_event_get_target(e);
-		lv_obj_t* menu = lv_event_get_user_data(e);
-		lv_obj_t* page = lv_obj_get_user_data(btn);
-		
-		if (page) {
-			lv_menu_set_focused(menu, page);
-		}
-	}
-}
-
 void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	/* Create main Networks page with grid layout */
-	lv_obj_t* nw_page = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
-	lv_obj_t* cont = tt_obj_cont_create(nw_page);
+	const models_nw_if_t* nw_if = models_get_nw_if();
 
-	/* Layout: center grid with 6 protocol buttons */
-	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
-	lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	// Settings / Network
+	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
+			"Settings / NW setup");
 
-	/* Create 6 protocol buttons */
-	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(cont, NULL, "Ethernet", NULL);
-	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(cont, NULL, "SNMP", NULL);
-	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(cont, NULL, "Modbus", NULL);
-	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(cont, NULL, "SSH", NULL);
-	lv_obj_t* btn_bluetooth = tt_obj_btn_mtx_create(cont, NULL, "Bluetooth", NULL);
-	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(cont, NULL, "NTP - SNTP", NULL);
+	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
-	/* Create all protocol sub-pages and map them */
-	lv_obj_t* eth_page = scr_settings_nw_eth_create(menu, btn_eth);
-	lv_obj_t* snmp_page = scr_settings_nw_snmp_create(menu, btn_snmp);
-	lv_obj_t* modbus_page = scr_settings_nw_modbus_create(menu, btn_modbus);
-	lv_obj_t* ssh_page = scr_settings_nw_ssh_create(menu, btn_ssh);
-	lv_obj_t* bluetooth_page = scr_settings_nw_blue_create(menu, btn_bluetooth);
-	lv_obj_t* ntp_page = scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+	tt_obj_label_create(nw_cont2, "Conenction type");
+	char* options = "Ethernet\nWiFi";
+	dd = tt_obj_dropdown_create(nw_cont2, options, update_cb);
+	btn_dhcp = tt_obj_btn_toggle_create(nw_cont2, update_cb, "DHCP");
+	lv_obj_add_style(btn_dhcp, &btn_style, 0);
+	lv_obj_set_height(btn_dhcp, 36);
 
-	/* Store page references in button user_data and add click callbacks */
-	lv_obj_set_user_data(btn_eth, eth_page);
-	lv_obj_add_event_cb(btn_eth, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+	lbl_wifi_ssid = tt_obj_label_create(nw_cont2, "WiFi SSID");
+	txt_wifi_ssid = tt_obj_txt_create(nw_cont2, "WiFi SSID", txt_cb);
+	lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
+	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
 
-	lv_obj_set_user_data(btn_snmp, snmp_page);
-	lv_obj_add_event_cb(btn_snmp, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+	lbl_wifi_pass = tt_obj_label_create(nw_cont2, "WiFi password");
+	txt_wifi_pass = tt_obj_txt_create(nw_cont2, "WiFi password", txt_cb);
+	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
+	cbx_pass = tt_obj_checkbox_create(nw_cont2,
+			"Show WiFi password", cbx_pass_cb);
+	lv_textarea_set_password_mode(txt_wifi_pass, true);
+	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
 
-	lv_obj_set_user_data(btn_modbus, modbus_page);
-	lv_obj_add_event_cb(btn_modbus, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+	lbl_ip = tt_obj_label_create(nw_cont2, "IP Address");
+	txt_ip = tt_obj_txt_create(nw_cont2, "IP Address", txt_num_cb);
+	lv_textarea_set_text(txt_ip, nw_if->params.ip);
 
-	lv_obj_set_user_data(btn_ssh, ssh_page);
-	lv_obj_add_event_cb(btn_ssh, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+	lbl_mask = tt_obj_label_create(nw_cont2, "Subnet Mask");
+	txt_mask = tt_obj_txt_create(nw_cont2, "Subnet Mask", txt_num_cb);
+	lv_textarea_set_text(txt_mask, nw_if->params.mask);
 
-	lv_obj_set_user_data(btn_bluetooth, bluetooth_page);
-	lv_obj_add_event_cb(btn_bluetooth, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+	lbl_gw = tt_obj_label_create(nw_cont2, "Gateway IP");
+	txt_gw = tt_obj_txt_create(nw_cont2, "Gateway IP", txt_num_cb);
+	lv_textarea_set_text(txt_gw, nw_if->params.gw);
 
-	lv_obj_set_user_data(btn_ntp, ntp_page);
-	lv_obj_add_event_cb(btn_ntp, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+	lbl_dns = tt_obj_label_create(nw_cont2, "DNS");
+	txt_dns = tt_obj_txt_create(nw_cont2, "DNS", txt_num_cb);
+	lv_textarea_set_text(txt_dns, nw_if->params.dns);
+
+	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
 }
