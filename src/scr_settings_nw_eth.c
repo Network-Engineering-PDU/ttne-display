@@ -10,6 +10,8 @@ static lv_obj_t* eth_mask_txt;
 static lv_obj_t* eth_gw_txt;
 static lv_obj_t* eth_ssid_txt;
 static lv_obj_t* eth_pass_txt;
+static lv_obj_t* eth_ssid_lbl;
+static lv_obj_t* eth_pass_lbl;
 static lv_obj_t* eth_config_cont;
 
 static void eth_mode_changed(lv_event_t* e)
@@ -19,19 +21,27 @@ static void eth_mode_changed(lv_event_t* e)
     /* Update UI based on selected mode */
     switch(selected) {
         case 0: /* Single LAN */
+            lv_obj_add_flag(eth_ssid_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(eth_ssid_txt, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(eth_pass_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(eth_pass_txt, LV_OBJ_FLAG_HIDDEN);
             break;
         case 1: /* WIFI */
+            lv_obj_clear_flag(eth_ssid_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(eth_ssid_txt, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(eth_pass_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(eth_pass_txt, LV_OBJ_FLAG_HIDDEN);
             break;
         case 2: /* Dual LAN */
+            lv_obj_add_flag(eth_ssid_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(eth_ssid_txt, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(eth_pass_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(eth_pass_txt, LV_OBJ_FLAG_HIDDEN);
             break;
         case 3: /* LAN & WIFI */
+            lv_obj_clear_flag(eth_ssid_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(eth_ssid_txt, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(eth_pass_lbl, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(eth_pass_txt, LV_OBJ_FLAG_HIDDEN);
             break;
         default:
@@ -67,13 +77,15 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
     eth_gw_txt = tt_obj_txt_create(cont, "Gateway", NULL);
 
     /* WIFI SSID (hidden by default for Single LAN mode) */
-    tt_obj_label_create(cont, "SSID");
+    eth_ssid_lbl = tt_obj_label_create(cont, "SSID");
     eth_ssid_txt = tt_obj_txt_create(cont, "SSID", NULL);
+    lv_obj_add_flag(eth_ssid_lbl, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(eth_ssid_txt, LV_OBJ_FLAG_HIDDEN);
 
     /* WIFI Password (hidden by default for Single LAN mode) */
-    tt_obj_label_create(cont, "Password");
+    eth_pass_lbl = tt_obj_label_create(cont, "Password");
     eth_pass_txt = tt_obj_txt_create(cont, "Password", NULL);
+    lv_obj_add_flag(eth_pass_lbl, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(eth_pass_txt, LV_OBJ_FLAG_HIDDEN);
 
     /* OK / Cancel buttons */
