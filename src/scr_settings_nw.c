@@ -337,6 +337,20 @@ static void update_data()
 
 /* Public functions ***********************************************************/
 
+static void protocol_btn_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	if (code == LV_EVENT_CLICKED) {
+		lv_obj_t* btn = lv_event_get_target(e);
+		lv_obj_t* menu = lv_event_get_user_data(e);
+		lv_obj_t* page = lv_obj_get_user_data(btn);
+		
+		if (page) {
+			lv_menu_set_focused(menu, page);
+		}
+	}
+}
+
 void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 {
 	/* Create main Networks page with grid layout */
@@ -356,10 +370,29 @@ void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(cont, NULL, "NTP - SNTP", NULL);
 
 	/* Create all protocol sub-pages and map them */
-	scr_settings_nw_eth_create(menu, btn_eth);
-	scr_settings_nw_snmp_create(menu, btn_snmp);
-	scr_settings_nw_modbus_create(menu, btn_modbus);
-	scr_settings_nw_ssh_create(menu, btn_ssh);
-	scr_settings_nw_blue_create(menu, btn_bluetooth);
-	scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+	lv_obj_t* eth_page = scr_settings_nw_eth_create(menu, btn_eth);
+	lv_obj_t* snmp_page = scr_settings_nw_snmp_create(menu, btn_snmp);
+	lv_obj_t* modbus_page = scr_settings_nw_modbus_create(menu, btn_modbus);
+	lv_obj_t* ssh_page = scr_settings_nw_ssh_create(menu, btn_ssh);
+	lv_obj_t* bluetooth_page = scr_settings_nw_blue_create(menu, btn_bluetooth);
+	lv_obj_t* ntp_page = scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+
+	/* Store page references in button user_data and add click callbacks */
+	lv_obj_set_user_data(btn_eth, eth_page);
+	lv_obj_add_event_cb(btn_eth, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+
+	lv_obj_set_user_data(btn_snmp, snmp_page);
+	lv_obj_add_event_cb(btn_snmp, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+
+	lv_obj_set_user_data(btn_modbus, modbus_page);
+	lv_obj_add_event_cb(btn_modbus, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+
+	lv_obj_set_user_data(btn_ssh, ssh_page);
+	lv_obj_add_event_cb(btn_ssh, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+
+	lv_obj_set_user_data(btn_bluetooth, bluetooth_page);
+	lv_obj_add_event_cb(btn_bluetooth, protocol_btn_cb, LV_EVENT_CLICKED, menu);
+
+	lv_obj_set_user_data(btn_ntp, ntp_page);
+	lv_obj_add_event_cb(btn_ntp, protocol_btn_cb, LV_EVENT_CLICKED, menu);
 }

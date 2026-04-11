@@ -7,7 +7,8 @@
  * @brief Create Ethernet settings sub-page
  * @param menu LVGL menu object
  * @param btn LVGL button object for back navigation
+ * @return Pointer to the created page object
  */
-void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn);
+lv_obj_t* scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn);
 
 #endif /* SCR_SETTINGS_NW_ETH_H */

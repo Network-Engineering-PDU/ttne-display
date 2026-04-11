@@ -27,7 +27,7 @@ static void snmp_enable_changed(lv_event_t* e)
     }
 }
 
-void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
+lv_obj_t* scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 {
     lv_obj_t* snmp_page = tt_obj_menu_page_create(menu, btn, NULL, "SNMP");
     lv_obj_t* cont = tt_obj_cont_create(snmp_page);
@@ -65,4 +65,6 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
     
     tt_obj_btn_std_create(btn_row, NULL, "OK");
     tt_obj_btn_std_create(btn_row, NULL, "Cancel");
+    
+    return snmp_page;
 }
