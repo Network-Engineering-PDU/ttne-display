@@ -13,10 +13,18 @@ static lv_obj_t* trap_ip_txts[4];
 static void snmp_enable_changed(lv_event_t* e)
 {
     bool enabled = lv_obj_get_state(snmp_enable_cbx) & LV_STATE_CHECKED;
-    lv_obj_set_enabled(snmp_version_combo, enabled);
-    lv_obj_set_enabled(set_enable_cbx, enabled);
-    lv_obj_set_enabled(community_txt, enabled);
-    lv_obj_set_enabled(traps_enable_cbx, enabled);
+    
+    if (enabled) {
+        lv_obj_clear_state(snmp_version_combo, LV_STATE_DISABLED);
+        lv_obj_clear_state(set_enable_cbx, LV_STATE_DISABLED);
+        lv_obj_clear_state(community_txt, LV_STATE_DISABLED);
+        lv_obj_clear_state(traps_enable_cbx, LV_STATE_DISABLED);
+    } else {
+        lv_obj_add_state(snmp_version_combo, LV_STATE_DISABLED);
+        lv_obj_add_state(set_enable_cbx, LV_STATE_DISABLED);
+        lv_obj_add_state(community_txt, LV_STATE_DISABLED);
+        lv_obj_add_state(traps_enable_cbx, LV_STATE_DISABLED);
+    }
 }
 
 void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
