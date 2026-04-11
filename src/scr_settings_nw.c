@@ -57,11 +57,11 @@ static void btn_nw_settings_cb(lv_event_t* e);
 static void txt_cb(lv_event_t* e);
 static void txt_num_cb(lv_event_t* e);
 static void cbx_pass_cb(lv_event_t* e);
-
 static void update_data();
 static bool is_ethernet();
 static bool is_static();
 */
+
 
 /* Function Prototypes for Network Sub-pages */
 static void menu_nw_cb(lv_event_t* e);
@@ -76,7 +76,7 @@ static void scr_settings_bluetooth_create(lv_obj_t* menu, lv_obj_t* btn);
 static void scr_settings_ntp_create(lv_obj_t* menu, lv_obj_t* btn);
 
 /* Callbacks ******************************************************************/
-
+/*
 static void menu_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -110,7 +110,8 @@ static void menu_cb(lv_event_t* e)
 		}
 	}
 }
-
+*/
+/*
 static void update_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -119,7 +120,8 @@ static void update_cb(lv_event_t* e)
 		update_data();
 	}
 }
-
+*/
+/*
 static void msg_box_timer_cb(lv_timer_t* timer)
 {
 	lv_timer_del(timer);
@@ -154,7 +156,8 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 		return;
 	}
 }
-
+*/
+/*
 static void loader_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -166,7 +169,8 @@ static void loader_cb(lv_event_t* e)
 		lv_obj_del(obj);
 	}
 }
-
+*/
+/*
 static void msg_box_nw_if_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -185,7 +189,8 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 		lv_msgbox_close(obj);
 	}
 }
-
+*/
+/*
 static void btn_nw_settings_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -249,7 +254,8 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				msg, "Connecting to internet...", msg_box_nw_if_cb);
 	}
 }
-
+*/
+/*
 static void txt_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -263,7 +269,8 @@ static void txt_cb(lv_event_t* e)
 		// Ready event from keyboard
 	}
 }
-
+*/
+/*
 static void txt_num_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -277,7 +284,8 @@ static void txt_num_cb(lv_event_t* e)
 		// Ready event from keyboard
 	}
 }
-
+*/
+/*
 static void cbx_pass_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -291,21 +299,23 @@ static void cbx_pass_cb(lv_event_t* e)
 		}
 	}
 }
-
+*/
 /* Function definitions *******************************************************/
-
+/*
 static bool is_ethernet()
 {
 	const models_nw_if_t* nw_if = models_get_nw_if();
 	return (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC);
 }
-
+*/
+/*
 static bool is_static()
 {
 	const models_nw_if_t* nw_if = models_get_nw_if();
 	return (nw_if->type == WIFI_STATIC || nw_if->type == ETH_STATIC);
 }
-
+*/
+/*
 static void update_data()
 {
 	if (lv_dropdown_get_selected(dd) == 0) { // Ethernet
@@ -341,7 +351,7 @@ static void update_data()
 		lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
 	}
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * @brief Menu callback for Networks page
