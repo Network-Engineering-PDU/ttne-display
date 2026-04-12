@@ -6,6 +6,7 @@
 
 #include "scr_settings.h"
 #include "scr_settings_nw.h"
+#include "scr_settings_nw_menu.h"
 #include "scr_settings_vis.h"
 #include "scr_settings_sys.h"
 #include "scr_settings_upd.h"
@@ -493,7 +494,7 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
     /* Navigation (will be implemented step by step) */
     scr_settings_vis_create(menu, btn_vis);
-    scr_settings_nw_create(menu, btn_nw);
+    scr_settings_nw_menu_create(menu, btn_nw);
     scr_settings_sys_create(menu, btn_sys);
     scr_settings_update_create(menu, btn_update);
 }

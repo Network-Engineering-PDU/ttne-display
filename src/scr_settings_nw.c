@@ -3,12 +3,6 @@
 #include "lvgl/lvgl.h"
 
 #include "scr_settings_nw.h"
-#include "scr_settings_nw_eth.h"
-#include "scr_settings_nw_snmp.h"
-#include "scr_settings_nw_modbus.h"
-#include "scr_settings_nw_ssh.h"
-#include "scr_settings_nw_blue.h"
-#include "scr_settings_nw_ntp_sntp.h"
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -27,8 +21,7 @@ typedef enum {
 } dd_opts_t;
 
 /* Global variables ***********************************************************/
-static lv_obj_t* menu;
-static lv_obj_t* settings_nw_page;
+
 static models_nw_if_t nw_ifaces;
 
 static lv_obj_t* loader_scr;
@@ -68,23 +61,6 @@ static void cbx_pass_cb(lv_event_t* e);
 static void update_data();
 static bool is_ethernet();
 static bool is_static();
-
-/* Function prototypes ********************************************************/
-
-static void menu_header_cb(lv_event_t* e);
-
-/* Callbacks ******************************************************************/
-
-static void menu_header_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* menu_header_btn = lv_event_get_user_data(e);
-	if (code == LV_EVENT_CLICKED) {
-		if (menu_header_btn != NULL) {
-			lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
-		}
-	}
-}
 
 /* Callbacks ******************************************************************/
 
@@ -355,49 +331,54 @@ static void update_data()
 
 /* Public functions ***********************************************************/
 
-void scr_settings_nw_create(lv_obj_t* l_menu, lv_obj_t* btn)
+void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	menu = lv_menu_create(lv_scr_act());
-	lv_obj_set_size(menu, lv_disp_get_hor_res(NULL), lv_disp_get_ver_res(NULL));
-	settings_nw_page = lv_menu_page_create(menu, NULL);
-	lv_obj_t* main_cont = lv_menu_cont_create(settings_nw_page);
-	lv_obj_set_flex_flow(main_cont, LV_FLEX_FLOW_ROW_WRAP);
-	// lv_obj_set_size(main_cont, LV_PCT(100), LV_PCT(100));
+	const models_nw_if_t* nw_if = models_get_nw_if();
 
-	lv_obj_set_style_bg_color(menu, lv_color_hex(TT_COLOR_BG2), 0);
+	// Settings / Network
+	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
+			"Settings / NW setup");
 
-	lv_obj_t* menu_header = lv_menu_get_main_header(menu);
-	lv_obj_set_height(menu_header, 40);
-	lv_obj_add_style(menu_header, &header_style, 0);
-	lv_obj_add_flag(menu_header, LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
-	lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
-	lv_obj_set_size(menu_header_btn, 30, 30);
-	lv_obj_set_flex_flow(menu_header_btn, LV_FLEX_FLOW_COLUMN);
-	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
-	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_CLICKABLE);
+	tt_obj_label_create(nw_cont2, "Conenction type");
+	char* options = "Ethernet\nWiFi";
+	dd = tt_obj_dropdown_create(nw_cont2, options, update_cb);
+	btn_dhcp = tt_obj_btn_toggle_create(nw_cont2, update_cb, "DHCP");
+	lv_obj_add_style(btn_dhcp, &btn_style, 0);
+	lv_obj_set_height(btn_dhcp, 36);
 
-	lv_obj_add_event_cb(menu_header, menu_header_cb, LV_EVENT_ALL, menu_header_btn);
+	lbl_wifi_ssid = tt_obj_label_create(nw_cont2, "WiFi SSID");
+	txt_wifi_ssid = tt_obj_txt_create(nw_cont2, "WiFi SSID", txt_cb);
+	lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
+	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
 
-	lv_obj_t* icon = lv_obj_get_child(menu_header_btn, 0);
-	lv_obj_set_layout(menu_header_btn, 0);
-	lv_obj_align(icon, LV_ALIGN_CENTER, 0, 0);
+	lbl_wifi_pass = tt_obj_label_create(nw_cont2, "WiFi password");
+	txt_wifi_pass = tt_obj_txt_create(nw_cont2, "WiFi password", txt_cb);
+	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
+	cbx_pass = tt_obj_checkbox_create(nw_cont2,
+			"Show WiFi password", cbx_pass_cb);
+	lv_textarea_set_password_mode(txt_wifi_pass, true);
+	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
 
-	lv_menu_set_page_title_static(settings_nw_page, "Networks");
+	lbl_ip = tt_obj_label_create(nw_cont2, "IP Address");
+	txt_ip = tt_obj_txt_create(nw_cont2, "IP Address", txt_num_cb);
+	lv_textarea_set_text(txt_ip, nw_if->params.ip);
 
-	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(main_cont, NULL, "Ethernet", ASSET("menu.png"));
-	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(main_cont, NULL, "SNMP", ASSET("menu.png"));
-	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(main_cont, NULL, "Modbus", ASSET("menu.png"));
-	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(main_cont, NULL, "SSH", ASSET("menu.png"));
-	lv_obj_t* btn_blue = tt_obj_btn_mtx_create(main_cont, NULL, "Bluetooth", ASSET("menu.png"));
-	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(main_cont, NULL, "NTP_SNTP", ASSET("menu.png"));
+	lbl_mask = tt_obj_label_create(nw_cont2, "Subnet Mask");
+	txt_mask = tt_obj_txt_create(nw_cont2, "Subnet Mask", txt_num_cb);
+	lv_textarea_set_text(txt_mask, nw_if->params.mask);
 
-	scr_settings_nw_eth_create(menu, btn_eth);
-	scr_settings_nw_snmp_create(menu, btn_snmp);
-	scr_settings_nw_modbus_create(menu, btn_modbus);
-	scr_settings_nw_ssh_create(menu, btn_ssh);
-	scr_settings_nw_blue_create(menu, btn_blue);
-	scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+	lbl_gw = tt_obj_label_create(nw_cont2, "Gateway IP");
+	txt_gw = tt_obj_txt_create(nw_cont2, "Gateway IP", txt_num_cb);
+	lv_textarea_set_text(txt_gw, nw_if->params.gw);
 
-	lv_menu_set_page(menu, settings_nw_page);
+	lbl_dns = tt_obj_label_create(nw_cont2, "DNS");
+	txt_dns = tt_obj_txt_create(nw_cont2, "DNS", txt_num_cb);
+	lv_textarea_set_text(txt_dns, nw_if->params.dns);
+
+	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
 }
