@@ -40,8 +40,7 @@ static void menu_cb(lv_event_t* e)
 
 void scr_settings_nw_menu_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	lv_obj_t* nw_menu_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"Networks");
+	lv_obj_t* nw_menu_cont = tt_obj_menu_page_create(menu, btn, menu_cb,"Networks");
 
 	lv_obj_t* nw_options_cont = tt_obj_cont_create(nw_menu_cont);
 
