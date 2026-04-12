@@ -483,21 +483,13 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
     );
 
     /* HUB buttons */
-    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(
-        cont, NULL, "Visual", ASSET("menu.png")
-    );
+    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(cont, NULL, "Visual", ASSET("menu.png"));
 
-    lv_obj_t* btn_nw = tt_obj_btn_mtx_create(
-        cont, NULL, "Networks", ASSET("menu.png")
-    );
+    lv_obj_t* btn_nw = tt_obj_btn_mtx_create(cont, NULL, "Networks", ASSET("menu.png"));
 
-    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(
-        cont, NULL, "Sys setup", ASSET("menu.png")
-    );
+    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(cont, NULL, "Sys setup", ASSET("menu.png"));
 
-    lv_obj_t* btn_update = tt_obj_btn_mtx_create(
-        cont, NULL, "Sys update", ASSET("menu.png")
-    );
+    lv_obj_t* btn_update = tt_obj_btn_mtx_create(cont, NULL, "Sys update", ASSET("menu.png"));
 
     /* Navigation (will be implemented step by step) */
     scr_settings_vis_create(menu, btn_vis);

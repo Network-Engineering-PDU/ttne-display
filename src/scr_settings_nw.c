@@ -365,15 +365,15 @@ void scr_settings_nw_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
 	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(cont, NULL, "SSH", ASSET("menu.png"));
 
-	lv_obj_t* btn_blue = tt_obj_btn_mtx_create(cont, NULL, "Bluetooth", ASSET("menu.png"));
+	//lv_obj_t* btn_blue = tt_obj_btn_mtx_create(cont, NULL, "Bluetooth", ASSET("menu.png"));
 
-	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(cont, NULL, "NTP_SNTP", ASSET("menu.png"));
+	//lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(cont, NULL, "NTP_SNTP", ASSET("menu.png"));
 
 	/* Navigation to individual network settings */
 	scr_settings_nw_eth_create(menu, btn_eth);
 	scr_settings_nw_snmp_create(menu, btn_snmp);
 	scr_settings_nw_modbus_create(menu, btn_modbus);
 	scr_settings_nw_ssh_create(menu, btn_ssh);
-	scr_settings_nw_blue_create(menu, btn_blue);
-	scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+	//scr_settings_nw_blue_create(menu, btn_blue);
+	//scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
 }
