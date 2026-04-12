@@ -28,6 +28,7 @@ typedef enum {
 
 /* Global variables ***********************************************************/
 static lv_obj_t* menu;
+static lv_obj_t* settings_nw_page;
 static models_nw_if_t nw_ifaces;
 
 static lv_obj_t* loader_scr;
@@ -67,6 +68,23 @@ static void cbx_pass_cb(lv_event_t* e);
 static void update_data();
 static bool is_ethernet();
 static bool is_static();
+
+/* Function prototypes ********************************************************/
+
+static void menu_header_cb(lv_event_t* e);
+
+/* Callbacks ******************************************************************/
+
+static void menu_header_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* menu_header_btn = lv_event_get_user_data(e);
+	if (code == LV_EVENT_CLICKED) {
+		if (menu_header_btn != NULL) {
+			lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
+		}
+	}
+}
 
 /* Callbacks ******************************************************************/
 
@@ -339,41 +357,47 @@ static void update_data()
 
 void scr_settings_nw_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {
-	menu = l_menu;
+	menu = lv_menu_create(lv_scr_act());
+	lv_obj_set_size(menu, lv_disp_get_hor_res(NULL), lv_disp_get_ver_res(NULL));
+	settings_nw_page = lv_menu_page_create(menu, NULL);
+	lv_obj_t* main_cont = lv_menu_cont_create(settings_nw_page);
+	lv_obj_set_flex_flow(main_cont, LV_FLEX_FLOW_ROW_WRAP);
+	// lv_obj_set_size(main_cont, LV_PCT(100), LV_PCT(100));
 
-	lv_obj_t* settings_cont_nw = tt_obj_menu_page_create(menu, btn, menu_cb, "Networks");
+	lv_obj_set_style_bg_color(menu, lv_color_hex(TT_COLOR_BG2), 0);
 
-    lv_obj_t* settings_page_nw = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
+	lv_obj_t* menu_header = lv_menu_get_main_header(menu);
+	lv_obj_set_height(menu_header, 40);
+	lv_obj_add_style(menu_header, &header_style, 0);
+	lv_obj_add_flag(menu_header, LV_OBJ_FLAG_CLICKABLE);
 
-    lv_obj_t* cont = tt_obj_cont_create(settings_page_nw);
+	lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
+	lv_obj_set_size(menu_header_btn, 30, 30);
+	lv_obj_set_flex_flow(menu_header_btn, LV_FLEX_FLOW_COLUMN);
+	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
+	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_CLICKABLE);
 
-    /* Layout: center grid like Page 2 */
-    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
-	lv_obj_set_flex_align(
-		cont,
-		LV_FLEX_ALIGN_CENTER,
-		LV_FLEX_ALIGN_CENTER,
-		LV_FLEX_ALIGN_CENTER
-	);
+	lv_obj_add_event_cb(menu_header, menu_header_cb, LV_EVENT_ALL, menu_header_btn);
 
-    /* HUB buttons */
-	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(cont, NULL, "Ethernet", ASSET("menu.png"));
+	lv_obj_t* icon = lv_obj_get_child(menu_header_btn, 0);
+	lv_obj_set_layout(menu_header_btn, 0);
+	lv_obj_align(icon, LV_ALIGN_CENTER, 0, 0);
 
-	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(cont, NULL, "SNMP", ASSET("menu.png"));
+	lv_menu_set_page_title_static(settings_nw_page, "Networks");
 
-	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(cont, NULL, "Modbus", ASSET("menu.png"));
+	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(main_cont, NULL, "Ethernet", ASSET("menu.png"));
+	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(main_cont, NULL, "SNMP", ASSET("menu.png"));
+	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(main_cont, NULL, "Modbus", ASSET("menu.png"));
+	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(main_cont, NULL, "SSH", ASSET("menu.png"));
+	lv_obj_t* btn_blue = tt_obj_btn_mtx_create(main_cont, NULL, "Bluetooth", ASSET("menu.png"));
+	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(main_cont, NULL, "NTP_SNTP", ASSET("menu.png"));
 
-	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(cont, NULL, "SSH", ASSET("menu.png"));
-
-	//lv_obj_t* btn_blue = tt_obj_btn_mtx_create(cont, NULL, "Bluetooth", ASSET("menu.png"));
-
-	//lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(cont, NULL, "NTP_SNTP", ASSET("menu.png"));
-
-	/* Navigation to individual network settings */
 	scr_settings_nw_eth_create(menu, btn_eth);
 	scr_settings_nw_snmp_create(menu, btn_snmp);
 	scr_settings_nw_modbus_create(menu, btn_modbus);
 	scr_settings_nw_ssh_create(menu, btn_ssh);
-	//scr_settings_nw_blue_create(menu, btn_blue);
-	//scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+	scr_settings_nw_blue_create(menu, btn_blue);
+	scr_settings_nw_ntp_sntp_create(menu, btn_ntp);
+
+	lv_menu_set_page(menu, settings_nw_page);
 }
