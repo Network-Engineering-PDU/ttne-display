@@ -27,7 +27,7 @@ typedef enum {
 } dd_opts_t;
 
 /* Global variables ***********************************************************/
-
+static lv_obj_t* menu;
 static models_nw_if_t nw_ifaces;
 
 static lv_obj_t* loader_scr;
@@ -337,46 +337,38 @@ static void update_data()
 
 /* Public functions ***********************************************************/
 
-void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
+void scr_settings_nw_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {
-	lv_obj_t* nw_page = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
-	
-	lv_obj_t* cont = tt_obj_cont_create(nw_page);
-	
-	/* Layout: center grid */
-	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
+	menu = l_menu;
+
+	lv_obj_t* settings_cont_nw = tt_obj_menu_page_create(menu, btn, menu_cb, "Networks");
+
+    lv_obj_t* settings_page_nw = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
+
+    lv_obj_t* cont = tt_obj_cont_create(settings_page_nw);
+
+    /* Layout: center grid like Page 2 */
+    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
 	lv_obj_set_flex_align(
 		cont,
 		LV_FLEX_ALIGN_CENTER,
 		LV_FLEX_ALIGN_CENTER,
 		LV_FLEX_ALIGN_CENTER
 	);
-	
-	/* Network option buttons */
-	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(
-		cont, NULL, "Ethernet", ASSET("menu.png")
-	);
-	
-	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(
-		cont, NULL, "SNMP", ASSET("menu.png")
-	);
-	
-	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(
-		cont, NULL, "Modbus", ASSET("menu.png")
-	);
-	
-	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(
-		cont, NULL, "SSH", ASSET("menu.png")
-	);
-	
-	lv_obj_t* btn_blue = tt_obj_btn_mtx_create(
-		cont, NULL, "Bluetooth", ASSET("menu.png")
-	);
-	
-	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(
-		cont, NULL, "NTP_SNTP", ASSET("menu.png")
-	);
-	
+
+    /* HUB buttons */
+	lv_obj_t* btn_eth = tt_obj_btn_mtx_create(cont, NULL, "Ethernet", ASSET("menu.png"));
+
+	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(cont, NULL, "SNMP", ASSET("menu.png"));
+
+	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(cont, NULL, "Modbus", ASSET("menu.png"));
+
+	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(cont, NULL, "SSH", ASSET("menu.png"));
+
+	lv_obj_t* btn_blue = tt_obj_btn_mtx_create(cont, NULL, "Bluetooth", ASSET("menu.png"));
+
+	lv_obj_t* btn_ntp = tt_obj_btn_mtx_create(cont, NULL, "NTP_SNTP", ASSET("menu.png"));
+
 	/* Navigation to individual network settings */
 	scr_settings_nw_eth_create(menu, btn_eth);
 	scr_settings_nw_snmp_create(menu, btn_snmp);

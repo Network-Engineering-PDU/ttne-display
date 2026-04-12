@@ -79,8 +79,7 @@ void ttne_display(void)
 	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_CLICKABLE);
 
-	lv_obj_add_event_cb(menu_header, menu_header_cb, LV_EVENT_ALL,
-			menu_header_btn);
+	lv_obj_add_event_cb(menu_header, menu_header_cb, LV_EVENT_ALL, menu_header_btn);
 
 	lv_obj_t* icon = lv_obj_get_child(menu_header_btn, 0);
 	lv_obj_set_layout(menu_header_btn, 0);
@@ -88,18 +87,12 @@ void ttne_display(void)
 
 	lv_menu_set_page_title_static(main_page, "Network Engineering");
 
-	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, "INFO",
-			ASSET("menu.png"));
-	lv_obj_t* btn_alarms = tt_obj_btn_mtx_create(main_cont, NULL,"ALARMS",
-			ASSET("alarms.png"));
-	lv_obj_t* btn_power = tt_obj_btn_mtx_create(main_cont, NULL, "POWER",
-			ASSET("power.png"));
-	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, "OUTLETS",
-			ASSET("outlets.png"));
-	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, "SENSORS",
-			ASSET("sensors.png"));
-	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS",
-			ASSET("settings.png"));
+	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, "INFO", ASSET("menu.png"));
+	lv_obj_t* btn_alarms = tt_obj_btn_mtx_create(main_cont, NULL,"ALARMS", ASSET("alarms.png"));
+	lv_obj_t* btn_power = tt_obj_btn_mtx_create(main_cont, NULL, "POWER", ASSET("power.png"));
+	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, "OUTLETS", ASSET("outlets.png"));
+	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, "SENSORS", ASSET("sensors.png"));
+	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS", ASSET("settings.png"));
 
 	scr_info_create(menu, btn_info);
 	scr_alarms_create(menu, btn_alarms);
