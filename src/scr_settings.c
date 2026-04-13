@@ -6,6 +6,10 @@
 
 #include "scr_settings.h"
 #include "scr_settings_nw.h"
+#include "scr_settings_vis.h"
+#include "scr_settings_sys.h"
+#include "scr_settings_upd.h"
+#include "scr_settings_nw_menu.h"
 #include "scr_diagnose.h"
 #include "scr_keyboard.h"
 #include "scr_support.h"
@@ -543,6 +547,7 @@ static char* get_last_element(const char* str)
 
 void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {
+	/*
 	menu = l_menu;
 
 	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
@@ -592,4 +597,40 @@ void scr_settings_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	tt_obj_label_create(settings_diag_cont, "System diagnosis");
 	tt_obj_btn_std_create(settings_diag_cont, btn_diag_cb, "DIAGNOSE");
 	tt_obj_btn_std_create(settings_diag_cont, btn_support_cb, "SUPPORT");
+	
+
+	    menu = l_menu;
+
+    // 1. Create the detailed settings page hub (Back button/header handled by menu system)
+    lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
+    
+    // Enable scrolling if necessary, though this specific layout doesn't require it
+    lv_obj_set_scrollbar_mode(settings_page, LV_SCROLLBAR_MODE_AUTO);
+
+    // Main central container
+    lv_obj_t* cont = tt_obj_cont_create(settings_page);
+    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_gap(cont, 15, 0);
+    lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    
+
+    // Create Row 1: Fits the top 3 buttons (Visualization, Networks, System setup)
+    lv_obj_t* row1 = create_button_row(cont);
+    
+    lv_obj_t* btn_vis = create_hub_btn(row1, "Visualisation", ASSET("menu.png"), NULL);
+    lv_obj_t* btn_nw = create_hub_btn(row1, "Networks", ASSET("menu.png"), NULL);
+    lv_obj_t* btn_sys = create_hub_btn(row1, "System setup", ASSET("menu.png"), NULL);
+
+    // Create Row 2: Fits the bottom centered button (PDU update)
+    lv_obj_t* row2 = create_button_row(cont);
+    
+    lv_obj_t* btn_update = create_hub_btn(row2, "PDU update", ASSET("menu.png"), NULL);
+
+    
+    scr_settings_vis_create(menu, btn_vis);
+    scr_settings_nw_menu_create(menu, btn_nw); // Note: Ensure this function name is correct in your project
+    scr_settings_sys_create(menu, btn_sys);
+    scr_settings_update_create(menu, btn_update);
+	*/
 }
