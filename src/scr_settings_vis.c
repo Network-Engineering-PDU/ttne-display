@@ -156,49 +156,27 @@ static void revert_rot()
 
 static void update_pdu_info_display()
 {
-    // TODO: Implement config getters for PDU info
-    // These calls require the following functions to be defined in config.c:
-    // - config_get_pdu_company()
-    // - config_get_pdu_rack()
-    // - config_get_pdu_system()
-    // - config_get_pdu_ups()
-    // - config_get_pdu_elec_board()
-    // - config_get_pdu_breaker()
-    // - config_get_pdu_service()
-    
-    // Stub: Set empty values for now
-    if (txt_fields[0]) lv_textarea_set_text(txt_fields[0], "");
-    if (txt_fields[1]) lv_textarea_set_text(txt_fields[1], "");
-    if (txt_fields[2]) lv_textarea_set_text(txt_fields[2], "");
-    if (txt_fields[3]) lv_textarea_set_text(txt_fields[3], "");
-    if (txt_fields[4]) lv_textarea_set_text(txt_fields[4], "");
-    if (txt_fields[5]) lv_textarea_set_text(txt_fields[5], "");
-    if (txt_fields[6]) lv_textarea_set_text(txt_fields[6], "");
+    // These calls assume getters exist in your config.h/controller.h
+    lv_textarea_set_text(txt_fields[0], config_get_pdu_company());
+    lv_textarea_set_text(txt_fields[1], config_get_pdu_rack());
+    lv_textarea_set_text(txt_fields[2], config_get_pdu_system());
+    lv_textarea_set_text(txt_fields[3], config_get_pdu_ups());
+    lv_textarea_set_text(txt_fields[4], config_get_pdu_elec_board());
+    lv_textarea_set_text(txt_fields[5], config_get_pdu_breaker());
+    lv_textarea_set_text(txt_fields[6], config_get_pdu_service());
 }
 
 static void save_pdu_info_field(int field_id, const char* value)
 {
-    // TODO: Implement config setters for PDU info
-    // These calls require the following functions to be defined in config.c:
-    // - config_set_pdu_company()
-    // - config_set_pdu_rack()
-    // - config_set_pdu_system()
-    // - config_set_pdu_ups()
-    // - config_set_pdu_elec_board()
-    // - config_set_pdu_breaker()
-    // - config_set_pdu_service()
-    
-    LV_LOG_USER("Saving PDU info field %d: %s", field_id, value ? value : "(null)");
-    
-    // switch(field_id) {
-    //     case 0: config_set_pdu_company(value); break;
-    //     case 1: config_set_pdu_rack(value); break;
-    //     case 2: config_set_pdu_system(value); break;
-    //     case 3: config_set_pdu_ups(value); break;
-    //     case 4: config_set_pdu_elec_board(value); break;
-    //     case 5: config_set_pdu_breaker(value); break;
-    //     case 6: config_set_pdu_service(value); break;
-    // }
+    switch(field_id) {
+        case 0: config_set_pdu_company(value); break;
+        case 1: config_set_pdu_rack(value); break;
+        case 2: config_set_pdu_system(value); break;
+        case 3: config_set_pdu_ups(value); break;
+        case 4: config_set_pdu_elec_board(value); break;
+        case 5: config_set_pdu_breaker(value); break;
+        case 6: config_set_pdu_service(value); break;
+    }
 }
 
 /* Layout Helper **************************************************************/

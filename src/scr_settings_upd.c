@@ -108,40 +108,36 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    tt_obj_btn_mtx_create(row, btn_update_cb, "Update\nFrom USB", ASSET("menu.png"));
+    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "Update\nFrom USB", ASSET("menu.png"));
 
-    tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("menu.png"));
+    lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("menu.png"));
 
-    tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\nReset", ASSET("menu.png"));
+    lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\nReset", ASSET("menu.png"));
     
-    /* TODO: Start polling for pending updates from remote server */
-    // Note: Requires implementation of controller_get_update_status() and models_get_update_status()
-    // update_confirmation_shown = false;
-    // timer_poll_update_status = lv_timer_create(timer_poll_update_status_cb, TIMER_POLL_UPDATE_STATUS, NULL);
+    /* Start polling for pending updates from remote server */
+    update_confirmation_shown = false;
+    timer_poll_update_status = lv_timer_create(timer_poll_update_status_cb, TIMER_POLL_UPDATE_STATUS, NULL);
 }
 
 /* Callbacks ******************************************************************/
 
 static void timer_poll_update_status_cb(lv_timer_t* timer) {
-    // TODO: Implement update status polling
-    // Requires: controller_get_update_status(), models_get_update_status(), and models_update_status_t type
-    (void)timer; // Suppress unused parameter warning
     // Poll for pending updates from the remote server
-    // controller_get_update_status();
-    // 
-    // const models_update_status_t* update_status = models_get_update_status();
-    // 
-    // // Only show confirmation once, when an update is pending and auto_update is enabled
-    // if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {
-    //     update_confirmation_shown = true;
-    //     
-    //     // Stop polling while showing confirmation dialog
-    //     lv_timer_pause(timer);
-    //     
-    //     char msg[300];
-    //     sprintf(msg, "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
-    //     tt_obj_msg_box_create("Firmware Update", msg, "Updating device...", msg_box_update_confirmation_cb);
-    // }
+    controller_get_update_status();
+    
+    const models_update_status_t* update_status = models_get_update_status();
+    
+    // Only show confirmation once, when an update is pending and auto_update is enabled
+    if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {
+        update_confirmation_shown = true;
+        
+        // Stop polling while showing confirmation dialog
+        lv_timer_pause(timer);
+        
+        char msg[300];
+        sprintf(msg, "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
+        tt_obj_msg_box_create("Firmware Update", msg, "Updating device...", msg_box_update_confirmation_cb);
+    }
 }
 
 static void btn_auto_cb(lv_event_t* e) {
@@ -149,9 +145,7 @@ static void btn_auto_cb(lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_target(e);
         uint16_t sel = lv_dropdown_get_selected(obj);
         bool enabled = (sel == 0); // 0 is ON, 1 is OFF
-        // TODO: Implement controller_set_auto_update()
-        LV_LOG_USER("Auto update set to: %s", enabled ? "ON" : "OFF");
-        // controller_set_auto_update(enabled);
+        controller_set_auto_update(enabled);
     }
 }
 
@@ -165,9 +159,7 @@ static void txt_server_cb(lv_event_t* e) {
         lv_obj_t* txt_obj = lv_event_get_target(e);
         const char* server_addr = lv_textarea_get_text(txt_obj);
         if (server_addr && strlen(server_addr) > 0) {
-            // TODO: Implement controller_set_update_server()
-            LV_LOG_USER("Update server set to: %s", server_addr);
-            // controller_set_update_server(server_addr);
+            controller_set_update_server(server_addr);
         }
     }
 }
@@ -202,7 +194,7 @@ static void msg_box_update_cb(lv_event_t* e) {
         if (lv_msgbox_get_active_btn(obj) == 0) {
             update_pid = runbg_run("/usr/bin/usb_autorun.sh", "add", update_dev, NULL);
             timer_check_update = lv_timer_create(timer_check_update_cb, TIMER_CHECK_UPDATE, NULL);
-            lv_obj_t* loader_scr = tt_obj_loader_create("Updating device...", NULL);
+            lv_obj_t* loader_scr = tt_obj_loader_create("Updating...", NULL);
             lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
             lv_scr_load(loader_scr);
         }
@@ -215,17 +207,13 @@ static void msg_box_update_confirmation_cb(lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_current_target(e);
         if (lv_msgbox_get_active_btn(obj) == 0) {
             // YES - confirm update
-            // TODO: Implement controller_post_update_confirm()
-            LV_LOG_USER("Update confirmed");
-            // controller_post_update_confirm(true);
-            // lv_obj_t* loader_scr = tt_obj_loader_create("Updating device...", NULL);
-            // lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
-            // lv_scr_load(loader_scr);
+            controller_post_update_confirm(true);
+            lv_obj_t* loader_scr = tt_obj_loader_create("Updating device...", NULL);
+            lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
+            lv_scr_load(loader_scr);
         } else {
             // NO - reject update
-            // TODO: Implement controller_post_update_confirm()
-            LV_LOG_USER("Update rejected");
-            // controller_post_update_confirm(false);
+            controller_post_update_confirm(false);
             update_confirmation_shown = false;
         }
         lv_msgbox_close(obj);
