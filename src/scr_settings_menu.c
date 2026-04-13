@@ -52,28 +52,35 @@ static void menu_cb(lv_event_t* e)
 
 void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn) 
 {
-	menu = l_menu;
+    menu = l_menu;
 
-	lv_obj_t* settings_menu_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"Settings");
-	lv_obj_t* cont = tt_obj_cont_create(settings_menu_cont);
+    /* Create the settings page directly */
+    lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
 
-	/* Center the 3+1 hub layout like the reference screen */
-	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
-	lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
-			LV_FLEX_ALIGN_CENTER);
+    /* Apply Flex layout directly to the page. 
+       In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 
+       that can act as containers.
+    */
+    lv_obj_set_flex_flow(settings_page, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(
+        settings_page,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER
+    );
 
-	lv_obj_t* btn_vis = tt_obj_btn_mtx_create(cont, NULL, "Visualisation",
-			ASSET("menu.png"));
-	lv_obj_t* btn_nw = tt_obj_btn_mtx_create(cont, NULL, "Networks",
-			ASSET("menu.png"));
-	lv_obj_t* btn_sys = tt_obj_btn_mtx_create(cont, NULL, "System setup",
-			ASSET("menu.png"));
-	lv_obj_t* btn_update = tt_obj_btn_mtx_create(cont, NULL, "PDU update",
-			ASSET("menu.png"));
+    /* HUB buttons: Parent is now 'settings_page' instead of 'cont' */
+    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(settings_page, NULL, "Visual", ASSET("menu.png"));
 
-	scr_settings_vis_create(menu, btn_vis);
-	scr_settings_nw_menu_create(menu, btn_nw);
-	scr_settings_sys_create(menu, btn_sys);
-	scr_settings_update_create(menu, btn_update);
+    lv_obj_t* btn_nw = tt_obj_btn_mtx_create(settings_page, NULL, "Networks", ASSET("menu.png"));
+
+    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(settings_page, NULL, "Sys setup", ASSET("menu.png"));
+
+    lv_obj_t* btn_update = tt_obj_btn_mtx_create(settings_page, NULL, "Sys update", ASSET("menu.png"));
+
+    /* Navigation links remain the same */
+    scr_settings_vis_create(menu, btn_vis);
+    scr_settings_nw_menu_create(menu, btn_nw);
+    scr_settings_sys_create(menu, btn_sys);
+    scr_settings_update_create(menu, btn_update);
 }
