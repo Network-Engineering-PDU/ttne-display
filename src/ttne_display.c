@@ -16,7 +16,6 @@
 #include "scr_power.h"
 #include "scr_outlets.h"
 #include "scr_sensors.h"
-//#include "scr_settings.h"
 #include "scr_settings_menu.h"
 
 #include "config.h"
