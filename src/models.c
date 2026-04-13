@@ -19,7 +19,6 @@ static models_nw_info_t nw_info;
 static models_nw_if_t nw_if;
 static models_license_t license;
 static models_modbus_t modbus;
-static models_update_status_t update_status;
 
 /* Function prototypes ********************************************************/
 
@@ -272,17 +271,4 @@ const models_modbus_t* models_get_modbus()
 void models_set_modbus(const models_modbus_t* l_modbus)
 {
 	modbus.addr = l_modbus->addr;
-}
-
-const models_update_status_t* models_get_update_status()
-{
-	return &update_status;
-}
-
-void models_set_update_status(const models_update_status_t* l_update_status)
-{
-	free((void*)update_status.update_server);
-	update_status.is_pending = l_update_status->is_pending;
-	update_status.auto_update = l_update_status->auto_update;
-	update_status.update_server = stralloc(l_update_status->update_server);
 }
