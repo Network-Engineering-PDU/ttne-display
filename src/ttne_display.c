@@ -16,7 +16,7 @@
 #include "scr_power.h"
 #include "scr_outlets.h"
 #include "scr_sensors.h"
-#include "scr_settings.h"
+#include "scr_settings_menu.h"
 
 #include "config.h"
 #include "controller.h"
@@ -79,8 +79,7 @@ void ttne_display(void)
 	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_CLICKABLE);
 
-	lv_obj_add_event_cb(menu_header, menu_header_cb, LV_EVENT_ALL,
-			menu_header_btn);
+	lv_obj_add_event_cb(menu_header, menu_header_cb, LV_EVENT_ALL, menu_header_btn);
 
 	lv_obj_t* icon = lv_obj_get_child(menu_header_btn, 0);
 	lv_obj_set_layout(menu_header_btn, 0);
@@ -88,18 +87,12 @@ void ttne_display(void)
 
 	lv_menu_set_page_title_static(main_page, "Network Engineering");
 
-	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, "INFO",
-			ASSET("menu.png"));
-	lv_obj_t* btn_alarms = tt_obj_btn_mtx_create(main_cont, NULL,"ALARMS",
-			ASSET("alarms.png"));
-	lv_obj_t* btn_power = tt_obj_btn_mtx_create(main_cont, NULL, "POWER",
-			ASSET("power.png"));
-	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, "OUTLETS",
-			ASSET("outlets.png"));
-	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, "SENSORS",
-			ASSET("sensors.png"));
-	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS",
-			ASSET("settings.png"));
+	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, "INFO", ASSET("menu.png"));
+	lv_obj_t* btn_alarms = tt_obj_btn_mtx_create(main_cont, NULL,"ALARMS", ASSET("alarms.png"));
+	lv_obj_t* btn_power = tt_obj_btn_mtx_create(main_cont, NULL, "POWER", ASSET("power.png"));
+	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, "OUTLETS", ASSET("outlets.png"));
+	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, "SENSORS", ASSET("sensors.png"));
+	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS", ASSET("settings.png"));
 
 	// Notifications test
 	// lv_obj_t* notif_cont = tt_obj_cont_create(btn_alarms);
@@ -117,7 +110,7 @@ void ttne_display(void)
 	scr_power_create(menu, btn_power);
 	scr_outlets_create(menu, btn_outlets);
 	scr_sensors_create(menu, btn_sensors);
-	scr_settings_create(menu, btn_settings);
+	scr_settings_menu_create(menu, btn_settings);
 
 	lv_menu_set_page(menu, main_page);
 	lv_obj_t* menu_scr = lv_scr_act();
