@@ -38,7 +38,7 @@ void config_set_inactivity_time(int inactivity_time);
  */
 int config_get_inactivity_time();
 
-**
+/**
  * @brief Set PDU company name.
  *
  * @param[in] value  Company name string.
