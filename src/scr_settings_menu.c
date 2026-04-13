@@ -32,80 +32,55 @@
 /* Global variables ***********************************************************/
 static lv_obj_t* menu;
 
-/* Static Helpers *************************************************************/
+/* Callbacks ******************************************************************/
 
-/**
- * Creates a horizontal container suitable for grouping buttons
- */
-static lv_obj_t* create_button_row(lv_obj_t* parent) {
-    lv_obj_t* row = lv_obj_create(parent);
-    lv_obj_set_size(row, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(row, 0, 0);
-    lv_obj_set_style_border_opa(row, 0, 0);
-    lv_obj_set_style_pad_all(row, 5, 0);
+static void menu_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* obj = lv_event_get_current_target(e);
 
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-    // Align everything to the center horizontally
-    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    // Add gap between buttons
-    lv_obj_set_style_pad_gap(row, 15, 0);
-
-    return row;
-}
-
-/**
- * Creates a standard large, rounded-square HUB button
- */
-static lv_obj_t* create_hub_btn(lv_obj_t* parent, const char* text, const char* icon_path, lv_event_cb_t cb) {
-    // Re-using tt_obj_btn_mtx_create which handles icon+text matrix style
-    lv_obj_t* btn = tt_obj_btn_mtx_create(parent, cb, text, icon_path);
-    
-    // Size to match mockup (approx 30% width)
-    lv_obj_set_size(btn, LV_PCT(30), 120); 
-    
-    // Smooth rounded corners as seen in the mockup
-    lv_obj_set_style_radius(btn, 15, 0);
-    
-    // Standard text alignment
-    lv_obj_set_style_text_align(btn, LV_TEXT_ALIGN_CENTER, 0);
-    return btn;
+	if (code == LV_EVENT_VALUE_CHANGED) {
+		lv_obj_t* curr_page = lv_event_get_user_data(e);
+		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
+		if (curr_page == page) {
+			LV_LOG_USER("Settings menu cb");
+		}
+	}
 }
 
 /* Function definitions *******************************************************/
 
-void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn) {
+void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn) 
+{
+
     menu = l_menu;
 
-    // 1. Create the detailed settings page hub (Back button/header handled by menu system)
-    lv_obj_t* settings_page = tt_obj_menu_page_create(menu, btn, NULL, "Settings");
-    
-    // Enable scrolling if necessary, though this specific layout doesn't require it
-    lv_obj_set_scrollbar_mode(settings_page, LV_SCROLLBAR_MODE_AUTO);
+	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings");
+	lv_obj_t* settings_page = scr_sensors_data_create(menu);
 
-    // Main central container
     lv_obj_t* cont = tt_obj_cont_create(settings_page);
-    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_gap(cont, 15, 0);
-    lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    /* --- HUB Buttons Layout to match image_3.png --- */
+    /* Layout: center grid like Page 2 */
+    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(
+        cont,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER
+    );
 
-    // Create Row 1: Fits the top 3 buttons (Visualization, Networks, System setup)
-    lv_obj_t* row1 = create_button_row(cont);
-    
-    lv_obj_t* btn_vis = create_hub_btn(row1, "Visualisation", ASSET("menu.png"), NULL);
-    lv_obj_t* btn_nw = create_hub_btn(row1, "Networks", ASSET("menu.png"), NULL);
-    lv_obj_t* btn_sys = create_hub_btn(row1, "System setup", ASSET("menu.png"), NULL);
+    /* HUB buttons */
+    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(cont, NULL, "Visual", ASSET("menu.png"));
 
-    // Create Row 2: Fits the bottom centered button (PDU update)
-    lv_obj_t* row2 = create_button_row(cont);
-    
-    lv_obj_t* btn_update = create_hub_btn(row2, "PDU update", ASSET("menu.png"), NULL);
+    lv_obj_t* btn_nw = tt_obj_btn_mtx_create(cont, NULL, "Networks", ASSET("menu.png"));
 
-    /* Navigation Registration (This links the buttons to the sub-pages) */
+    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(cont, NULL, "Sys setup", ASSET("menu.png"));
+
+    lv_obj_t* btn_update = tt_obj_btn_mtx_create(cont, NULL, "Sys update", ASSET("menu.png"));
+
+    /* Navigation (will be implemented step by step) */
     scr_settings_vis_create(menu, btn_vis);
-    scr_settings_nw_menu_create(menu, btn_nw); // Note: Ensure this function name is correct in your project
+    scr_settings_nw_menu_create(menu, btn_nw);
     scr_settings_sys_create(menu, btn_sys);
     scr_settings_update_create(menu, btn_update);
 }
