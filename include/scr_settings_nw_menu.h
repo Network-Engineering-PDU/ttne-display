@@ -7,7 +7,7 @@ extern "C" {
 
 #include "lvgl/lvgl.h"
 
-void scr_settings_nw_menu_create(lv_obj_t* menu, lv_obj_t* btn);
+void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn);
 
 #ifdef __cplusplus
 }
