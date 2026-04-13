@@ -35,7 +35,7 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* curr_page = lv_event_get_user_data(e);
 		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
 		if (curr_page == page) {
-			LV_LOG_USER("Network menu opened");
+			LV_LOG_USER("Network menu cb");
 		}
 	}
 }

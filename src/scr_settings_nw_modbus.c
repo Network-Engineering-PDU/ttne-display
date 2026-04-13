@@ -1,6 +1,15 @@
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_modbus.h"
 #include "tt_obj.h"
+#include "tt_styles.h"
+#include "tt_colors.h"
+#include "utils.h"
+#include "models.h"
+#include "controller.h"
+#include "config.h"
+#include "screen.h"
+#include "ttne_display.h"
+#include "runbg.h"
 
 /* Modbus configuration variables */
 static lv_obj_t* modbus_tcp_combo;

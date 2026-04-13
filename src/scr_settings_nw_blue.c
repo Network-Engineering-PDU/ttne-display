@@ -1,6 +1,15 @@
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_blue.h"
 #include "tt_obj.h"
+#include "tt_styles.h"
+#include "tt_colors.h"
+#include "utils.h"
+#include "models.h"
+#include "controller.h"
+#include "config.h"
+#include "screen.h"
+#include "ttne_display.h"
+#include "runbg.h"
 
 static lv_obj_t* bluetooth_enable_cbx;
 
