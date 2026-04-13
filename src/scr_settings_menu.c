@@ -52,35 +52,28 @@ static void menu_cb(lv_event_t* e)
 
 void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn) 
 {
+	menu = l_menu;
 
-    menu = l_menu;
+	lv_obj_t* settings_menu_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
+			"Settings");
+	lv_obj_t* cont = tt_obj_cont_create(settings_menu_cont);
 
-	lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings");
-	lv_obj_t* settings_page = scr_sensors_data_create(menu);
+	/* Center the 3+1 hub layout like the reference screen */
+	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
+	lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+			LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t* cont = tt_obj_cont_create(settings_page);
+	lv_obj_t* btn_vis = tt_obj_btn_mtx_create(cont, NULL, "Visualisation",
+			ASSET("menu.png"));
+	lv_obj_t* btn_nw = tt_obj_btn_mtx_create(cont, NULL, "Networks",
+			ASSET("menu.png"));
+	lv_obj_t* btn_sys = tt_obj_btn_mtx_create(cont, NULL, "System setup",
+			ASSET("menu.png"));
+	lv_obj_t* btn_update = tt_obj_btn_mtx_create(cont, NULL, "PDU update",
+			ASSET("menu.png"));
 
-    /* Layout: center grid like Page 2 */
-    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(
-        cont,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER
-    );
-
-    /* HUB buttons */
-    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(cont, NULL, "Visual", ASSET("menu.png"));
-
-    lv_obj_t* btn_nw = tt_obj_btn_mtx_create(cont, NULL, "Networks", ASSET("menu.png"));
-
-    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(cont, NULL, "Sys setup", ASSET("menu.png"));
-
-    lv_obj_t* btn_update = tt_obj_btn_mtx_create(cont, NULL, "Sys update", ASSET("menu.png"));
-
-    /* Navigation (will be implemented step by step) */
-    scr_settings_vis_create(menu, btn_vis);
-    scr_settings_nw_menu_create(menu, btn_nw);
-    scr_settings_sys_create(menu, btn_sys);
-    scr_settings_update_create(menu, btn_update);
+	scr_settings_vis_create(menu, btn_vis);
+	scr_settings_nw_menu_create(menu, btn_nw);
+	scr_settings_sys_create(menu, btn_sys);
+	scr_settings_update_create(menu, btn_update);
 }
