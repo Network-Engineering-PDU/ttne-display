@@ -94,9 +94,8 @@ static void menu_cb(lv_event_t* e)
 			lv_textarea_set_text(txt_mask, nw_if->params.mask);
 			lv_textarea_set_text(txt_gw, nw_if->params.gw);
 			lv_textarea_set_text(txt_dns, nw_if->params.dns);
-			// TODO: uncomment
-			// lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
-			// lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
+			lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
+			lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
 			update_data();
 		}
 	}
@@ -170,7 +169,7 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 			char* txt = lv_event_get_user_data(e);
 			loader_scr = tt_obj_loader_create(txt, NULL);
 			//TODO: remove (touch for del [debug])
-			lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
+			//lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
 			lv_scr_load(loader_scr);
 		}
 		lv_msgbox_close(obj);
@@ -335,9 +334,8 @@ static void update_data()
 
 /* Public functions ***********************************************************/
 
-void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
+void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	/*
 	const models_nw_if_t* nw_if = models_get_nw_if();
 
 	// Settings / Network
@@ -386,5 +384,4 @@ void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_textarea_set_text(txt_dns, nw_if->params.dns);
 
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
-	*/
 }

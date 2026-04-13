@@ -3,7 +3,7 @@
 #include "lvgl/lvgl.h"
 
 #include "scr_settings_nw_menu.h"
-#include "scr_settings_nw.h"
+#include "scr_settings_nw_eth.h"
 #include "scr_settings_nw_snmp.h"
 #include "scr_settings_nw_modbus.h"
 #include "scr_settings_nw_ssh.h"
@@ -79,7 +79,7 @@ void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	lv_obj_t* btn_ntp_sntp = tt_obj_btn_mtx_create(nw_menu_page, NULL, "NTP-SNTP", ASSET("menu.png"));
 
 	// Link buttons to their respective screen pages
-	scr_settings_nw_create(menu, btn_ethernet);
+	scr_settings_nw_eth_create(menu, btn_ethernet);
 	scr_settings_nw_snmp_create(menu, btn_snmp);
 	scr_settings_nw_modbus_create(menu, btn_modbus);
 	scr_settings_nw_ssh_create(menu, btn_ssh);

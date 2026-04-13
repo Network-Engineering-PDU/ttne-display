@@ -1,5 +1,5 @@
-#ifndef SCR_SETTINGS_NW_H
-#define SCR_SETTINGS_NW_H
+#ifndef SCR_SETTINGS_NW_ETH_H
+#define SCR_SETTINGS_NW_ETH_H
 
 #include "lvgl/lvgl.h"
 
@@ -13,10 +13,10 @@ extern "C" {
  * @param[in] menu      Pointer to menu.
  * @param[in] btn       Main menu page button.
  */
-void scr_settings_nw_create(lv_obj_t* menu, lv_obj_t* btn);
+void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* SCR_SETTINGS_NW_H */
+#endif /* SCR_SETTINGS_NW_ETH_H */
