@@ -159,6 +159,12 @@ typedef struct models_modbus_t {
 	int addr;
 } models_modbus_t;
 
+typedef struct models_update_status_t {
+	bool is_pending;
+	bool auto_update;
+	const char* update_server;
+} models_update_status_t;
+
 const models_info_t* models_get_info();
 void models_set_info(const models_info_t* info);
 
@@ -197,6 +203,9 @@ void models_set_license(const models_license_t* license);
 
 const models_modbus_t* models_get_modbus();
 void models_set_modbus(const models_modbus_t* modbus);
+
+const models_update_status_t* models_get_update_status();
+void models_set_update_status(const models_update_status_t* update_status);
 
 // const models_settings_t* models_get_settings();
 // void models_set_settings(models_settings_t* settings);

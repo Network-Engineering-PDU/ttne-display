@@ -555,3 +555,39 @@ int json_helper_update_modbus(const char* json_str)
 
 	return 0;
 }
+
+int json_helper_update_update_status(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_update_status_t update_status;
+	int err;
+	
+	cJSON* is_pending = cJSON_GetObjectItemCaseSensitive(json, "is_pending");
+	if (cJSON_IsBool(is_pending)) {
+		update_status.is_pending = is_pending->valueint;
+	} else {
+		return 1;
+	}
+
+	cJSON* auto_update = cJSON_GetObjectItemCaseSensitive(json, "auto_update");
+	if (cJSON_IsBool(auto_update)) {
+		update_status.auto_update = auto_update->valueint;
+	} else {
+		return 1;
+	}
+
+	const char* server_str = json_get_string(json, "update_server");
+	if (server_str != NULL) {
+		update_status.update_server = server_str;
+	}
+	
+	models_set_update_status(&update_status);
+
+	cJSON_Delete(json);
+
+	return 0;
+}
