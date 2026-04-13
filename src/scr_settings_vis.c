@@ -188,7 +188,7 @@ static void save_pdu_info_field(int field_id, const char* value)
     // - config_set_pdu_breaker()
     // - config_set_pdu_service()
     
-    LV_LOG_USER(\"Saving PDU info field %d: %s\", field_id, value ? value : \"(null)\");
+    LV_LOG_USER("Saving PDU info field %d: %s", field_id, value ? value : "(null)");
     
     // switch(field_id) {
     //     case 0: config_set_pdu_company(value); break;
