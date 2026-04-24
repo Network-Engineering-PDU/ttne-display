@@ -408,7 +408,7 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	const models_nw_if_t* nw_if = models_get_nw_if();
 
 	// Settings / Network
-	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network setup");
+	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network Setup");
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
 	tt_obj_label_create(nw_cont2, "Connection type");
