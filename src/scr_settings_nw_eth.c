@@ -127,6 +127,7 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 	lv_obj_t* scr = timer->user_data;
 	lv_obj_t* msg_box_conn;
 	if (connected) {
+		retries = 0;
 		lv_timer_del(timer);
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
@@ -136,7 +137,10 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 
 	}
 	if (retries > MAX_NW_CONN_RETRIES) {
+		retries = 0;
 		lv_timer_del(timer);
+		lv_scr_load(scr);
+		lv_obj_del(loader_scr);
 		msg_box_conn = tt_obj_info_box_create("ERROR", "Can not connect to Internet", 1);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
@@ -162,12 +166,12 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
+			lv_obj_t* prev_scr = lv_scr_act();
 			controller_put_nw_if(&nw_ifaces);
-			lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, lv_scr_act());
+			lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, prev_scr);
 			char* txt = lv_event_get_user_data(e);
 			loader_scr = tt_obj_loader_create(txt, NULL);
-			//TODO: remove (touch for del [debug])
-			//lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
+			lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, prev_scr);
 			lv_scr_load(loader_scr);
 		}
 		lv_msgbox_close(obj);
@@ -337,10 +341,10 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	const models_nw_if_t* nw_if = models_get_nw_if();
 
 	// Settings / Network
-	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings / NW setup");
+	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network setup");
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
-	tt_obj_label_create(nw_cont2, "Conenction type");
+	tt_obj_label_create(nw_cont2, "Connection type");
 	char* options = "Ethernet\nWiFi";
 	dd = tt_obj_dropdown_create(nw_cont2, options, update_cb);
 	btn_dhcp = tt_obj_btn_toggle_create(nw_cont2, update_cb, "DHCP");
