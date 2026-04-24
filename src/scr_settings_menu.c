@@ -5,7 +5,6 @@
 
 #include "scr_settings_menu.h"
 #include "scr_settings_vis.h"
-//#include "scr_settings_nw.h"
 #include "scr_settings_sys.h"
 #include "scr_settings_upd.h"
 #include "scr_settings_nw_menu.h"

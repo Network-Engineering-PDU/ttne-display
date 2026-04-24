@@ -1,8 +1,5 @@
 #include <stdio.h>
-
 #include "lvgl/lvgl.h"
-
-//#include "scr_settings_nw.h"
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_styles.h"

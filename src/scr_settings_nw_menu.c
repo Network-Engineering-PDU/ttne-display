@@ -1,7 +1,5 @@
 #include <stdio.h>
-
 #include "lvgl/lvgl.h"
-
 #include "scr_settings_nw_menu.h"
 #include "scr_settings_nw_eth.h"
 #include "scr_settings_nw_snmp.h"
@@ -40,7 +38,6 @@ static void menu_cb(lv_event_t* e)
 	}
 }
 
-/* Function definitions *******************************************************/
 /* Public functions ***********************************************************/
 
 void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
@@ -49,9 +46,6 @@ void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
 	/* Create the settings page directly */
     lv_obj_t* nw_menu_page = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
-
-	//lv_obj_t* nw_menu_cont = tt_obj_menu_page_create(menu, btn, menu_cb,"Networks");
-	//lv_obj_t* nw_options_cont = tt_obj_cont_create(nw_menu_cont);
 
 	/* Apply Flex layout directly to the page. 
        In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 
@@ -67,15 +61,10 @@ void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
 	// Create buttons for each network protocol
 	lv_obj_t* btn_ethernet = tt_obj_btn_mtx_create(nw_menu_page, NULL, "Ethernet", ASSET("menu.png"));
-	
 	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(nw_menu_page, NULL, "SNMP", ASSET("menu.png"));
-	
 	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(nw_menu_page, NULL, "Modbus", ASSET("menu.png"));
-	
 	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(nw_menu_page, NULL, "SSH", ASSET("menu.png"));
-	
 	lv_obj_t* btn_bluetooth = tt_obj_btn_mtx_create(nw_menu_page, NULL, "Bluetooth", ASSET("menu.png"));
-	
 	lv_obj_t* btn_ntp_sntp = tt_obj_btn_mtx_create(nw_menu_page, NULL, "NTP-SNTP", ASSET("menu.png"));
 
 	// Link buttons to their respective screen pages

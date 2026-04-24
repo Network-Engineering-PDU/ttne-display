@@ -1,7 +1,5 @@
 #include <stdio.h>
-
 #include "lvgl/lvgl.h"
-
 #include "scr_settings_nw_eth.h"
 #include "scr_keyboard.h"
 #include "tt_obj.h"
@@ -339,9 +337,7 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	const models_nw_if_t* nw_if = models_get_nw_if();
 
 	// Settings / Network
-	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"Settings / NW setup");
-
+	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Settings / NW setup");
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
 	tt_obj_label_create(nw_cont2, "Conenction type");
@@ -360,8 +356,7 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_wifi_pass = tt_obj_label_create(nw_cont2, "WiFi password");
 	txt_wifi_pass = tt_obj_txt_create(nw_cont2, "WiFi password", txt_cb);
 	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
-	cbx_pass = tt_obj_checkbox_create(nw_cont2,
-			"Show WiFi password", cbx_pass_cb);
+	cbx_pass = tt_obj_checkbox_create(nw_cont2, "Show WiFi password", cbx_pass_cb);
 	lv_textarea_set_password_mode(txt_wifi_pass, true);
 	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
 	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
