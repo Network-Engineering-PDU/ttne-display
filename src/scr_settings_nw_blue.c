@@ -98,11 +98,10 @@ void scr_settings_nw_blue_create(lv_obj_t* l_menu, lv_obj_t* btn)
     lv_obj_set_style_pad_gap(footer, 10, 0); // Gap between OK and Cancel
 
     // 6. Create OK and Cancel Buttons using your framework
-    lv_obj_t* btn_ok = tt_obj_btn_create(footer, "OK", BTN_WIDTH, BTN_HEIGHT);
-    lv_obj_t* btn_cancel = tt_obj_btn_create(footer, "Cancel", BTN_WIDTH, BTN_HEIGHT);
+    // tt_obj_btn_create(parent, callback, label, img_path, width, height, lbl_align)
+    lv_obj_t* btn_ok = tt_obj_btn_create(footer, ok_event_cb, "OK", NULL, BTN_WIDTH, BTN_HEIGHT, LV_ALIGN_CENTER);
+    lv_obj_t* btn_cancel = tt_obj_btn_create(footer, cancel_event_cb, "Cancel", NULL, BTN_WIDTH, BTN_HEIGHT, LV_ALIGN_CENTER);
 
-    // 7. Assign Events
-    // Passing sw_bt as user_data to OK so we can read the switch state on click
+    // 7. Assign user data for OK button to access the switch state
     lv_obj_add_event_cb(btn_ok, ok_event_cb, LV_EVENT_CLICKED, sw_bt);
-    lv_obj_add_event_cb(btn_cancel, cancel_event_cb, LV_EVENT_CLICKED, NULL);
 }
