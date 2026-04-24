@@ -124,6 +124,21 @@ static void msg_box_timer_cb(lv_timer_t* timer)
 static void nw_if_timer_cb(lv_timer_t* timer)
 {
 	static int retries = 0;
+	lv_obj_t* scr = timer->user_data;
+	lv_obj_t* msg_box_conn;
+
+	// For static IP configuration, return immediately without checking internet
+	if (nw_ifaces.type == ETH_STATIC || nw_ifaces.type == WIFI_STATIC) {
+		retries = 0;
+		lv_timer_del(timer);
+		lv_scr_load(scr);
+		lv_obj_del(loader_scr);
+		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied", 0);
+		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
+		return;
+	}
+
+	// For DHCP, check internet connectivity
 	// Call API network info
 	controller_get_nw_info();
 	const models_nw_info_t* nw_info = models_get_nw_info();
@@ -131,8 +146,7 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 	retries++;
 	LV_LOG_USER("Connected: %s (%d/%d)", connected ? "yes" : "no",
 			retries, MAX_NW_CONN_RETRIES);
-	lv_obj_t* scr = timer->user_data;
-	lv_obj_t* msg_box_conn;
+
 	if (connected) {
 		retries = 0;
 		lv_timer_del(timer);
