@@ -56,6 +56,8 @@ int http_helper_get(http_get_req_t* req, char* url)
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 1000L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 3000L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)req);
 
@@ -99,6 +101,8 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 1000L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 3000L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)req);
 		if (post_data) {
@@ -144,6 +148,8 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, put_data);
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 1000L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 3000L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)req);
 
