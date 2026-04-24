@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_eth.h"
 #include "scr_keyboard.h"
@@ -63,6 +67,9 @@ static void cbx_pass_cb(lv_event_t* e);
 static void update_data();
 static bool is_ethernet();
 static bool is_static();
+static void save_nw_if_async(const models_nw_if_t* nw_if);
+static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if);
+static void free_nw_if(models_nw_if_t* nw_if);
 
 /* Callbacks ******************************************************************/
 
@@ -159,6 +166,52 @@ static void loader_cb(lv_event_t* e)
 	}
 }
 
+static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if)
+{
+	models_nw_if_t copy = *nw_if;
+	copy.params.ip = strdup(nw_if->params.ip);
+	copy.params.mask = strdup(nw_if->params.mask);
+	copy.params.gw = strdup(nw_if->params.gw);
+	copy.params.dns = strdup(nw_if->params.dns);
+	copy.params.ssid = strdup(nw_if->params.ssid);
+	copy.params.pass = strdup(nw_if->params.pass);
+	return copy;
+}
+
+static void free_nw_if(models_nw_if_t* nw_if)
+{
+	free((void*)nw_if->params.ip);
+	free((void*)nw_if->params.mask);
+	free((void*)nw_if->params.gw);
+	free((void*)nw_if->params.dns);
+	free((void*)nw_if->params.ssid);
+	free((void*)nw_if->params.pass);
+}
+
+static void save_nw_if_async(const models_nw_if_t* nw_if)
+{
+	models_nw_if_t copy = clone_nw_if(nw_if);
+	pid_t pid = fork();
+
+	if (pid == 0) {
+		pid_t worker_pid = fork();
+		if (worker_pid == 0) {
+			controller_put_nw_if(&copy);
+			free_nw_if(&copy);
+			_exit(0);
+		}
+		_exit(0);
+	}
+
+	if (pid > 0) {
+		waitpid(pid, NULL, 0);
+	} else {
+		controller_put_nw_if(nw_if);
+	}
+
+	free_nw_if(&copy);
+}
+
 static void msg_box_nw_if_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -167,7 +220,7 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
 			lv_obj_t* prev_scr = lv_scr_act();
-			controller_put_nw_if(&nw_ifaces);
+			save_nw_if_async(&nw_ifaces);
 			lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, prev_scr);
 			char* txt = lv_event_get_user_data(e);
 			loader_scr = tt_obj_loader_create(txt, NULL);
