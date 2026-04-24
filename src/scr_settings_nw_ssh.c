@@ -11,12 +11,6 @@
 #include "ttne_display.h"
 #include "runbg.h"
 
-/* --- Assumed Custom Object Prefix Declarations --- */
-/* (In a real project, these are defined elsewhere) */
-extern lv_obj_t* tt_obj_menu_page_create(lv_obj_t* parent, lv_obj_t* back_btn, lv_event_cb_t cb, const char* title);
-extern lv_obj_t* tt_obj_label_create(lv_obj_t* parent, const char* text);
-extern lv_obj_t* tt_obj_btn_create(lv_obj_t* parent, const char* text, int width, int height);
-
 /**
  * @brief Creates the SSH configuration sub-screen.
  * * @param l_menu The parent menu object that handles page navigation.
@@ -70,11 +64,9 @@ void scr_settings_nw_ssh_create(lv_obj_t* l_menu, lv_obj_t* btn)
     lv_obj_set_style_border_width(bot_btns_cont, 0, LV_PART_MAIN);
 
     // 6. Add the Buttons
-    // Need a custom button framework call, or standard LVGL button + label
-    
-    // tt_obj_btn_create handles button width/height internally or via parameters
-    lv_obj_t* btn_ok = tt_obj_btn_create(bot_btns_cont, "OK", 80, 40);
-    lv_obj_t* btn_cancel = tt_obj_btn_create(bot_btns_cont, "Cancel", 80, 40);
+    // tt_obj_btn_create(parent, callback, label, img_path, width, height, lbl_align)
+    lv_obj_t* btn_ok = tt_obj_btn_create(bot_btns_cont, NULL, "OK", NULL, 80, 40, LV_ALIGN_CENTER);
+    lv_obj_t* btn_cancel = tt_obj_btn_create(bot_btns_cont, NULL, "Cancel", NULL, 80, 40, LV_ALIGN_CENTER);
 
     /* Add Event Callbacks (e.g., Close screen, Save settings) */
     // lv_obj_add_event_cb(btn_ok, ssh_ok_event_cb, LV_EVENT_CLICKED, NULL);
