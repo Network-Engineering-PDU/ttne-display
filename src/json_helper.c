@@ -631,8 +631,11 @@ int json_helper_update_update_status(const char* json_str)
 		return 1;
 	}
 
-	models_update_status_t update_status;
-	int err;
+	models_update_status_t update_status = {
+		.is_pending = false,
+		.auto_update = false,
+		.update_server = ""
+	};
 	
 	cJSON* is_pending = cJSON_GetObjectItemCaseSensitive(json, "is_pending");
 	if (cJSON_IsBool(is_pending)) {

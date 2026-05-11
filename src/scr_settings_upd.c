@@ -44,6 +44,7 @@ static void msg_box_update_cb(lv_event_t* e);
 static void msg_box_update_confirmation_cb(lv_event_t* e);
 static void msg_box_reboot_cb(lv_event_t* e);
 static void msg_box_factory_cb(lv_event_t* e);
+static void update_controls_from_status(const models_update_status_t* update_status);
 
 static char* get_last_element(const char* str) {
     char *last_element = NULL;
@@ -128,6 +129,7 @@ static void timer_poll_update_status_cb(lv_timer_t* timer) {
     controller_get_update_status();
     
     const models_update_status_t* update_status = models_get_update_status();
+    update_controls_from_status(update_status);
     
     LV_LOG_USER("Poll: pending=%d, auto_update=%d, shown=%d", 
         update_status->is_pending, update_status->auto_update, update_confirmation_shown);
@@ -143,6 +145,23 @@ static void timer_poll_update_status_cb(lv_timer_t* timer) {
         char msg[300];
         sprintf(msg, "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
         tt_obj_msg_box_create("Firmware Update", msg, "Updating device...", msg_box_update_confirmation_cb);
+    }
+}
+
+static void update_controls_from_status(const models_update_status_t* update_status) {
+    if (btn_auto != NULL) {
+        uint16_t expected_sel = update_status->auto_update ? 0 : 1;
+        if (lv_dropdown_get_selected(btn_auto) != expected_sel) {
+            lv_dropdown_set_selected(btn_auto, expected_sel);
+        }
+    }
+
+    if (txt_server != NULL &&
+        update_status->update_server != NULL &&
+        strcmp(update_status->update_server, "N/A") != 0 &&
+        strlen(update_status->update_server) > 0 &&
+        strcmp(lv_textarea_get_text(txt_server), update_status->update_server) != 0) {
+        lv_textarea_set_text(txt_server, update_status->update_server);
     }
 }
 
