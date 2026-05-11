@@ -419,13 +419,68 @@ int json_helper_update_nw_services(const char* json_str)
 	}
 	nw_services.ssh = bl;
 	err = json_get_bool(&bl, json, "bluetooth");
-	if (err != 0) {
-		return 1;
-	}
-	nw_services.bluetooth = bl;
+	nw_services.bluetooth = (err == 0) ? bl : false;
 	
 	models_set_nw_services(&nw_services);
 
+	cJSON_Delete(json);
+
+	return 0;
+}
+
+int json_helper_update_bt_status(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_bt_status_t bt_status;
+	const char* str;
+	bool bl;
+	int err;
+
+	str = json_get_string(json, "controller_mac");
+	bt_status.controller_mac = str ? str : "";
+	str = json_get_string(json, "name");
+	bt_status.name = str ? str : "";
+	err = json_get_bool(&bl, json, "powered");
+	bt_status.powered = (err == 0) ? bl : false;
+	err = json_get_bool(&bl, json, "pairable");
+	bt_status.pairable = (err == 0) ? bl : false;
+	err = json_get_bool(&bl, json, "discoverable");
+	bt_status.discoverable = (err == 0) ? bl : false;
+	err = json_get_bool(&bl, json, "discovering");
+	bt_status.discovering = (err == 0) ? bl : false;
+	bt_status.device_count = 0;
+
+	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");
+	if (cJSON_IsArray(devices)) {
+		cJSON* device = NULL;
+		cJSON_ArrayForEach(device, devices) {
+			if (bt_status.device_count >= MAX_BT_DEVICES) {
+				break;
+			}
+			models_bt_device_t* bt_device = &bt_status.devices[bt_status.device_count];
+			str = json_get_string(device, "mac");
+			bt_device->mac = str ? str : "";
+			str = json_get_string(device, "name");
+			bt_device->name = str ? str : bt_device->mac;
+			err = json_get_bool(&bl, device, "paired");
+			bt_device->paired = (err == 0) ? bl : false;
+			err = json_get_bool(&bl, device, "trusted");
+			bt_device->trusted = (err == 0) ? bl : false;
+			err = json_get_bool(&bl, device, "connected");
+			bt_device->connected = (err == 0) ? bl : false;
+			err = json_get_int(&bt_device->rssi, device, "rssi");
+			if (err != 0) {
+				bt_device->rssi = 0;
+			}
+			bt_status.device_count++;
+		}
+	}
+
+	models_set_bt_status(&bt_status);
 	cJSON_Delete(json);
 
 	return 0;

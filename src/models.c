@@ -15,6 +15,7 @@ static models_out_data_t out_data;
 static models_sensor_t* sensor_list;
 static int sensor_list_len;
 static models_nw_services_t nw_services;
+static models_bt_status_t bt_status;
 static models_nw_info_t nw_info;
 static models_nw_if_t nw_if;
 static models_license_t license;
@@ -218,6 +219,41 @@ void models_set_nw_services(const models_nw_services_t* l_nw_services)
 	nw_services.snmp = l_nw_services->snmp;
 	nw_services.modbus = l_nw_services->modbus;
 	nw_services.bluetooth = l_nw_services->bluetooth;
+}
+
+const models_bt_status_t* models_get_bt_status()
+{
+	return &bt_status;
+}
+
+void models_set_bt_status(const models_bt_status_t* l_bt_status)
+{
+	free((void*)bt_status.controller_mac);
+	free((void*)bt_status.name);
+	for (int i = 0; i < bt_status.device_count; i++) {
+		free((void*)bt_status.devices[i].mac);
+		free((void*)bt_status.devices[i].name);
+	}
+
+	bt_status.controller_mac = stralloc(l_bt_status->controller_mac);
+	bt_status.name = stralloc(l_bt_status->name);
+	bt_status.powered = l_bt_status->powered;
+	bt_status.pairable = l_bt_status->pairable;
+	bt_status.discoverable = l_bt_status->discoverable;
+	bt_status.discovering = l_bt_status->discovering;
+	bt_status.device_count = l_bt_status->device_count;
+
+	if (bt_status.device_count > MAX_BT_DEVICES) {
+		bt_status.device_count = MAX_BT_DEVICES;
+	}
+	for (int i = 0; i < bt_status.device_count; i++) {
+		bt_status.devices[i].mac = stralloc(l_bt_status->devices[i].mac);
+		bt_status.devices[i].name = stralloc(l_bt_status->devices[i].name);
+		bt_status.devices[i].paired = l_bt_status->devices[i].paired;
+		bt_status.devices[i].trusted = l_bt_status->devices[i].trusted;
+		bt_status.devices[i].connected = l_bt_status->devices[i].connected;
+		bt_status.devices[i].rssi = l_bt_status->devices[i].rssi;
+	}
 }
 
 const models_nw_info_t* models_get_nw_info()

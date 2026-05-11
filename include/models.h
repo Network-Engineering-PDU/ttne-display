@@ -8,6 +8,7 @@ extern "C" {
 #include <stdbool.h>
 
 #define MAX_ALARMS 100
+#define MAX_BT_DEVICES 12
 
 // INFO
 
@@ -152,6 +153,26 @@ typedef struct models_nw_services_t {
 	bool bluetooth;
 } models_nw_services_t;
 
+typedef struct models_bt_device_t {
+	const char* mac;
+	const char* name;
+	bool paired;
+	bool trusted;
+	bool connected;
+	int rssi;
+} models_bt_device_t;
+
+typedef struct models_bt_status_t {
+	const char* controller_mac;
+	const char* name;
+	bool powered;
+	bool pairable;
+	bool discoverable;
+	bool discovering;
+	models_bt_device_t devices[MAX_BT_DEVICES];
+	int device_count;
+} models_bt_status_t;
+
 typedef struct models_license_t {
 	const char* type_id;
 } models_license_t;
@@ -192,6 +213,8 @@ void models_set_sensor(const models_sensor_t* l_sensor, int len);
 
 const models_nw_services_t* models_get_nw_services();
 void models_set_nw_services(const models_nw_services_t* nw_services);
+const models_bt_status_t* models_get_bt_status();
+void models_set_bt_status(const models_bt_status_t* bt_status);
 
 const models_nw_info_t* models_get_nw_info();
 void models_set_nw_info(const models_nw_info_t* nw_info);

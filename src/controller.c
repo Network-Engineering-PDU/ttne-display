@@ -1,6 +1,7 @@
 #include <lvgl/lvgl.h>
 #include <cjson/cJSON.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <strings.h>
 
 #include "controller.h"
@@ -49,6 +50,16 @@ void controller_init()
 	nw_if.params.ssid = "";
 	nw_if.params.pass = "";
 	models_set_nw_if(&nw_if);
+
+	models_bt_status_t bt_status;
+	bt_status.controller_mac = "";
+	bt_status.name = "";
+	bt_status.powered = false;
+	bt_status.pairable = false;
+	bt_status.discoverable = false;
+	bt_status.discovering = false;
+	bt_status.device_count = 0;
+	models_set_bt_status(&bt_status);
 }
 
 bool controller_check_conn()
@@ -403,12 +414,84 @@ void controller_post_stop_bluetooth()
 	http_helper_free(&req);
 }
 
+void controller_get_bluetooth()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/bluetooth/";
+	int err = http_helper_get(&req, url);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth status GET error");
+		http_helper_free(&req);
+		return;
+	}
+	err = json_helper_update_bt_status(req.buffer);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth status parse error");
+	}
+	http_helper_free(&req);
+}
+
+void controller_put_bluetooth(bool powered, bool pairable, bool discoverable)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/bluetooth";
+	cJSON *json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "powered", powered);
+	cJSON_AddBoolToObject(json, "pairable", pairable);
+	cJSON_AddBoolToObject(json, "discoverable", discoverable);
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth settings PUT error");
+	}
+	free(put_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+}
+
+void controller_post_bluetooth_scan(bool enable)
+{
+	http_get_req_t req;
+	char* url = enable ? BASE_URL "settings/bluetooth/scan/start" :
+			BASE_URL "settings/bluetooth/scan/stop";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth scan error");
+	}
+	http_helper_free(&req);
+}
+
+void controller_post_bluetooth_device_action(const char* mac, const char* action)
+{
+	http_get_req_t req;
+	char url[160];
+	sprintf(url, BASE_URL "settings/bluetooth/devices/%s/%s", mac, action);
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth device action error");
+	}
+	http_helper_free(&req);
+}
+
 void controller_get_update_status()
 {
 	http_get_req_t req;
 	char* url = BASE_URL "settings/update-status";
-	http_helper_get(&req, url);
-	json_helper_update_update_status(req.buffer);
+	int err = http_helper_get(&req, url);
+	if (err != 0) {
+		LV_LOG_ERROR("Update status GET error: %d", err);
+		http_helper_free(&req);
+		return;
+	}
+	if (req.buffer == NULL || strlen(req.buffer) == 0) {
+		LV_LOG_ERROR("Update status response empty");
+		http_helper_free(&req);
+		return;
+	}
+	int parse_err = json_helper_update_update_status(req.buffer);
+	if (parse_err != 0) {
+		LV_LOG_ERROR("Failed to parse update status JSON");
+	}
 	http_helper_free(&req);
 }
 

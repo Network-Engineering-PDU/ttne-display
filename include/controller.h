@@ -38,6 +38,10 @@ void controller_put_modbus(const models_modbus_t* modbus);
 void controller_get_modbus();
 void controller_post_start_bluetooth();
 void controller_post_stop_bluetooth();
+void controller_get_bluetooth();
+void controller_put_bluetooth(bool powered, bool pairable, bool discoverable);
+void controller_post_bluetooth_scan(bool enable);
+void controller_post_bluetooth_device_action(const char* mac, const char* action);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -16,6 +16,7 @@ int json_helper_update_out_data(const char* json_str);
 int json_helper_update_nw_services(const char* json_str);
 int json_helper_update_nw_info(const char* json_str);
 int json_helper_update_nw_if(const char* json_str);
+int json_helper_update_bt_status(const char* json_str);
 int json_helper_update_license(const char* json_str);
 int json_helper_update_modbus(const char* json_str);
 

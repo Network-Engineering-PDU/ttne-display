@@ -111,8 +111,14 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n Reset", ASSET("menu.png"));
     
     /* Start polling for pending updates from remote server */
+    // Delete any existing timer to prevent duplicates
+    if (timer_poll_update_status != NULL) {
+        lv_timer_del(timer_poll_update_status);
+        timer_poll_update_status = NULL;
+    }
     update_confirmation_shown = false;
     timer_poll_update_status = lv_timer_create(timer_poll_update_status_cb, TIMER_POLL_UPDATE_STATUS, NULL);
+    LV_LOG_USER("Update polling timer started");
 }
 
 /* Callbacks ******************************************************************/
@@ -123,9 +129,13 @@ static void timer_poll_update_status_cb(lv_timer_t* timer) {
     
     const models_update_status_t* update_status = models_get_update_status();
     
+    LV_LOG_USER("Poll: pending=%d, auto_update=%d, shown=%d", 
+        update_status->is_pending, update_status->auto_update, update_confirmation_shown);
+    
     // Only show confirmation once, when an update is pending and auto_update is enabled
     if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {
         update_confirmation_shown = true;
+        LV_LOG_USER("Firmware update detected! Showing confirmation dialog.");
         
         // Stop polling while showing confirmation dialog
         lv_timer_pause(timer);
@@ -141,6 +151,7 @@ static void btn_auto_cb(lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_target(e);
         uint16_t sel = lv_dropdown_get_selected(obj);
         bool enabled = (sel == 0); // 0 is ON, 1 is OFF
+        LV_LOG_USER("Auto-update changed to: %s", enabled ? "ON" : "OFF");
         controller_set_auto_update(enabled);
     }
 }
