@@ -36,6 +36,8 @@ void controller_post_start_modbus();
 void controller_post_stop_modbus();
 void controller_put_modbus(const models_modbus_t* modbus);
 void controller_get_modbus();
+void controller_post_start_bluetooth();
+void controller_post_stop_bluetooth();
 
 #ifdef __cplusplus
 } /* extern "C" */

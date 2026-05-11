@@ -379,6 +379,30 @@ void controller_post_stop_modbus()
 	http_helper_free(&req);
 }
 
+void controller_post_start_bluetooth()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/start-bluetooth";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth start error");
+	}
+	printf("Buffer received: %s\n", req.buffer);
+	http_helper_free(&req);
+}
+
+void controller_post_stop_bluetooth()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/stop-bluetooth";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth stop error");
+	}
+	printf("Buffer received: %s\n", req.buffer);
+	http_helper_free(&req);
+}
+
 void controller_get_update_status()
 {
 	http_get_req_t req;

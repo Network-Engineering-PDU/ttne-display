@@ -418,6 +418,11 @@ int json_helper_update_nw_services(const char* json_str)
 		return 1;
 	}
 	nw_services.ssh = bl;
+	err = json_get_bool(&bl, json, "bluetooth");
+	if (err != 0) {
+		return 1;
+	}
+	nw_services.bluetooth = bl;
 	
 	models_set_nw_services(&nw_services);
 

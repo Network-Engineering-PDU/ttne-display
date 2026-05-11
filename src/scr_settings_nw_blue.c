@@ -11,24 +11,110 @@
 #include "ttne_display.h"
 #include "runbg.h"
 
-static lv_obj_t* bluetooth_enable_cbx;
+/* Global variables ***********************************************************/
+static lv_obj_t* dd_bt_state;
+static lv_obj_t* menu_handle;
+static bool is_page_active = false;
 
-void scr_settings_nw_blue_create(lv_obj_t* menu, lv_obj_t* btn)
+/* Function prototypes ********************************************************/
+static void menu_cb(lv_event_t* e);
+static void btn_bt_ok_cb(lv_event_t* e);
+static void btn_bt_cancel_cb(lv_event_t* e);
+
+/* Callbacks ******************************************************************/
+
+static void menu_cb(lv_event_t* e)
 {
-    /*
-    lv_obj_t* blue_page = tt_obj_menu_page_create(menu, btn, NULL, "Bluetooth");
-    lv_obj_t* cont = tt_obj_cont_create(blue_page);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t* menu = lv_event_get_current_target(e);
 
-    // Bluetooth Enable
-    tt_obj_label_create(cont, "Bluetooth enable");
-    bluetooth_enable_cbx = tt_obj_checkbox_create(cont, "", NULL);
+    if (code == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* target_page = lv_event_get_user_data(e);
+        lv_obj_t* active_page = lv_menu_get_cur_main_page(menu);
+        
+        if (target_page == active_page) {
+            // Refresh data from model when page opens
+            controller_get_nw_services();
+            const models_nw_services_t* nw_services = models_get_nw_services();
+            
+            // Set dropdown index: 0 for ON, 1 for OFF
+            lv_dropdown_set_selected(dd_bt_state, nw_services->bluetooth ? 0 : 1);
 
-    // OK / Cancel buttons
-    lv_obj_t* btn_row = lv_obj_create(cont);
-    lv_obj_set_flex_flow(btn_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(btn_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+            if (!is_page_active) {
+                is_page_active = true;
+                LV_LOG_USER("Bluetooth Settings Opened");
+            }
+        }
+    } else if (code == LV_EVENT_DELETE) {
+        is_page_active = false;
+    }
+}
+
+static void btn_bt_ok_cb(lv_event_t* e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        // 0 = ON, 1 = OFF
+        uint16_t selected = lv_dropdown_get_selected(dd_bt_state);
+        
+        if (selected == 0) {
+            controller_post_start_bluetooth();
+            LV_LOG_USER("Action: Bluetooth Enabled");
+        } else {
+            controller_post_stop_bluetooth();
+            LV_LOG_USER("Action: Bluetooth Disabled");
+        }
+
+        // Navigate back
+        lv_obj_t* back_btn = lv_menu_get_main_header_back_btn(menu_handle);
+        lv_event_send(back_btn, LV_EVENT_CLICKED, NULL);
+    }
+}
+
+static void btn_bt_cancel_cb(lv_event_t* e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        // Just go back without calling any controller functions
+        lv_obj_t* back_btn = lv_menu_get_main_header_back_btn(menu_handle);
+        lv_event_send(back_btn, LV_EVENT_CLICKED, NULL);
+    }
+}
+
+/* Creation Function **********************************************************/
+
+void scr_settings_nw_blue_create(lv_obj_t* menu_param, lv_obj_t* btn)
+{
+    menu_handle = menu_param;
+
+    // Create the menu page
+    lv_obj_t* bt_cont = tt_obj_menu_page_create(menu_handle, btn, menu_cb, "Bluetooth");
     
-    tt_obj_btn_std_create(btn_row, NULL, "OK");
-    tt_obj_btn_std_create(btn_row, NULL, "Cancel");
-    */
+    // 1. Label Design
+    lv_obj_t* label = tt_obj_label_create(bt_cont, "Bluetooth state");
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+
+    // 2. Dropdown Design (Replacing the "X")
+    dd_bt_state = lv_dropdown_create(bt_cont);
+    lv_dropdown_set_options(dd_bt_state, "ON\nOFF");
+    lv_obj_set_width(dd_bt_state, 120);
+    lv_obj_set_style_border_width(dd_bt_state, 2, 0);
+    lv_obj_set_style_border_color(dd_bt_state, lv_color_white(), 0);
+    
+    // Position it to the right of the text
+    lv_obj_align(dd_bt_state, LV_ALIGN_CENTER, 70, -20);
+
+    // 3. Action Button Container (Flex Row)
+    lv_obj_t* actions_cont = lv_obj_create(bt_cont);
+    lv_obj_set_size(actions_cont, LV_PCT(100), 80);
+    lv_obj_set_flex_flow(actions_cont, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(actions_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_gap(actions_cont, 15, 0);
+    lv_obj_set_style_bg_opa(actions_cont, 0, 0); // Transparent background
+    lv_obj_set_style_border_opa(actions_cont, 0, 0);
+
+    // 4. OK & Cancel Buttons
+    tt_obj_btn_create(actions_cont, btn_bt_ok_cb, "OK", 
+                      NULL, LV_PCT(40), 45, LV_ALIGN_CENTER);
+                      
+    tt_obj_btn_create(actions_cont, btn_bt_cancel_cb, "Cancel", 
+                      NULL, LV_PCT(40), 45, LV_ALIGN_CENTER);
 }

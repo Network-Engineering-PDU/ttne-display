@@ -149,6 +149,7 @@ typedef struct models_nw_services_t {
 	bool snmp;
 	bool modbus;
 	bool ssh;
+	bool bluetooth;
 } models_nw_services_t;
 
 typedef struct models_license_t {

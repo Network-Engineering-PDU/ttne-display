@@ -217,6 +217,7 @@ void models_set_nw_services(const models_nw_services_t* l_nw_services)
 	nw_services.ssh = l_nw_services->ssh;
 	nw_services.snmp = l_nw_services->snmp;
 	nw_services.modbus = l_nw_services->modbus;
+	nw_services.bluetooth = l_nw_services->bluetooth;
 }
 
 const models_nw_info_t* models_get_nw_info()

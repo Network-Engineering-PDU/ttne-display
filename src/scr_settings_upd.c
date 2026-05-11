@@ -60,7 +60,7 @@ static char* get_last_element(const char* str) {
 void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     /* 1. Create page and main container */
-    lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, "System update");
+    lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, "System Update");
     lv_obj_t* main = tt_obj_cont_create(cont);
     lv_obj_set_flex_flow(main, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_all(main, 15, 0);

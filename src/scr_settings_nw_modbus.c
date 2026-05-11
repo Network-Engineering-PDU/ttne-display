@@ -10,71 +10,111 @@
 #include "screen.h"
 #include "ttne_display.h"
 #include "runbg.h"
+#include "scr_keyboard.h"
 
-/* Modbus configuration variables */
-static lv_obj_t* modbus_tcp_combo;
-static lv_obj_t* modbus_eth1_combo;
-static lv_obj_t* modbus_eth2_combo;
-static lv_obj_t* modbus_baud_txt;
-static lv_obj_t* modbus_parity_txt;
-static lv_obj_t* modbus_stopbits_txt;
-static lv_obj_t* modbus_rt485_acc1_combo;
-static lv_obj_t* modbus_rt485_acc2_combo;
-static lv_obj_t* modbus_rt485_baud_txt;
-static lv_obj_t* modbus_rt485_parity_txt;
-static lv_obj_t* modbus_rt485_stopbits_txt;
+/* Global variables ***********************************************************/
+static lv_obj_t* txt_modbus_addr;
+static lv_obj_t* btn_modbus;
+static bool running = false;
+
+/* Function prototypes ********************************************************/
+static void btn_modbus_cb(lv_event_t* e);
+static void msg_box_modbus_cb(lv_event_t* e);
+static void txt_modbus_addr_cb(lv_event_t* e);
+
+/* Callbacks ******************************************************************/
+static void menu_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* menu = lv_event_get_current_target(e);
+
+	if (code == LV_EVENT_VALUE_CHANGED) {
+		lv_obj_t* curr_page = lv_event_get_user_data(e);
+		lv_obj_t* page = lv_menu_get_cur_main_page(menu);
+		if (curr_page == page) {
+			controller_get_nw_services();
+			const models_nw_services_t* nw_services = models_get_nw_services();
+			tt_obj_btn_toggle_set_state(btn_modbus, nw_services->modbus);
+			controller_get_modbus();
+			const models_modbus_t* modbus = models_get_modbus();
+			char modbus_addr_str[10];
+			sprintf(modbus_addr_str, "%d", modbus->addr);
+			lv_textarea_set_text(txt_modbus_addr, modbus_addr_str);
+			if (!running) {
+				running = true;
+				LV_LOG_USER("Settings open");
+			}
+		}
+	} else if (code == LV_EVENT_CLICKED) {
+		if (running) {
+			running = false;
+			LV_LOG_USER("Settings close");
+		}
+	}
+}
+
+static void btn_modbus_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* btn = lv_event_get_current_target(e);
+
+	if (code == LV_EVENT_VALUE_CHANGED) {
+		char msg[100];
+		sprintf(msg, "Are you sure you want to " TT_COLOR_GREEN_NE_STR
+				" %s# Modbus?", (lv_obj_get_state(btn) & LV_STATE_CHECKED) ?
+				"enable" : "disable");
+		tt_obj_msg_box_create("Modbus service", msg, NULL, msg_box_modbus_cb);
+	}
+}
+
+static void msg_box_modbus_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* obj = lv_event_get_current_target(e);
+
+	if (code == LV_EVENT_VALUE_CHANGED) {
+		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
+			if (lv_obj_get_state(btn_modbus) & LV_STATE_CHECKED) {
+				controller_post_start_modbus();
+			} else {
+				controller_post_stop_modbus();
+			}
+		} else {
+			const models_nw_services_t* nw_services = models_get_nw_services();
+			tt_obj_btn_toggle_set_state(btn_modbus, nw_services->modbus);
+		}
+		lv_msgbox_close(obj);
+	}
+}
+
+static void txt_modbus_addr_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* obj = lv_event_get_target(e);
+
+	if (code == LV_EVENT_CLICKED) {
+		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_NUM);
+		lv_scr_load(kb_scr);
+	}
+	if (code == LV_EVENT_READY) {
+		// TODO: ensure txt_modbus_addr text is an integer
+		models_modbus_t modbus;
+		modbus.addr = atoi(lv_textarea_get_text(txt_modbus_addr));
+		if (modbus.addr < 0 || modbus.addr > 255) {
+			tt_obj_info_box_create("ERROR",
+					"Modbus address must be in the interval [0-255]", 1);
+			return;
+		}
+		controller_put_modbus(&modbus);
+	}
+}
 
 void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-    /*
-    lv_obj_t* modbus_page = tt_obj_menu_page_create(menu, btn, NULL, "Modbus");
-    lv_obj_t* cont = tt_obj_cont_create(modbus_page);
+    lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
+            "Modbus Settings");
 
-    // TCP/Ethernet Section 
-    tt_obj_label_create(cont, "TCP / Ethernet 1");
-    modbus_eth1_combo = tt_obj_dropdown_create(cont, "Enabled\nDisabled", NULL);
-    lv_dropdown_set_selected(modbus_eth1_combo, 0);
-
-    tt_obj_label_create(cont, "Ethernet 2");
-    modbus_eth2_combo = tt_obj_dropdown_create(cont, "Enabled\nDisabled", NULL);
-    lv_dropdown_set_selected(modbus_eth2_combo, 0);
-
-    // Baud Rate Configuration 
-    tt_obj_label_create(cont, "Baud rate");
-    modbus_baud_txt = tt_obj_txt_create(cont, "Baud rate", NULL);
-
-    tt_obj_label_create(cont, "Parity");
-    modbus_parity_txt = tt_obj_txt_create(cont, "Parity", NULL);
-
-    tt_obj_label_create(cont, "Stop bits");
-    modbus_stopbits_txt = tt_obj_txt_create(cont, "Stop bits", NULL);
-
-    // RT485 Section
-    tt_obj_label_create(cont, "RT 485");
-    
-    tt_obj_label_create(cont, "ACC-1");
-    modbus_rt485_acc1_combo = tt_obj_dropdown_create(cont, "Enabled\nDisabled", NULL);
-    lv_dropdown_set_selected(modbus_rt485_acc1_combo, 0);
-
-    tt_obj_label_create(cont, "ACC-2");
-    modbus_rt485_acc2_combo = tt_obj_dropdown_create(cont, "Enabled\nDisabled", NULL);
-    lv_dropdown_set_selected(modbus_rt485_acc2_combo, 0);
-
-    tt_obj_label_create(cont, "Baud rate");
-    modbus_rt485_baud_txt = tt_obj_txt_create(cont, "Baud rate", NULL);
-
-    tt_obj_label_create(cont, "Parity");
-    modbus_rt485_parity_txt = tt_obj_txt_create(cont, "Parity", NULL);
-
-    tt_obj_label_create(cont, "Stop bits");
-    modbus_rt485_stopbits_txt = tt_obj_txt_create(cont, "Stop bits", NULL);
-
-    // OK / Cancel buttons
-    lv_obj_t* btn_row = lv_obj_create(cont);
-    lv_obj_set_flex_flow(btn_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(btn_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    tt_obj_btn_std_create(btn_row, NULL, "OK");
-    tt_obj_btn_std_create(btn_row, NULL, "Cancel");
-    */
+    lv_obj_t* settings_nw_cont = tt_obj_cont_create(settings_cont);
+    tt_obj_label_create(settings_nw_cont, "Modbus address");
+	txt_modbus_addr = tt_obj_txt_create(settings_nw_cont, "Modbus address", txt_modbus_addr_cb);
 }
