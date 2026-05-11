@@ -58,6 +58,10 @@ void controller_init()
 	bt_status.pairable = false;
 	bt_status.discoverable = false;
 	bt_status.discovering = false;
+	bt_status.pairing_request = false;
+	bt_status.pairing_mac = "";
+	bt_status.pairing_name = "";
+	bt_status.pairing_passkey = "";
 	bt_status.device_count = 0;
 	models_set_bt_status(&bt_status);
 }
@@ -469,6 +473,18 @@ void controller_post_bluetooth_device_action(const char* mac, const char* action
 	int err = http_helper_post(&req, url, NULL);
 	if (err != 0) {
 		LV_LOG_ERROR("Bluetooth device action error");
+	}
+	http_helper_free(&req);
+}
+
+void controller_post_bluetooth_pairing_response(bool accept)
+{
+	http_get_req_t req;
+	char* url = accept ? BASE_URL "settings/bluetooth/pairing/accept" :
+			BASE_URL "settings/bluetooth/pairing/refuse";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("Bluetooth pairing response error");
 	}
 	http_helper_free(&req);
 }

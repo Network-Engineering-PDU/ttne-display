@@ -452,6 +452,14 @@ int json_helper_update_bt_status(const char* json_str)
 	bt_status.discoverable = (err == 0) ? bl : false;
 	err = json_get_bool(&bl, json, "discovering");
 	bt_status.discovering = (err == 0) ? bl : false;
+	err = json_get_bool(&bl, json, "pairing_request");
+	bt_status.pairing_request = (err == 0) ? bl : false;
+	str = json_get_string(json, "pairing_mac");
+	bt_status.pairing_mac = str ? str : "";
+	str = json_get_string(json, "pairing_name");
+	bt_status.pairing_name = str ? str : "";
+	str = json_get_string(json, "pairing_passkey");
+	bt_status.pairing_passkey = str ? str : "";
 	bt_status.device_count = 0;
 
 	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");

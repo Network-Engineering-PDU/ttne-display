@@ -230,6 +230,9 @@ void models_set_bt_status(const models_bt_status_t* l_bt_status)
 {
 	free((void*)bt_status.controller_mac);
 	free((void*)bt_status.name);
+	free((void*)bt_status.pairing_mac);
+	free((void*)bt_status.pairing_name);
+	free((void*)bt_status.pairing_passkey);
 	for (int i = 0; i < bt_status.device_count; i++) {
 		free((void*)bt_status.devices[i].mac);
 		free((void*)bt_status.devices[i].name);
@@ -241,6 +244,10 @@ void models_set_bt_status(const models_bt_status_t* l_bt_status)
 	bt_status.pairable = l_bt_status->pairable;
 	bt_status.discoverable = l_bt_status->discoverable;
 	bt_status.discovering = l_bt_status->discovering;
+	bt_status.pairing_request = l_bt_status->pairing_request;
+	bt_status.pairing_mac = stralloc(l_bt_status->pairing_mac);
+	bt_status.pairing_name = stralloc(l_bt_status->pairing_name);
+	bt_status.pairing_passkey = stralloc(l_bt_status->pairing_passkey);
 	bt_status.device_count = l_bt_status->device_count;
 
 	if (bt_status.device_count > MAX_BT_DEVICES) {

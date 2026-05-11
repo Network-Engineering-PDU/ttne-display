@@ -42,6 +42,7 @@ void controller_get_bluetooth();
 void controller_put_bluetooth(bool powered, bool pairable, bool discoverable);
 void controller_post_bluetooth_scan(bool enable);
 void controller_post_bluetooth_device_action(const char* mac, const char* action);
+void controller_post_bluetooth_pairing_response(bool accept);
 
 #ifdef __cplusplus
 } /* extern "C" */

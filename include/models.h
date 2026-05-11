@@ -169,6 +169,10 @@ typedef struct models_bt_status_t {
 	bool pairable;
 	bool discoverable;
 	bool discovering;
+	bool pairing_request;
+	const char* pairing_mac;
+	const char* pairing_name;
+	const char* pairing_passkey;
 	models_bt_device_t devices[MAX_BT_DEVICES];
 	int device_count;
 } models_bt_status_t;
