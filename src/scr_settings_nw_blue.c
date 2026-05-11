@@ -12,12 +12,14 @@
 #include "runbg.h"
 
 /* Global variables ***********************************************************/
-static lv_obj_t* dd_bt_state;
+static lv_obj_t* btn_bt_state;
 static lv_obj_t* menu_handle;
 static bool is_page_active = false;
+static uint16_t selected_state = 0; // 0 = ON, 1 = OFF
 
 /* Function prototypes ********************************************************/
 static void menu_cb(lv_event_t* e);
+static void btn_bt_state_cb(lv_event_t* e);
 static void btn_bt_ok_cb(lv_event_t* e);
 static void btn_bt_cancel_cb(lv_event_t* e);
 
@@ -37,8 +39,9 @@ static void menu_cb(lv_event_t* e)
             controller_get_nw_services();
             const models_nw_services_t* nw_services = models_get_nw_services();
             
-            // Set dropdown index: 0 for ON, 1 for OFF
-            lv_dropdown_set_selected(dd_bt_state, nw_services->bluetooth ? 0 : 1);
+            // Set button state: 0 for ON, 1 for OFF
+            selected_state = nw_services->bluetooth ? 0 : 1;
+            lv_label_set_text(lv_obj_get_child(btn_bt_state, 0), nw_services->bluetooth ? "ON" : "OFF");
 
             if (!is_page_active) {
                 is_page_active = true;
@@ -50,13 +53,21 @@ static void menu_cb(lv_event_t* e)
     }
 }
 
+static void btn_bt_state_cb(lv_event_t* e)
+{
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        // Toggle state: 0 = ON, 1 = OFF
+        selected_state = selected_state == 0 ? 1 : 0;
+        lv_label_set_text(lv_obj_get_child(btn_bt_state, 0), selected_state == 0 ? "ON" : "OFF");
+    }
+}
+
 static void btn_bt_ok_cb(lv_event_t* e)
 {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
         // 0 = ON, 1 = OFF
-        uint16_t selected = lv_dropdown_get_selected(dd_bt_state);
         
-        if (selected == 0) {
+        if (selected_state == 0) {
             controller_post_start_bluetooth();
             LV_LOG_USER("Action: Bluetooth Enabled");
         } else {
@@ -67,7 +78,7 @@ static void btn_bt_ok_cb(lv_event_t* e)
         // Update the local model state immediately for UI consistency
         models_nw_services_t* nw_services = (models_nw_services_t*)models_get_nw_services();
         if (nw_services) {
-            nw_services->bluetooth = (selected == 0) ? true : false;
+            nw_services->bluetooth = (selected_state == 0) ? true : false;
         }
 
         // Navigate back
@@ -107,12 +118,11 @@ void scr_settings_nw_blue_create(lv_obj_t* menu_param, lv_obj_t* btn)
     lv_obj_t* label = tt_obj_label_create(state_cont, "Bluetooth state");
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 
-    // Dropdown on the right
-    dd_bt_state = lv_dropdown_create(state_cont);
-    lv_dropdown_set_options(dd_bt_state, "ON\nOFF");
-    lv_obj_set_width(dd_bt_state, 100);
-    lv_obj_set_style_border_width(dd_bt_state, 2, 0);
-    lv_obj_set_style_border_color(dd_bt_state, lv_color_white(), 0);
+    // Button on the right
+    btn_bt_state = tt_obj_btn_create(state_cont, btn_bt_state_cb, "ON", 
+                                      NULL, 80, 45, LV_ALIGN_CENTER);
+    lv_obj_set_style_border_width(btn_bt_state, 2, 0);
+    lv_obj_set_style_border_color(btn_bt_state, lv_color_white(), 0);
 
     // 2. Action Button Container (Flex Row)
     lv_obj_t* actions_cont = lv_obj_create(bt_cont);

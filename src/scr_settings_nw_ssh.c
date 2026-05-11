@@ -68,10 +68,16 @@ static void msg_box_ssh_cb(lv_event_t* e)
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			if (lv_obj_get_state(btn_ssh) & LV_STATE_CHECKED) {
+			bool enable = (lv_obj_get_state(btn_ssh) & LV_STATE_CHECKED) ? true : false;
+			if (enable) {
 				controller_post_start_ssh();
 			} else {
 				controller_post_stop_ssh();
+			}
+			// Update the model state immediately for UI consistency
+			models_nw_services_t* nw_services = (models_nw_services_t*)models_get_nw_services();
+			if (nw_services) {
+				nw_services->ssh = enable;
 			}
 		} else {
 			const models_nw_services_t* nw_services = models_get_nw_services();
