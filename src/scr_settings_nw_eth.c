@@ -550,5 +550,32 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_dns = tt_obj_txt_create(nw_cont2, "DNS", txt_num_cb);
 	lv_textarea_set_text(txt_dns, nw_if->params.dns);
 
+	/* Dual LAN fields (initially hidden) */
+	lbl_lan1 = tt_obj_label_create(nw_cont2, "LAN1 Interface");
+	lbl_lan1_ip = tt_obj_label_create(nw_cont2, "LAN1 IP Address");
+	txt_lan1_ip = tt_obj_txt_create(nw_cont2, "LAN1 IP Address", txt_num_cb);
+	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+
+	lbl_lan1_mask = tt_obj_label_create(nw_cont2, "LAN1 Subnet Mask");
+	txt_lan1_mask = tt_obj_txt_create(nw_cont2, "LAN1 Subnet Mask", txt_num_cb);
+	lv_obj_add_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+
+	lbl_lan2 = tt_obj_label_create(nw_cont2, "LAN2 Interface");
+	lbl_lan2_ip = tt_obj_label_create(nw_cont2, "LAN2 IP Address");
+	txt_lan2_ip = tt_obj_txt_create(nw_cont2, "LAN2 IP Address", txt_num_cb);
+	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+
+	lbl_lan2_mask = tt_obj_label_create(nw_cont2, "LAN2 Subnet Mask");
+	txt_lan2_mask = tt_obj_txt_create(nw_cont2, "LAN2 Subnet Mask", txt_num_cb);
+	lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+
+	/* Hide all dual LAN labels initially */
+	lv_obj_add_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
+
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
 }
