@@ -22,10 +22,12 @@
 #define MAX_NW_CONN_RETRIES 5
 
 typedef enum {
-    NW_WIFI_ONLY   = 0,  // WiFi only
-    NW_SINGLE_LAN  = 1,  // Single ethernet (eth0 or eth1)
+    NW_SINGLE_LAN  = 0,  // Single ethernet (eth0 or eth1)
+    NW_WIFI_ONLY   = 1,  // WiFi only
     NW_DUAL_LAN    = 2,  // Both eth0 and eth1
     NW_LAN_WIFI    = 3,  // Ethernet + WiFi
+    NW_ETH         = NW_SINGLE_LAN,
+    NW_WIFI        = NW_WIFI_ONLY,
 } dd_opts_t;
 
 /* Global variables ***********************************************************/
