@@ -22,8 +22,10 @@
 #define MAX_NW_CONN_RETRIES 5
 
 typedef enum {
-    NW_ETH  = 0,
-    NW_WIFI = 1,
+    NW_WIFI_ONLY   = 0,  // WiFi only
+    NW_SINGLE_LAN  = 1,  // Single ethernet (eth0 or eth1)
+    NW_DUAL_LAN    = 2,  // Both eth0 and eth1
+    NW_LAN_WIFI    = 3,  // Ethernet + WiFi
 } dd_opts_t;
 
 /* Global variables ***********************************************************/
@@ -50,6 +52,19 @@ static lv_obj_t* txt_ip;
 static lv_obj_t* txt_mask;
 static lv_obj_t* txt_gw;
 static lv_obj_t* txt_dns;
+
+/* Dual LAN specific fields */
+static lv_obj_t* lbl_lan1;
+static lv_obj_t* lbl_lan1_ip;
+static lv_obj_t* lbl_lan1_mask;
+static lv_obj_t* lbl_lan2;
+static lv_obj_t* lbl_lan2_ip;
+static lv_obj_t* lbl_lan2_mask;
+
+static lv_obj_t* txt_lan1_ip;
+static lv_obj_t* txt_lan1_mask;
+static lv_obj_t* txt_lan2_ip;
+static lv_obj_t* txt_lan2_mask;
 
 /* Function prototypes ********************************************************/
 
@@ -371,27 +386,37 @@ static bool is_static()
 
 static void update_data()
 {
-	if (lv_dropdown_get_selected(dd) == 0) { // Ethernet
-		lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-	} else { // WIFI
-		lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-	}
-	if (lv_obj_get_state(btn_dhcp) & LV_STATE_CHECKED) {
+	uint16_t selected = lv_dropdown_get_selected(dd);
+	bool dhcp_enabled = (lv_obj_get_state(btn_dhcp) & LV_STATE_CHECKED) != 0;
+
+	/* Hide all optional field groups first */
+	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
+
+	lv_obj_add_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+
+	lv_obj_add_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+
+	/* Handle static IP fields visibility */
+	if (dhcp_enabled) {
 		lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
 	} else {
 		lv_obj_clear_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
@@ -402,6 +427,76 @@ static void update_data()
 		lv_obj_clear_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	/* Mode-specific field visibility */
+	switch (selected) {
+		case NW_WIFI_ONLY:
+			/* WiFi only: show WiFi fields, hide single/dual LAN */
+			lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
+			
+			lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
+			break;
+
+		case NW_SINGLE_LAN:
+			/* Single LAN: show standard IP fields, hide WiFi and dual LAN */
+			/* IP fields already shown/hidden by DHCP toggle above */
+			break;
+
+		case NW_DUAL_LAN:
+			/* Dual LAN: show LAN1 and LAN2 fields, hide WiFi */
+			if (!dhcp_enabled) {
+				/* Show dual LAN static IP fields */
+				lv_obj_clear_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+
+				lv_obj_clear_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+
+				/* Show shared gateway and DNS */
+				lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_clear_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
+
+				/* Hide single LAN IP fields */
+				lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
+			}
+			break;
+
+		case NW_LAN_WIFI:
+			/* LAN & WiFi: show both LAN and WiFi fields */
+			lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
+			
+			/* IP fields already shown/hidden by DHCP toggle above */
+			break;
+
+		default:
+			break;
 	}
 }
 
