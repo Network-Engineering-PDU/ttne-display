@@ -12,570 +12,160 @@
 #include "utils.h"
 #include "models.h"
 #include "controller.h"
-#include "config.h"
-#include "screen.h"
-#include "ttne_display.h"
-#include "runbg.h"
 
-#define TIMER_NW_CHECK_PERIOD 2000 // ms
-#define TIMER_MSG_BOX_PERIOD 10000 // ms
-#define MAX_NW_CONN_RETRIES 5
-
+/* Mode Definitions matching your table */
 typedef enum {
-    NW_SINGLE_LAN  = 0,  // Single ethernet (eth0 or eth1)
-    NW_WIFI_ONLY   = 1,  // WiFi only
-    NW_DUAL_LAN    = 2,  // Both eth0 and eth1
-    NW_LAN_WIFI    = 3,  // Ethernet + WiFi
-    NW_ETH         = NW_SINGLE_LAN,
-    NW_WIFI        = NW_WIFI_ONLY,
-} dd_opts_t;
+    MODE_WIFI = 0,
+    MODE_SINGLE_LAN,
+    MODE_DUAL_LAN,
+    MODE_LAN_WIFI
+} nw_mode_t;
 
-/* Global variables ***********************************************************/
+/* Global UI Pointers */
+static lv_obj_t *dd_mode;
+static lv_obj_t *dd_config;
+static lv_obj_t *cont_left, *cont_right;
 
-static models_nw_if_t nw_ifaces;
+/* Shared Fields */
+static lv_obj_t *txt_ip, *txt_mask, *txt_gw, *txt_dns;
+static lv_obj_t *txt_wifi_ssid, *txt_wifi_pass;
+static lv_obj_t *txt_lan2_ip, *txt_lan2_mask;
 
-static lv_obj_t* loader_scr;
+/* Labels for visibility toggling */
+static lv_obj_t *lbl_ip, *lbl_mask, *lbl_gw, *lbl_dns, *lbl_ssid, *lbl_pass, *lbl_lan2_ip, *lbl_lan2_mask;
 
-static lv_obj_t* dd;
-static lv_obj_t* btn_dhcp;
+/* --- Logic Functions --- */
 
-static lv_obj_t* lbl_wifi_ssid;
-static lv_obj_t* lbl_wifi_pass;
-static lv_obj_t* lbl_ip;
-static lv_obj_t* lbl_mask;
-static lv_obj_t* lbl_gw;
-static lv_obj_t* lbl_dns;
+static void update_visibility() {
+    nw_mode_t mode = (nw_mode_t)lv_dropdown_get_selected(dd_mode);
+    bool is_dhcp = (lv_dropdown_get_selected(dd_config) == 0);
 
-static lv_obj_t* cbx_pass;
+    /* Reset everything to hidden */
+    lv_obj_add_flag(cont_right, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_gw, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_ssid, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_pass, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
 
-static lv_obj_t* txt_wifi_ssid;
-static lv_obj_t* txt_wifi_pass;
-static lv_obj_t* txt_ip;
-static lv_obj_t* txt_mask;
-static lv_obj_t* txt_gw;
-static lv_obj_t* txt_dns;
+    switch(mode) {
+        case MODE_WIFI:
+            lv_obj_clear_flag(lbl_ssid, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(lbl_pass, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+            break;
 
-/* Dual LAN specific fields */
-static lv_obj_t* lbl_lan1;
-static lv_obj_t* lbl_lan1_ip;
-static lv_obj_t* lbl_lan1_mask;
-static lv_obj_t* lbl_lan2;
-static lv_obj_t* lbl_lan2_ip;
-static lv_obj_t* lbl_lan2_mask;
+        case MODE_SINGLE_LAN:
+            if(!is_dhcp) {
+                lv_obj_clear_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+            }
+            break;
 
-static lv_obj_t* txt_lan1_ip;
-static lv_obj_t* txt_lan1_mask;
-static lv_obj_t* txt_lan2_ip;
-static lv_obj_t* txt_lan2_mask;
+        case MODE_DUAL_LAN:
+            lv_obj_clear_flag(cont_right, LV_OBJ_FLAG_HIDDEN);
+            if(!is_dhcp) {
+                /* LAN 1 (Left) */
+                lv_obj_clear_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
+                /* LAN 2 (Right) */
+                lv_obj_clear_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+                /* Shared Gateway */
+                lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+            }
+            break;
 
-/* Function prototypes ********************************************************/
-
-static void menu_cb(lv_event_t* e);
-static void update_cb(lv_event_t* e);
-static void msg_box_timer_cb(lv_timer_t* timer);
-static void nw_if_timer_cb(lv_timer_t* timer);
-static void loader_cb(lv_event_t* e);
-static void msg_box_nw_if_cb(lv_event_t* e);
-static void btn_nw_settings_cb(lv_event_t* e);
-static void txt_cb(lv_event_t* e);
-static void txt_num_cb(lv_event_t* e);
-static void cbx_pass_cb(lv_event_t* e);
-
-static void update_data();
-static bool is_ethernet();
-static bool is_static();
-static void save_nw_if_async(const models_nw_if_t* nw_if);
-static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if);
-static void free_nw_if(models_nw_if_t* nw_if);
-
-/* Callbacks ******************************************************************/
-
-static void menu_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* menu = lv_event_get_current_target(e);
-
-	if (code == LV_EVENT_VALUE_CHANGED) {
-		lv_obj_t* curr_page = lv_event_get_user_data(e);
-		lv_obj_t* page = lv_menu_get_cur_main_page(menu);
-		if (curr_page == page) {
-			controller_get_nw_if();
-			const models_nw_if_t* nw_if = models_get_nw_if();
-			if (is_ethernet()) {
-				lv_dropdown_set_selected(dd, NW_ETH);
-			} else {
-				lv_dropdown_set_selected(dd, NW_WIFI);
-			}
-			(void)is_static(); // Not used
-			if (nw_if->dhcp) {
-				lv_obj_add_state(btn_dhcp, LV_STATE_CHECKED);
-			} else {
-				lv_obj_clear_state(btn_dhcp, LV_STATE_CHECKED);
-			}
-			lv_textarea_set_text(txt_ip, nw_if->params.ip);
-			lv_textarea_set_text(txt_mask, nw_if->params.mask);
-			lv_textarea_set_text(txt_gw, nw_if->params.gw);
-			lv_textarea_set_text(txt_dns, nw_if->params.dns);
-			lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
-			lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
-			update_data();
-		}
-	}
+        case MODE_LAN_WIFI:
+            lv_obj_clear_flag(cont_right, LV_OBJ_FLAG_HIDDEN);
+            /* LAN (Left) */
+            if(!is_dhcp) {
+                lv_obj_clear_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
+            }
+            /* WIFI (Right) */
+            lv_obj_clear_flag(lbl_ssid, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(lbl_pass, LV_OBJ_FLAG_HIDDEN); lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);   lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
+            break;
+    }
 }
 
-static void update_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
+static void update_cb(lv_event_t* e) { update_visibility(); }
 
-	if (code == LV_EVENT_VALUE_CHANGED) {
-		update_data();
-	}
-}
+/* --- Screen Creation --- */
 
-static void msg_box_timer_cb(lv_timer_t* timer)
-{
-	lv_timer_del(timer);
-	lv_msgbox_close(timer->user_data);
-}
+void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn) {
+    /* Create Page with Correct Header Title */
+    lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, NULL, "< Ethernet");
+    lv_obj_t* main_cont = tt_obj_cont_create(nw_cont);
+    lv_obj_set_flex_flow(main_cont, LV_FLEX_FLOW_COLUMN);
 
-static void nw_if_timer_cb(lv_timer_t* timer)
-{
-	static int retries = 0;
-	lv_obj_t* scr = timer->user_data;
-	lv_obj_t* msg_box_conn;
+    /* 1. Top Section: Mode and Config Dropdowns */
+    tt_obj_label_create(main_cont, "Ethernet mode");
+    dd_mode = tt_obj_dropdown_create(main_cont, "WIFI\nSingle LAN\nDual LAN\nLAN & WIFI", update_cb);
 
-	// For static IP configuration, return immediately without checking internet
-	if (nw_ifaces.type == ETH_STATIC || nw_ifaces.type == WIFI_STATIC) {
-		retries = 0;
-		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied", 0);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
-		return;
-	}
+    tt_obj_label_create(main_cont, "Configure");
+    dd_config = tt_obj_dropdown_create(main_cont, "DHCP\nManual", update_cb);
 
-	// For DHCP, check internet connectivity
-	// Call API network info
-	controller_get_nw_info();
-	const models_nw_info_t* nw_info = models_get_nw_info();
-	bool connected = (bool)nw_info->connected;
-	retries++;
-	LV_LOG_USER("Connected: %s (%d/%d)", connected ? "yes" : "no",
-			retries, MAX_NW_CONN_RETRIES);
+    /* 2. Middle Section: Dual Column Layout for Fields */
+    lv_obj_t* row_cont = lv_obj_create(main_cont);
+    lv_obj_set_size(row_cont, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(row_cont, 0, 0);
+    lv_obj_set_style_border_opa(row_cont, 0, 0);
+    lv_obj_set_flex_flow(row_cont, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(row_cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
-	if (connected) {
-		retries = 0;
-		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("INFO", "Connected to Internet", 0);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
-		return;
+    /* Create Left Column */
+    cont_left = lv_obj_create(row_cont);
+    lv_obj_set_flex_grow(cont_left, 1);
+    lv_obj_set_flex_flow(cont_left, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_bg_opa(cont_left, 0, 0);
 
-	}
-	if (retries > MAX_NW_CONN_RETRIES) {
-		retries = 0;
-		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("ERROR", "Can not connect to Internet", 1);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
-		return;
-	}
-}
+    /* Create Right Column */
+    cont_right = lv_obj_create(row_cont);
+    lv_obj_set_flex_grow(cont_right, 1);
+    lv_obj_set_flex_flow(cont_right, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_bg_opa(cont_right, 0, 0);
 
-static void loader_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_current_target(e);
-	lv_obj_t* scr = lv_event_get_user_data(e);
+    /* Left Column Fields */
+    lbl_ssid = tt_obj_label_create(cont_left, "SSID");
+    txt_wifi_ssid = tt_obj_txt_create(cont_left, "SSID", NULL);
+    
+    lbl_pass = tt_obj_label_create(cont_left, "Password");
+    txt_wifi_pass = tt_obj_txt_create(cont_left, "Password", NULL);
+    lv_textarea_set_password_mode(txt_wifi_pass, true);
 
-	if (code == LV_EVENT_CLICKED) {
-		lv_scr_load(scr);
-		lv_obj_del(obj);
-	}
-}
+    lbl_ip = tt_obj_label_create(cont_left, "I.P. address");
+    txt_ip = tt_obj_txt_create(cont_left, "0.0.0.0", NULL);
 
-static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if)
-{
-	models_nw_if_t copy = *nw_if;
-	copy.params.ip = strdup(nw_if->params.ip);
-	copy.params.mask = strdup(nw_if->params.mask);
-	copy.params.gw = strdup(nw_if->params.gw);
-	copy.params.dns = strdup(nw_if->params.dns);
-	copy.params.ssid = strdup(nw_if->params.ssid);
-	copy.params.pass = strdup(nw_if->params.pass);
-	copy.eth_interface = strdup(nw_if->eth_interface != NULL ? nw_if->eth_interface : "");
-	return copy;
-}
+    lbl_mask = tt_obj_label_create(cont_left, "Mask");
+    txt_mask = tt_obj_txt_create(cont_left, "255.255.255.0", NULL);
 
-static void free_nw_if(models_nw_if_t* nw_if)
-{
-	free((void*)nw_if->params.ip);
-	free((void*)nw_if->params.mask);
-	free((void*)nw_if->params.gw);
-	free((void*)nw_if->params.dns);
-	free((void*)nw_if->params.ssid);
-	free((void*)nw_if->params.pass);
-	free((void*)nw_if->eth_interface);
-}
+    /* Right Column Fields (used for Dual LAN / LAN+WiFi) */
+    lbl_lan2_ip = tt_obj_label_create(cont_right, "LAN2 I.P.");
+    txt_lan2_ip = tt_obj_txt_create(cont_right, "0.0.0.0", NULL);
 
-static void save_nw_if_async(const models_nw_if_t* nw_if)
-{
-	models_nw_if_t copy = clone_nw_if(nw_if);
-	pid_t pid = fork();
+    lbl_lan2_mask = tt_obj_label_create(cont_right, "LAN2 Mask");
+    txt_lan2_mask = tt_obj_txt_create(cont_right, "255.255.255.0", NULL);
 
-	if (pid == 0) {
-		pid_t worker_pid = fork();
-		if (worker_pid == 0) {
-			controller_put_nw_if(&copy);
-			free_nw_if(&copy);
-			_exit(0);
-		}
-		_exit(0);
-	}
+    /* Bottom Shared Fields (Back to Main Container) */
+    lbl_gw = tt_obj_label_create(main_cont, "Gateway");
+    txt_gw = tt_obj_txt_create(main_cont, "0.0.0.0", NULL);
 
-	if (pid > 0) {
-		waitpid(pid, NULL, 0);
-	} else {
-		controller_put_nw_if(nw_if);
-	}
+    /* 3. Action Buttons Section */
+    lv_obj_t* btn_row = lv_obj_create(main_cont);
+    lv_obj_set_size(btn_row, LV_PCT(100), 60);
+    lv_obj_set_flex_flow(btn_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_style_bg_opa(btn_row, 0, 0);
+    lv_obj_set_style_border_opa(btn_row, 0, 0);
 
-	free_nw_if(&copy);
-}
+    tt_obj_btn_std_create(btn_row, NULL, "OK");
+    tt_obj_btn_std_create(btn_row, NULL, "Cancel");
 
-static void msg_box_nw_if_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_current_target(e);
-
-	if (code == LV_EVENT_VALUE_CHANGED) {
-		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			lv_obj_t* prev_scr = lv_scr_act();
-			save_nw_if_async(&nw_ifaces);
-			lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, prev_scr);
-			char* txt = lv_event_get_user_data(e);
-			loader_scr = tt_obj_loader_create(txt, NULL);
-			lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, prev_scr);
-			lv_scr_load(loader_scr);
-		}
-		lv_msgbox_close(obj);
-	}
-}
-
-static void btn_nw_settings_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-
-	if (code == LV_EVENT_CLICKED) {
-		bool dhcp = (bool)(lv_obj_get_state(btn_dhcp) & LV_STATE_CHECKED);
-		const char* nw_type;
-		const models_nw_if_t* current_nw_if = models_get_nw_if();
-		nw_ifaces.eth_interface = current_nw_if->eth_interface;
-		if (lv_dropdown_get_selected(dd) == 0) { // Ethernet
-			nw_type = "Ethernet";
-			if (dhcp) {
-				nw_ifaces.type = ETH_DHCP;
-			} else {
-				nw_ifaces.type = ETH_STATIC;
-			}
-		} else { // WIFI
-			nw_type = "WiFi";
-			if (dhcp) {
-				nw_ifaces.type = WIFI_DHCP;
-			} else {
-				nw_ifaces.type = WIFI_STATIC;
-			}
-		}
-		const char* nw_dhcp;
-		if (dhcp) {
-			nw_dhcp = "Enabled";
-		} else {
-			nw_dhcp = "Disabled";
-		}
-		nw_ifaces.dhcp = dhcp;
-		nw_ifaces.params.ip = lv_textarea_get_text(txt_ip);
-		nw_ifaces.params.mask = lv_textarea_get_text(txt_mask);
-		nw_ifaces.params.gw = lv_textarea_get_text(txt_gw);
-		nw_ifaces.params.dns = lv_textarea_get_text(txt_dns);
-		nw_ifaces.params.ssid = lv_textarea_get_text(txt_wifi_ssid);
-		nw_ifaces.params.pass = lv_textarea_get_text(txt_wifi_pass);
-		if (nw_ifaces.params.pass == NULL) {
-			nw_ifaces.params.pass = "";
-		}
-
-		char msg[1000];
-		int len = 0;
-		len += sprintf(msg, "Are you sure you want to save this network settings?\n\n"
-				"Type: " TT_COLOR_GREEN_NE_STR " %s\n" \
-				"DHCP: " TT_COLOR_GREEN_NE_STR " %s\n", nw_type, nw_dhcp);
-		if (!lv_obj_has_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN)) { // WiFi
-			len += sprintf(msg + len, "SSID: " TT_COLOR_GREEN_NE_STR " %s\n"
-				"Pass: " TT_COLOR_GREEN_NE_STR " *******\n",
-				nw_ifaces.params.ssid);
-		}
-		if (!lv_obj_has_flag(txt_ip, LV_OBJ_FLAG_HIDDEN)) { // Static
-			len += sprintf(msg + len, "IP: " TT_COLOR_GREEN_NE_STR " %s\n" \
-				"Mask: " TT_COLOR_GREEN_NE_STR " %s\n" \
-				"Gateway: " TT_COLOR_GREEN_NE_STR " %s\n" \
-				"DNS: " TT_COLOR_GREEN_NE_STR " %s",
-				nw_ifaces.params.ip,
-				nw_ifaces.params.mask,
-				nw_ifaces.params.gw,
-				nw_ifaces.params.dns);
-		} 
-		tt_obj_msg_box_create("Network settings",
-				msg, "Connecting to internet...", msg_box_nw_if_cb);
-	}
-}
-
-static void txt_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_target(e);
-
-	if (code == LV_EVENT_CLICKED) {
-		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_ABC);
-		lv_scr_load(kb_scr);
-	}
-	if (code == LV_EVENT_READY) {
-		// Ready event from keyboard
-	}
-}
-
-static void txt_num_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_target(e);
-
-	if (code == LV_EVENT_CLICKED) {
-		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_NUM);
-		lv_scr_load(kb_scr);
-	}
-	if (code == LV_EVENT_READY) {
-		// Ready event from keyboard
-	}
-}
-
-static void cbx_pass_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_target(e);
-
-	if (code == LV_EVENT_VALUE_CHANGED) {
-		if (lv_obj_get_state(obj) & LV_STATE_CHECKED) {
-			lv_textarea_set_password_mode(txt_wifi_pass, false);
-		} else {
-			lv_textarea_set_password_mode(txt_wifi_pass, true);
-		}
-	}
-}
-
-/* Function definitions *******************************************************/
-
-static bool is_ethernet()
-{
-	const models_nw_if_t* nw_if = models_get_nw_if();
-	return (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC);
-}
-
-static bool is_static()
-{
-	const models_nw_if_t* nw_if = models_get_nw_if();
-	return (nw_if->type == WIFI_STATIC || nw_if->type == ETH_STATIC);
-}
-
-static void update_data()
-{
-	uint16_t selected = lv_dropdown_get_selected(dd);
-	bool dhcp_enabled = (lv_obj_get_state(btn_dhcp) & LV_STATE_CHECKED) != 0;
-
-	/* Hide all optional field groups first */
-	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-
-	lv_obj_add_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-
-	lv_obj_add_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-
-	/* Handle static IP fields visibility */
-	if (dhcp_enabled) {
-		lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
-	} else {
-		lv_obj_clear_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
-	}
-
-	/* Mode-specific field visibility */
-	switch (selected) {
-		case NW_WIFI_ONLY:
-			/* WiFi only: show WiFi fields, hide single/dual LAN */
-			lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-			
-			lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
-			break;
-
-		case NW_SINGLE_LAN:
-			/* Single LAN: show standard IP fields, hide WiFi and dual LAN */
-			/* IP fields already shown/hidden by DHCP toggle above */
-			break;
-
-		case NW_DUAL_LAN:
-			/* Dual LAN: show LAN1 and LAN2 fields, hide WiFi */
-			if (!dhcp_enabled) {
-				/* Show dual LAN static IP fields */
-				lv_obj_clear_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-
-				lv_obj_clear_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-
-				/* Show shared gateway and DNS */
-				lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
-
-				/* Hide single LAN IP fields */
-				lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
-			}
-			break;
-
-		case NW_LAN_WIFI:
-			/* LAN & WiFi: show both LAN and WiFi fields */
-			lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-			
-			/* IP fields already shown/hidden by DHCP toggle above */
-			break;
-
-		default:
-			break;
-	}
-}
-
-/* Public functions ***********************************************************/
-
-void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
-{
-	const models_nw_if_t* nw_if = models_get_nw_if();
-
-	// Settings / Network
-	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network Setup");
-	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
-
-	tt_obj_label_create(nw_cont2, "Connection type");
-	char* options = "Ethernet\nWiFi";
-	dd = tt_obj_dropdown_create(nw_cont2, options, update_cb);
-	btn_dhcp = tt_obj_btn_toggle_create(nw_cont2, update_cb, "DHCP");
-	lv_obj_add_style(btn_dhcp, &btn_style, 0);
-	lv_obj_set_height(btn_dhcp, 36);
-
-	lbl_wifi_ssid = tt_obj_label_create(nw_cont2, "WiFi SSID");
-	txt_wifi_ssid = tt_obj_txt_create(nw_cont2, "WiFi SSID", txt_cb);
-	lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
-	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_wifi_pass = tt_obj_label_create(nw_cont2, "WiFi password");
-	txt_wifi_pass = tt_obj_txt_create(nw_cont2, "WiFi password", txt_cb);
-	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
-	cbx_pass = tt_obj_checkbox_create(nw_cont2, "Show WiFi password", cbx_pass_cb);
-	lv_textarea_set_password_mode(txt_wifi_pass, true);
-	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_ip = tt_obj_label_create(nw_cont2, "IP Address");
-	txt_ip = tt_obj_txt_create(nw_cont2, "IP Address", txt_num_cb);
-	lv_textarea_set_text(txt_ip, nw_if->params.ip);
-
-	lbl_mask = tt_obj_label_create(nw_cont2, "Subnet Mask");
-	txt_mask = tt_obj_txt_create(nw_cont2, "Subnet Mask", txt_num_cb);
-	lv_textarea_set_text(txt_mask, nw_if->params.mask);
-
-	lbl_gw = tt_obj_label_create(nw_cont2, "Gateway IP");
-	txt_gw = tt_obj_txt_create(nw_cont2, "Gateway IP", txt_num_cb);
-	lv_textarea_set_text(txt_gw, nw_if->params.gw);
-
-	lbl_dns = tt_obj_label_create(nw_cont2, "DNS");
-	txt_dns = tt_obj_txt_create(nw_cont2, "DNS", txt_num_cb);
-	lv_textarea_set_text(txt_dns, nw_if->params.dns);
-
-	/* Dual LAN fields (initially hidden) */
-	lbl_lan1 = tt_obj_label_create(nw_cont2, "LAN1 Interface");
-	lbl_lan1_ip = tt_obj_label_create(nw_cont2, "LAN1 IP Address");
-	txt_lan1_ip = tt_obj_txt_create(nw_cont2, "LAN1 IP Address", txt_num_cb);
-	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_lan1_mask = tt_obj_label_create(nw_cont2, "LAN1 Subnet Mask");
-	txt_lan1_mask = tt_obj_txt_create(nw_cont2, "LAN1 Subnet Mask", txt_num_cb);
-	lv_obj_add_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_lan2 = tt_obj_label_create(nw_cont2, "LAN2 Interface");
-	lbl_lan2_ip = tt_obj_label_create(nw_cont2, "LAN2 IP Address");
-	txt_lan2_ip = tt_obj_txt_create(nw_cont2, "LAN2 IP Address", txt_num_cb);
-	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_lan2_mask = tt_obj_label_create(nw_cont2, "LAN2 Subnet Mask");
-	txt_lan2_mask = tt_obj_txt_create(nw_cont2, "LAN2 Subnet Mask", txt_num_cb);
-	lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-
-	/* Hide all dual LAN labels initially */
-	lv_obj_add_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
-
-	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
+    /* Initial state */
+    update_visibility();
 }
