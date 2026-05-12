@@ -143,6 +143,7 @@ typedef struct models_nw_info_t {
 typedef struct models_nw_if_t {
 	nw_type_t type;
 	bool dhcp;
+	const char* eth_interface;
 	nw_if_params_t params;
 } models_nw_if_t;
 

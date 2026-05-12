@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "lvgl/lvgl.h"
 #include "scr_splash.h"
@@ -28,6 +29,7 @@ static bool flag_init = false;
 
 static void splash_cb(lv_event_t* e);
 static void splash_timer_cb(lv_timer_t* timer);
+static const char* get_iface_label(const models_nw_if_t* nw_if);
 
 /* Callbacks ******************************************************************/
 
@@ -61,16 +63,32 @@ static void splash_timer_cb(lv_timer_t* timer)
 		lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_obj_del(init_spinner);
 	}
-	const char* iface = "";
-	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
-		iface = "(ETH)";
-	} else if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
-		iface = "(WIFI)";
-	}
+	const char* iface = get_iface_label(nw_if);
 	sprintf(str, "%s: %s", "SYSTEM", info->product_name);
 	lv_label_set_text(lbl_system, str);
 	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
 	lv_label_set_text(lbl_ip, str);
+}
+
+static const char* get_iface_label(const models_nw_if_t* nw_if)
+{
+	if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
+		return "(WIFI)";
+	}
+
+	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
+		const char* eth_interface =
+				nw_if->eth_interface != NULL ? nw_if->eth_interface : "";
+		if (strcmp(eth_interface, "eth0") == 0) {
+			return "(ETH1)";
+		}
+		if (strcmp(eth_interface, "eth1") == 0) {
+			return "(ETH2)";
+		}
+		return "(ETH)";
+	}
+
+	return "";
 }
 
 /* Function definitions *******************************************************/

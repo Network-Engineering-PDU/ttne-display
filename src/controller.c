@@ -43,6 +43,7 @@ void controller_init()
 	models_nw_if_t nw_if;
 	nw_if.type = UNCONF;
 	nw_if.dhcp = true;
+	nw_if.eth_interface = "";
 	nw_if.params.ip = "";
 	nw_if.params.mask = "";
 	nw_if.params.gw = "";
@@ -197,6 +198,8 @@ void controller_put_nw_if(const models_nw_if_t* nw_if)
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddNumberToObject(json, "type", nw_if->type);
 	cJSON_AddBoolToObject(json, "dhcp", nw_if->dhcp);
+	cJSON_AddStringToObject(json, "eth_interface",
+			nw_if->eth_interface != NULL ? nw_if->eth_interface : "");
 	cJSON* json_params = cJSON_AddObjectToObject(json, "params");
 	cJSON_AddStringToObject(json_params, "ip", nw_if->params.ip);
 	cJSON_AddStringToObject(json_params, "subnet_mask", nw_if->params.mask);

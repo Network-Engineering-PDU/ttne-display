@@ -539,8 +539,17 @@ int json_helper_update_nw_if(const char* json_str)
 		return 1;
 	}
 	nw_if.dhcp = bl;
+	nw_if.eth_interface = "";
 
 	cJSON* params = cJSON_GetObjectItem(json, "params");
+
+	str = json_get_string(json, "eth_interface");
+	if (str == NULL) {
+		str = json_get_string(params, "eth_interface");
+	}
+	if (str != NULL) {
+		nw_if.eth_interface = str;
+	}
 
 	str = json_get_string(params, "ip");
 	if (str == NULL) {

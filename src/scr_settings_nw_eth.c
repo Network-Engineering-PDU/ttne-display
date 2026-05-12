@@ -189,6 +189,7 @@ static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if)
 	copy.params.dns = strdup(nw_if->params.dns);
 	copy.params.ssid = strdup(nw_if->params.ssid);
 	copy.params.pass = strdup(nw_if->params.pass);
+	copy.eth_interface = strdup(nw_if->eth_interface != NULL ? nw_if->eth_interface : "");
 	return copy;
 }
 
@@ -200,6 +201,7 @@ static void free_nw_if(models_nw_if_t* nw_if)
 	free((void*)nw_if->params.dns);
 	free((void*)nw_if->params.ssid);
 	free((void*)nw_if->params.pass);
+	free((void*)nw_if->eth_interface);
 }
 
 static void save_nw_if_async(const models_nw_if_t* nw_if)
@@ -252,6 +254,8 @@ static void btn_nw_settings_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		bool dhcp = (bool)(lv_obj_get_state(btn_dhcp) & LV_STATE_CHECKED);
 		const char* nw_type;
+		const models_nw_if_t* current_nw_if = models_get_nw_if();
+		nw_ifaces.eth_interface = current_nw_if->eth_interface;
 		if (lv_dropdown_get_selected(dd) == 0) { // Ethernet
 			nw_type = "Ethernet";
 			if (dhcp) {
