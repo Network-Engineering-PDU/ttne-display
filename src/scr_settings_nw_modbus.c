@@ -115,6 +115,7 @@ void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
             "Modbus Settings");
 
     lv_obj_t* settings_nw_cont = tt_obj_cont_create(settings_cont);
+    btn_modbus = tt_obj_btn_toggle_create(settings_nw_cont, btn_modbus_cb, "Modbus");
     tt_obj_label_create(settings_nw_cont, "Modbus address");
 	txt_modbus_addr = tt_obj_txt_create(settings_nw_cont, "Modbus address", txt_modbus_addr_cb);
 }
