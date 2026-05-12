@@ -370,6 +370,15 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			}
 		}
 		
+		tt_obj_msg_box_create("Network settings",
+				msg, "Connecting to internet...", msg_box_nw_if_cb);
+	}
+}
+
+static void txt_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* obj = lv_event_get_target(e);
 
 	if (code == LV_EVENT_CLICKED) {
 		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_ABC);
