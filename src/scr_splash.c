@@ -80,10 +80,10 @@ static const char* get_iface_label(const models_nw_if_t* nw_if)
 		const char* eth_interface =
 				nw_if->eth_interface != NULL ? nw_if->eth_interface : "";
 		if (strcmp(eth_interface, "eth0") == 0) {
-			return "(ETH1)";
+			return "(ETH2)";
 		}
 		if (strcmp(eth_interface, "eth1") == 0) {
-			return "(ETH2)";
+			return "(ETH1)";
 		}
 		return "(ETH)";
 	}
