@@ -145,6 +145,9 @@ typedef struct models_nw_if_t {
 	bool dhcp;
 	const char* eth_interface;
 	nw_if_params_t params;
+	const char* lan1_ip;
+	const char* lan2_ip;
+	const char* wifi_ip;
 } models_nw_if_t;
 
 typedef struct models_nw_services_t {

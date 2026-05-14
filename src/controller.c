@@ -50,6 +50,9 @@ void controller_init()
 	nw_if.params.dns = "";
 	nw_if.params.ssid = "";
 	nw_if.params.pass = "";
+	nw_if.lan1_ip = "";
+	nw_if.lan2_ip = "";
+	nw_if.wifi_ip = "";
 	models_set_nw_if(&nw_if);
 
 	models_bt_status_t bt_status;
