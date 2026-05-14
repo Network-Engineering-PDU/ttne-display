@@ -631,18 +631,18 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	
 	/* Create horizontal container for dropdown and DHCP button */
 	lv_obj_t* dd_dhcp_cont = lv_obj_create(nw_cont2);
-	lv_obj_set_size(dd_dhcp_cont, LV_PCT(100), 36);
+	lv_obj_set_size(dd_dhcp_cont, LV_PCT(100), 40);
 	lv_obj_set_flex_flow(dd_dhcp_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(dd_dhcp_cont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	
 	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
 	dd = tt_obj_dropdown_create(dd_dhcp_cont, options, update_cb);
 	lv_obj_set_flex_grow(dd, 1);  /* Dropdown takes half space */
-	lv_obj_set_height(dd, 32);
+	lv_obj_set_height(dd, 36);
 	
 	btn_dhcp = tt_obj_btn_toggle_create(dd_dhcp_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
-	lv_obj_set_height(btn_dhcp, 32);
+	lv_obj_set_height(btn_dhcp, 36);
 	lv_obj_set_flex_grow(btn_dhcp, 1);  /* Button takes half space */
 
 	/* Single LAN mode container */
