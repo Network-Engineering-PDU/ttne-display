@@ -240,7 +240,7 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 		lv_timer_del(timer);
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied\nPlease wait a moment...", 0);
+		msg_box_conn = tt_obj_info_box_create("INFO", "     Configuration Applied\n     Please wait a moment...", 0);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
 	}
@@ -628,11 +628,22 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
 	tt_obj_label_create(nw_cont2, "Connection type");
+	
+	/* Create horizontal container for dropdown and DHCP button */
+	lv_obj_t* dd_dhcp_cont = lv_obj_create(nw_cont2);
+	lv_obj_set_size(dd_dhcp_cont, LV_PCT(100), 36);
+	lv_obj_set_flex_flow(dd_dhcp_cont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(dd_dhcp_cont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	
 	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
-	dd = tt_obj_dropdown_create(nw_cont2, options, update_cb);
-	btn_dhcp = tt_obj_btn_toggle_create(nw_cont2, update_cb, "DHCP");
+	dd = tt_obj_dropdown_create(dd_dhcp_cont, options, update_cb);
+	lv_obj_set_flex_grow(dd, 1);  /* Dropdown takes half space */
+	lv_obj_set_height(dd, 36);
+	
+	btn_dhcp = tt_obj_btn_toggle_create(dd_dhcp_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
 	lv_obj_set_height(btn_dhcp, 36);
+	lv_obj_set_flex_grow(btn_dhcp, 1);  /* Button takes half space */
 
 	/* Single LAN mode container */
 	cont_single_lan = tt_obj_cont_create(nw_cont2);
