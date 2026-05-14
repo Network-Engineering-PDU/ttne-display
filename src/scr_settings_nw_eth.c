@@ -240,7 +240,7 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 		lv_timer_del(timer);
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied", 0);
+		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied...", 0);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
 	}

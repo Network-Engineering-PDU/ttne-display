@@ -286,15 +286,13 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 // TODO: fix close button; colors allowed??
 lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
 {
-	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, true);
+	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, false);
 	lv_obj_center(msgbox);
 	lv_obj_set_size(msgbox, LV_PCT(90), LV_SIZE_CONTENT);
 
-	lv_obj_t* close_btn = lv_msgbox_get_close_btn(msgbox);
-	if (severiry == 1) { // ERROR
-		lv_obj_add_style(close_btn, &btn_err_style, LV_STATE_DEFAULT);
-	} else { // INFO
-		lv_obj_add_style(close_btn, &btn_hover_style, LV_STATE_DEFAULT);
+	/* No close button available when close button is disabled */
+	if (severiry == 0) { // INFO
+		/* Apply info style if needed */
 	}
 
 	return msgbox;
