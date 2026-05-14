@@ -145,6 +145,10 @@ typedef struct models_nw_if_t {
 	bool dhcp;
 	const char* eth_interface;
 	nw_if_params_t params;
+	/* Multi-interface support for dual LAN and LAN+WiFi modes */
+	const char* lan1_ip;    /* LAN1 IP for dual LAN mode */
+	const char* lan2_ip;    /* LAN2 IP for dual LAN mode */
+	const char* wifi_ip;    /* WiFi IP for combined modes */
 } models_nw_if_t;
 
 typedef struct models_nw_services_t {

@@ -22,6 +22,9 @@ static lv_obj_t* init_spinner;
 
 static lv_obj_t* lbl_system;
 static lv_obj_t* lbl_ip;
+static lv_obj_t* lbl_ip_wifi;
+static lv_obj_t* lbl_lan1_ip;
+static lv_obj_t* lbl_lan2_ip;
 
 static bool flag_init = false;
 
@@ -66,8 +69,41 @@ static void splash_timer_cb(lv_timer_t* timer)
 	const char* iface = get_iface_label(nw_if);
 	sprintf(str, "%s: %s", "SYSTEM", info->product_name);
 	lv_label_set_text(lbl_system, str);
-	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
-	lv_label_set_text(lbl_ip, str);
+
+	/* Display IPs based on network mode */
+	lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_ip_wifi, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+
+	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
+		/* Single LAN mode */
+		sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
+		lv_label_set_text(lbl_ip, str);
+		lv_obj_clear_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+	} else if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
+		/* WiFi Only mode */
+		sprintf(str, "%s: %s (WIFI)", "IP", nw_if->params.ip);
+		lv_label_set_text(lbl_ip, str);
+		lv_obj_clear_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+	}
+	/* Dual LAN: display both LAN IPs */
+	if (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0) {
+		sprintf(str, "LAN1: %s", nw_if->lan1_ip);
+		lv_label_set_text(lbl_lan1_ip, str);
+		lv_obj_clear_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	}
+	if (nw_if->lan2_ip != NULL && strlen(nw_if->lan2_ip) > 0) {
+		sprintf(str, "LAN2: %s", nw_if->lan2_ip);
+		lv_label_set_text(lbl_lan2_ip, str);
+		lv_obj_clear_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+	}
+	/* LAN + WiFi: display WiFi IP */
+	if (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0) {
+		sprintf(str, "WiFi: %s", nw_if->wifi_ip);
+		lv_label_set_text(lbl_ip_wifi, str);
+		lv_obj_clear_flag(lbl_ip_wifi, LV_OBJ_FLAG_HIDDEN);
+	}
 }
 
 static const char* get_iface_label(const models_nw_if_t* nw_if)
@@ -123,6 +159,15 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 	lbl_system = tt_obj_label_create(info_cont, NULL);
 	lbl_ip = tt_obj_label_create(info_cont, NULL);
+	lbl_lan1_ip = tt_obj_label_create(info_cont, NULL);
+	lbl_lan2_ip = tt_obj_label_create(info_cont, NULL);
+	lbl_ip_wifi = tt_obj_label_create(info_cont, NULL);
+
+	/* Initialize all IP labels as hidden */
+	lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_ip_wifi, LV_OBJ_FLAG_HIDDEN);
 
 	timer_check = lv_timer_create(splash_timer_cb, TIMER_REFRESH_RATE, NULL);
 	lv_timer_pause(timer_check);
