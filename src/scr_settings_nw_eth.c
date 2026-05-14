@@ -92,8 +92,31 @@ static bool is_static();
 static void save_nw_if_async(const models_nw_if_t* nw_if);
 static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if);
 static void free_nw_if(models_nw_if_t* nw_if);
+static uint16_t determine_network_mode(const models_nw_if_t* nw_if);
 
 /* Callbacks ******************************************************************/
+
+/**
+ * Determine the network mode from saved network interface configuration
+ * by examining the multi-interface IP fields
+ */
+static uint16_t determine_network_mode(const models_nw_if_t* nw_if)
+{
+	bool has_lan1 = (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0);
+	bool has_lan2 = (nw_if->lan2_ip != NULL && strlen(nw_if->lan2_ip) > 0);
+	bool has_wifi = (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0);
+	
+	/* Determine mode based on multi-interface IP configuration */
+	if (has_wifi && has_lan1 && has_lan2) {
+		return NW_LAN_WIFI;  /* Both LAN interfaces and WiFi */
+	} else if (has_lan1 && has_lan2) {
+		return NW_DUAL_LAN;  /* Both LAN interfaces */
+	} else if (has_wifi && !has_lan1 && !has_lan2) {
+		return NW_WIFI_ONLY; /* WiFi only */
+	} else {
+		return NW_SINGLE_LAN; /* Single LAN or unknown */
+	}
+}
 
 static void menu_cb(lv_event_t* e)
 {
@@ -106,23 +129,66 @@ static void menu_cb(lv_event_t* e)
 		if (curr_page == page) {
 			controller_get_nw_if();
 			const models_nw_if_t* nw_if = models_get_nw_if();
-			if (is_ethernet()) {
-				lv_dropdown_set_selected(dd, NW_ETH);
-			} else {
-				lv_dropdown_set_selected(dd, NW_WIFI);
-			}
+			
+			/* Determine the correct network mode from saved configuration */
+			uint16_t saved_mode = determine_network_mode(nw_if);
+			lv_dropdown_set_selected(dd, saved_mode);
+			
 			(void)is_static(); // Not used
 			if (nw_if->dhcp) {
 				lv_obj_add_state(btn_dhcp, LV_STATE_CHECKED);
 			} else {
 				lv_obj_clear_state(btn_dhcp, LV_STATE_CHECKED);
 			}
-			lv_textarea_set_text(txt_ip, nw_if->params.ip);
+			
+			/* Load IP configurations based on saved mode */
+			switch (saved_mode) {
+				case NW_SINGLE_LAN:
+					/* For single LAN, restore IP from lan1_ip if available, else from params.ip */
+					if (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0) {
+						lv_textarea_set_text(txt_ip, nw_if->lan1_ip);
+					} else {
+						lv_textarea_set_text(txt_ip, nw_if->params.ip);
+					}
+					break;
+				
+				case NW_DUAL_LAN:
+					/* For dual LAN, restore from lan1_ip and lan2_ip */
+					if (nw_if->lan1_ip != NULL) {
+						lv_textarea_set_text(txt_lan1_ip, nw_if->lan1_ip);
+					}
+					if (nw_if->lan2_ip != NULL) {
+						lv_textarea_set_text(txt_lan2_ip, nw_if->lan2_ip);
+					}
+					break;
+				
+				case NW_LAN_WIFI:
+					/* For LAN+WiFi, restore LAN IP from lan1_ip */
+					if (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0) {
+						lv_textarea_set_text(txt_lan1_ip, nw_if->lan1_ip);
+					}
+					break;
+				
+				default:
+					lv_textarea_set_text(txt_ip, nw_if->params.ip);
+					break;
+			}
+			
+			/* Always load common fields */
 			lv_textarea_set_text(txt_mask, nw_if->params.mask);
 			lv_textarea_set_text(txt_gw, nw_if->params.gw);
 			lv_textarea_set_text(txt_dns, nw_if->params.dns);
 			lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
 			lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
+			
+			/* Populate dual LAN masks from saved configuration */
+			if (saved_mode == NW_DUAL_LAN || saved_mode == NW_LAN_WIFI) {
+				if (!nw_if->dhcp && strlen(nw_if->params.mask) > 0) {
+					lv_textarea_set_text(txt_lan1_mask, nw_if->params.mask);
+					lv_textarea_set_text(txt_lan2_mask, nw_if->params.mask);
+				}
+			}
+			
 			update_data();
 		}
 	}
@@ -334,6 +400,35 @@ static void btn_nw_settings_cb(lv_event_t* e)
 		nw_ifaces.params.pass = lv_textarea_get_text(txt_wifi_pass);
 		if (nw_ifaces.params.pass == NULL) {
 			nw_ifaces.params.pass = "";
+		}
+		
+		/* Populate multi-interface IP fields based on selected mode */
+		switch (selected_mode) {
+			case NW_SINGLE_LAN:
+				nw_ifaces.lan1_ip = lv_textarea_get_text(txt_ip);
+				nw_ifaces.lan2_ip = "";
+				nw_ifaces.wifi_ip = "";
+				break;
+			case NW_WIFI_ONLY:
+				nw_ifaces.lan1_ip = "";
+				nw_ifaces.lan2_ip = "";
+				nw_ifaces.wifi_ip = lv_textarea_get_text(txt_wifi_ssid); /* Will use wifi params */
+				break;
+			case NW_DUAL_LAN:
+				nw_ifaces.lan1_ip = lv_textarea_get_text(txt_lan1_ip);
+				nw_ifaces.lan2_ip = lv_textarea_get_text(txt_lan2_ip);
+				nw_ifaces.wifi_ip = "";
+				break;
+			case NW_LAN_WIFI:
+				nw_ifaces.lan1_ip = lv_textarea_get_text(txt_lan1_ip);
+				nw_ifaces.lan2_ip = "";
+				nw_ifaces.wifi_ip = lv_textarea_get_text(txt_wifi_ssid); /* Will use wifi params */
+				break;
+			default:
+				nw_ifaces.lan1_ip = "";
+				nw_ifaces.lan2_ip = "";
+				nw_ifaces.wifi_ip = "";
+				break;
 		}
 
 		char msg[1500];
