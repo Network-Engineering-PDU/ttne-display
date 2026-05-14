@@ -638,11 +638,11 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
 	dd = tt_obj_dropdown_create(dd_dhcp_cont, options, update_cb);
 	lv_obj_set_flex_grow(dd, 1);  /* Dropdown takes half space */
-	lv_obj_set_height(dd, 34);
+	lv_obj_set_height(dd, 32);
 	
 	btn_dhcp = tt_obj_btn_toggle_create(dd_dhcp_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
-	lv_obj_set_height(btn_dhcp, 34);
+	lv_obj_set_height(btn_dhcp, 32);
 	lv_obj_set_flex_grow(btn_dhcp, 1);  /* Button takes half space */
 
 	/* Single LAN mode container */
