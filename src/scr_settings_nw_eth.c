@@ -39,33 +39,38 @@ static lv_obj_t* loader_scr;
 static lv_obj_t* dd;
 static lv_obj_t* btn_dhcp;
 
-static lv_obj_t* lbl_wifi_ssid;
-static lv_obj_t* lbl_wifi_pass;
+/* Mode containers */
+static lv_obj_t* cont_single_lan;
+static lv_obj_t* cont_wifi_only;
+static lv_obj_t* cont_dual_lan;
+
+/* Single LAN fields */
 static lv_obj_t* lbl_ip;
 static lv_obj_t* lbl_mask;
 static lv_obj_t* lbl_gw;
 static lv_obj_t* lbl_dns;
-
-static lv_obj_t* cbx_pass;
-
-static lv_obj_t* txt_wifi_ssid;
-static lv_obj_t* txt_wifi_pass;
 static lv_obj_t* txt_ip;
 static lv_obj_t* txt_mask;
 static lv_obj_t* txt_gw;
 static lv_obj_t* txt_dns;
 
-/* Dual LAN specific fields */
+/* WiFi only fields */
+static lv_obj_t* lbl_wifi_ssid;
+static lv_obj_t* txt_wifi_ssid;
+static lv_obj_t* lbl_wifi_pass;
+static lv_obj_t* txt_wifi_pass;
+static lv_obj_t* cbx_pass;
+
+/* Dual LAN fields */
 static lv_obj_t* lbl_lan1;
 static lv_obj_t* lbl_lan1_ip;
+static lv_obj_t* txt_lan1_ip;
 static lv_obj_t* lbl_lan1_mask;
+static lv_obj_t* txt_lan1_mask;
 static lv_obj_t* lbl_lan2;
 static lv_obj_t* lbl_lan2_ip;
-static lv_obj_t* lbl_lan2_mask;
-
-static lv_obj_t* txt_lan1_ip;
-static lv_obj_t* txt_lan1_mask;
 static lv_obj_t* txt_lan2_ip;
+static lv_obj_t* lbl_lan2_mask;
 static lv_obj_t* txt_lan2_mask;
 
 /* Function prototypes ********************************************************/
@@ -436,26 +441,12 @@ static void update_data()
 	uint16_t selected = lv_dropdown_get_selected(dd);
 	bool dhcp_enabled = (lv_obj_get_state(btn_dhcp) & LV_STATE_CHECKED) != 0;
 
-	/* Hide all optional field groups first */
-	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
+	/* Hide all mode containers first */
+	lv_obj_add_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cont_dual_lan, LV_OBJ_FLAG_HIDDEN);
 
-	lv_obj_add_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-
-	lv_obj_add_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-
-	/* Handle static IP fields visibility */
+	/* Handle DHCP/Static IP fields visibility for containers that use them */
 	if (dhcp_enabled) {
 		lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
@@ -476,70 +467,34 @@ static void update_data()
 		lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
 	}
 
-	/* Mode-specific field visibility */
+	/* Mode-specific container and field visibility */
 	switch (selected) {
-		case NW_WIFI_ONLY:
-			/* WiFi only: show WiFi fields, hide single/dual LAN */
-			lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-			
-			lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
+		case NW_SINGLE_LAN:
+			/* Single LAN: show single LAN container */
+			lv_obj_clear_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
 			break;
 
-		case NW_SINGLE_LAN:
-			/* Single LAN: show standard IP fields, hide WiFi and dual LAN */
-			/* IP fields already shown/hidden by DHCP toggle above */
+		case NW_WIFI_ONLY:
+			/* WiFi only: show WiFi container */
+			lv_obj_clear_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
 			break;
 
 		case NW_DUAL_LAN:
-			/* Dual LAN: show LAN1 and LAN2 fields, hide WiFi */
+			/* Dual LAN: show dual LAN container */
+			lv_obj_clear_flag(cont_dual_lan, LV_OBJ_FLAG_HIDDEN);
 			if (!dhcp_enabled) {
-				/* Show dual LAN static IP fields */
-				lv_obj_clear_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-
-				lv_obj_clear_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-
-				/* Show shared gateway and DNS */
+				/* Show gateway and DNS for dual LAN static config */
 				lv_obj_clear_flag(lbl_gw, LV_OBJ_FLAG_HIDDEN);
 				lv_obj_clear_flag(txt_gw, LV_OBJ_FLAG_HIDDEN);
 				lv_obj_clear_flag(lbl_dns, LV_OBJ_FLAG_HIDDEN);
 				lv_obj_clear_flag(txt_dns, LV_OBJ_FLAG_HIDDEN);
-
-				/* Hide single LAN IP fields */
-				lv_obj_add_flag(lbl_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(txt_ip, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(lbl_mask, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(txt_mask, LV_OBJ_FLAG_HIDDEN);
 			}
 			break;
 
 		case NW_LAN_WIFI:
-			/* LAN & WiFi: show both LAN and WiFi fields */
-			lv_obj_clear_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-			
-			/* IP fields already shown/hidden by DHCP toggle above */
+			/* LAN & WiFi: show single LAN container + WiFi container */
+			lv_obj_clear_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
 			break;
 
 		default:
@@ -564,63 +519,57 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
 	lv_obj_set_height(btn_dhcp, 36);
 
-	lbl_wifi_ssid = tt_obj_label_create(nw_cont2, "WiFi SSID");
-	txt_wifi_ssid = tt_obj_txt_create(nw_cont2, "WiFi SSID", txt_cb);
-	lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
-	lv_obj_add_flag(lbl_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN);
+	/* Single LAN mode container */
+	cont_single_lan = tt_obj_cont_create(nw_cont2);
 
-	lbl_wifi_pass = tt_obj_label_create(nw_cont2, "WiFi password");
-	txt_wifi_pass = tt_obj_txt_create(nw_cont2, "WiFi password", txt_cb);
-	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
-	cbx_pass = tt_obj_checkbox_create(nw_cont2, "Show WiFi password", cbx_pass_cb);
-	lv_textarea_set_password_mode(txt_wifi_pass, true);
-	lv_obj_add_flag(lbl_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_wifi_pass, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(cbx_pass, LV_OBJ_FLAG_HIDDEN);
-
-	lbl_ip = tt_obj_label_create(nw_cont2, "IP Address");
-	txt_ip = tt_obj_txt_create(nw_cont2, "IP Address", txt_num_cb);
+	/* Single LAN fields */
+	lbl_ip = tt_obj_label_create(cont_single_lan, "IP Address");
+	txt_ip = tt_obj_txt_create(cont_single_lan, "IP Address", txt_num_cb);
 	lv_textarea_set_text(txt_ip, nw_if->params.ip);
 
-	lbl_mask = tt_obj_label_create(nw_cont2, "Subnet Mask");
-	txt_mask = tt_obj_txt_create(nw_cont2, "Subnet Mask", txt_num_cb);
+	lbl_mask = tt_obj_label_create(cont_single_lan, "Subnet Mask");
+	txt_mask = tt_obj_txt_create(cont_single_lan, "Subnet Mask", txt_num_cb);
 	lv_textarea_set_text(txt_mask, nw_if->params.mask);
 
-	lbl_gw = tt_obj_label_create(nw_cont2, "Gateway IP");
-	txt_gw = tt_obj_txt_create(nw_cont2, "Gateway IP", txt_num_cb);
+	lbl_gw = tt_obj_label_create(cont_single_lan, "Gateway IP");
+	txt_gw = tt_obj_txt_create(cont_single_lan, "Gateway IP", txt_num_cb);
 	lv_textarea_set_text(txt_gw, nw_if->params.gw);
 
-	lbl_dns = tt_obj_label_create(nw_cont2, "DNS");
-	txt_dns = tt_obj_txt_create(nw_cont2, "DNS", txt_num_cb);
+	lbl_dns = tt_obj_label_create(cont_single_lan, "DNS");
+	txt_dns = tt_obj_txt_create(cont_single_lan, "DNS", txt_num_cb);
 	lv_textarea_set_text(txt_dns, nw_if->params.dns);
 
-	/* Dual LAN fields (initially hidden) */
-	lbl_lan1 = tt_obj_label_create(nw_cont2, "LAN1 Interface");
-	lbl_lan1_ip = tt_obj_label_create(nw_cont2, "LAN1 IP Address");
-	txt_lan1_ip = tt_obj_txt_create(nw_cont2, "LAN1 IP Address", txt_num_cb);
-	lv_obj_add_flag(lbl_lan1_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_ip, LV_OBJ_FLAG_HIDDEN);
+	/* WiFi only mode container */
+	cont_wifi_only = tt_obj_cont_create(nw_cont2);
 
-	lbl_lan1_mask = tt_obj_label_create(nw_cont2, "LAN1 Subnet Mask");
-	txt_lan1_mask = tt_obj_txt_create(nw_cont2, "LAN1 Subnet Mask", txt_num_cb);
-	lv_obj_add_flag(lbl_lan1_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan1_mask, LV_OBJ_FLAG_HIDDEN);
+	/* WiFi only fields */
+	lbl_wifi_ssid = tt_obj_label_create(cont_wifi_only, "WiFi SSID");
+	txt_wifi_ssid = tt_obj_txt_create(cont_wifi_only, "WiFi SSID", txt_cb);
+	lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
 
-	lbl_lan2 = tt_obj_label_create(nw_cont2, "LAN2 Interface");
-	lbl_lan2_ip = tt_obj_label_create(nw_cont2, "LAN2 IP Address");
-	txt_lan2_ip = tt_obj_txt_create(nw_cont2, "LAN2 IP Address", txt_num_cb);
-	lv_obj_add_flag(lbl_lan2_ip, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_ip, LV_OBJ_FLAG_HIDDEN);
+	lbl_wifi_pass = tt_obj_label_create(cont_wifi_only, "WiFi password");
+	txt_wifi_pass = tt_obj_txt_create(cont_wifi_only, "WiFi password", txt_cb);
+	lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
+	cbx_pass = tt_obj_checkbox_create(cont_wifi_only, "Show WiFi password", cbx_pass_cb);
+	lv_textarea_set_password_mode(txt_wifi_pass, true);
 
-	lbl_lan2_mask = tt_obj_label_create(nw_cont2, "LAN2 Subnet Mask");
-	txt_lan2_mask = tt_obj_txt_create(nw_cont2, "LAN2 Subnet Mask", txt_num_cb);
-	lv_obj_add_flag(lbl_lan2_mask, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(txt_lan2_mask, LV_OBJ_FLAG_HIDDEN);
+	/* Dual LAN mode container */
+	cont_dual_lan = tt_obj_cont_create(nw_cont2);
 
-	/* Hide all dual LAN labels initially */
-	lv_obj_add_flag(lbl_lan1, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_add_flag(lbl_lan2, LV_OBJ_FLAG_HIDDEN);
+	/* Dual LAN fields */
+	lbl_lan1 = tt_obj_label_create(cont_dual_lan, "LAN1 Interface");
+	lbl_lan1_ip = tt_obj_label_create(cont_dual_lan, "LAN1 IP Address");
+	txt_lan1_ip = tt_obj_txt_create(cont_dual_lan, "LAN1 IP Address", txt_num_cb);
+
+	lbl_lan1_mask = tt_obj_label_create(cont_dual_lan, "LAN1 Subnet Mask");
+	txt_lan1_mask = tt_obj_txt_create(cont_dual_lan, "LAN1 Subnet Mask", txt_num_cb);
+
+	lbl_lan2 = tt_obj_label_create(cont_dual_lan, "LAN2 Interface");
+	lbl_lan2_ip = tt_obj_label_create(cont_dual_lan, "LAN2 IP Address");
+	txt_lan2_ip = tt_obj_txt_create(cont_dual_lan, "LAN2 IP Address", txt_num_cb);
+
+	lbl_lan2_mask = tt_obj_label_create(cont_dual_lan, "LAN2 Subnet Mask");
+	txt_lan2_mask = tt_obj_txt_create(cont_dual_lan, "LAN2 Subnet Mask", txt_num_cb);
 
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
 }
