@@ -53,6 +53,7 @@ void controller_init()
 	nw_if.lan1_ip = "";
 	nw_if.lan2_ip = "";
 	nw_if.wifi_ip = "";
+	nw_if.nw_mode = 0;  /* Default to Single LAN */
 	models_set_nw_if(&nw_if);
 
 	models_bt_status_t bt_status;
@@ -201,6 +202,7 @@ void controller_put_nw_if(const models_nw_if_t* nw_if)
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddNumberToObject(json, "type", nw_if->type);
 	cJSON_AddBoolToObject(json, "dhcp", nw_if->dhcp);
+	cJSON_AddNumberToObject(json, "nw_mode", nw_if->nw_mode);  /* Store persistent mode */
 	cJSON_AddStringToObject(json, "eth_interface",
 			nw_if->eth_interface != NULL ? nw_if->eth_interface : "");
 	

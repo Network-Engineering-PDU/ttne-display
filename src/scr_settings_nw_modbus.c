@@ -112,7 +112,7 @@ static void txt_modbus_addr_cb(lv_event_t* e)
 void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 {
     lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-            "Modbus Settings");
+            "Modbus");
 
     lv_obj_t* settings_nw_cont = tt_obj_cont_create(settings_cont);
     btn_modbus = tt_obj_btn_toggle_create(settings_nw_cont, btn_modbus_cb, "Modbus");

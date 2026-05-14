@@ -539,6 +539,12 @@ int json_helper_update_nw_if(const char* json_str)
 		return 1;
 	}
 	nw_if.dhcp = bl;
+	
+	/* Parse network mode (optional, defaults to 0 if not present) */
+	int mode = 0;
+	err = json_get_int(&mode, json, "nw_mode");
+	nw_if.nw_mode = (err == 0) ? mode : 0;
+	
 	nw_if.eth_interface = "";
 
 	cJSON* params = cJSON_GetObjectItem(json, "params");

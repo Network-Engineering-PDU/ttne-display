@@ -90,7 +90,7 @@ static void msg_box_snmp_cb(lv_event_t* e)
 void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 {
     lv_obj_t* settings_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"SNMP Settings");
+			"SNMP");
 
     lv_obj_t* settings_nw_cont = tt_obj_cont_create(settings_cont);
     btn_snmp = tt_obj_btn_toggle_create(settings_nw_cont, btn_snmp_cb, "SNMP");

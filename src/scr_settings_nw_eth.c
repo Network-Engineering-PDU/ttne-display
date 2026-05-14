@@ -130,8 +130,9 @@ static void menu_cb(lv_event_t* e)
 			controller_get_nw_if();
 			const models_nw_if_t* nw_if = models_get_nw_if();
 			
-			/* Determine the correct network mode from saved configuration */
-			uint16_t saved_mode = determine_network_mode(nw_if);
+			/* Use saved network mode if available, otherwise determine from configuration */
+			uint16_t saved_mode = (nw_if->nw_mode >= 0 && nw_if->nw_mode <= 3) ? 
+				nw_if->nw_mode : determine_network_mode(nw_if);
 			lv_dropdown_set_selected(dd, saved_mode);
 			
 			(void)is_static(); // Not used
@@ -392,6 +393,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			nw_dhcp = "Disabled";
 		}
 		nw_ifaces.dhcp = dhcp;
+		nw_ifaces.nw_mode = selected_mode;  /* Store the selected network mode */
 		nw_ifaces.params.ip = lv_textarea_get_text(txt_ip);
 		nw_ifaces.params.mask = lv_textarea_get_text(txt_mask);
 		nw_ifaces.params.gw = lv_textarea_get_text(txt_gw);
