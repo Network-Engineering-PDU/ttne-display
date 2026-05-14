@@ -53,7 +53,7 @@ void controller_init()
 	nw_if.lan1_ip = "";
 	nw_if.lan2_ip = "";
 	nw_if.wifi_ip = "";
-	nw_if.nw_mode = 0;  /* Default to Single LAN */
+	nw_if.nw_mode = -1;  /* -1 = not set, will auto-detect on load */
 	models_set_nw_if(&nw_if);
 
 	models_bt_status_t bt_status;

@@ -540,10 +540,10 @@ int json_helper_update_nw_if(const char* json_str)
 	}
 	nw_if.dhcp = bl;
 	
-	/* Parse network mode (optional, defaults to 0 if not present) */
-	int mode = 0;
+	/* Parse network mode (optional, defaults to -1 if not present, meaning use auto-detect) */
+	int mode = -1;
 	err = json_get_int(&mode, json, "nw_mode");
-	nw_if.nw_mode = (err == 0) ? mode : 0;
+	nw_if.nw_mode = mode;  /* Keep -1 if not found in JSON */
 	
 	nw_if.eth_interface = "";
 

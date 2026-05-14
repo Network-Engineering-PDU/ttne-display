@@ -98,23 +98,28 @@ static uint16_t determine_network_mode(const models_nw_if_t* nw_if);
 
 /**
  * Determine the network mode from saved network interface configuration
- * by examining the multi-interface IP fields
+ * by examining the multi-interface IP fields and SSID
  */
 static uint16_t determine_network_mode(const models_nw_if_t* nw_if)
 {
 	bool has_lan1 = (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0);
 	bool has_lan2 = (nw_if->lan2_ip != NULL && strlen(nw_if->lan2_ip) > 0);
-	bool has_wifi = (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0);
+	bool has_wifi_marker = (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0);
+	bool has_ssid = (nw_if->params.ssid != NULL && strlen(nw_if->params.ssid) > 0);
 	
-	/* Determine mode based on multi-interface IP configuration */
-	if (has_wifi && has_lan1 && has_lan2) {
-		return NW_LAN_WIFI;  /* Both LAN interfaces and WiFi */
+	/* Determine mode based on multi-interface configuration */
+	if (has_wifi_marker && has_lan1 && has_lan2) {
+		return NW_LAN_WIFI;  /* Both LAN interfaces and WiFi marker */
 	} else if (has_lan1 && has_lan2) {
 		return NW_DUAL_LAN;  /* Both LAN interfaces */
-	} else if (has_wifi && !has_lan1 && !has_lan2) {
-		return NW_WIFI_ONLY; /* WiFi only */
+	} else if ((has_wifi_marker || has_ssid) && !has_lan1 && !has_lan2) {
+		return NW_WIFI_ONLY; /* WiFi marker or SSID present, no LAN IPs */
+	} else if (has_wifi_marker && has_ssid && !has_lan1 && has_lan2) {
+		return NW_LAN_WIFI;  /* WiFi marker and SSID, with one LAN - treat as LAN+WiFi */
+	} else if (has_ssid && has_lan1 && !has_lan2 && has_wifi_marker) {
+		return NW_LAN_WIFI;  /* SSID + LAN1 + wifi_marker = LAN+WiFi */
 	} else {
-		return NW_SINGLE_LAN; /* Single LAN or unknown */
+		return NW_SINGLE_LAN; /* Default to Single LAN */
 	}
 }
 
@@ -130,9 +135,22 @@ static void menu_cb(lv_event_t* e)
 			controller_get_nw_if();
 			const models_nw_if_t* nw_if = models_get_nw_if();
 			
-			/* Use saved network mode if available, otherwise determine from configuration */
-			uint16_t saved_mode = (nw_if->nw_mode >= 0 && nw_if->nw_mode <= 3) ? 
-				nw_if->nw_mode : determine_network_mode(nw_if);
+			/* Determine network mode with priority:
+			   1. Use saved nw_mode if explicitly set (nw_mode >= 0)
+			   2. Fall back to auto-detection from multi-interface IPs and SSID */
+			uint16_t saved_mode;
+			if (nw_if->nw_mode >= 0) {
+				saved_mode = nw_if->nw_mode;
+				LV_LOG_USER("Network mode: %d (from stored nw_mode)", saved_mode);
+			} else {
+				saved_mode = determine_network_mode(nw_if);
+				LV_LOG_USER("Network mode: %d (auto-detected). lan1=%s, lan2=%s, wifi=%s, ssid=%s", 
+					saved_mode, 
+					nw_if->lan1_ip ? nw_if->lan1_ip : "empty",
+					nw_if->lan2_ip ? nw_if->lan2_ip : "empty",
+					nw_if->wifi_ip ? nw_if->wifi_ip : "empty",
+					nw_if->params.ssid ? nw_if->params.ssid : "empty");
+			}
 			lv_dropdown_set_selected(dd, saved_mode);
 			
 			(void)is_static(); // Not used
@@ -414,7 +432,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			case NW_WIFI_ONLY:
 				nw_ifaces.lan1_ip = "";
 				nw_ifaces.lan2_ip = "";
-				nw_ifaces.wifi_ip = lv_textarea_get_text(txt_wifi_ssid); /* Will use wifi params */
+				nw_ifaces.wifi_ip = "wifi";  /* Marker to indicate WiFi is configured */
 				break;
 			case NW_DUAL_LAN:
 				nw_ifaces.lan1_ip = lv_textarea_get_text(txt_lan1_ip);
@@ -424,7 +442,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			case NW_LAN_WIFI:
 				nw_ifaces.lan1_ip = lv_textarea_get_text(txt_lan1_ip);
 				nw_ifaces.lan2_ip = "";
-				nw_ifaces.wifi_ip = lv_textarea_get_text(txt_wifi_ssid); /* Will use wifi params */
+				nw_ifaces.wifi_ip = "wifi";  /* Marker to indicate WiFi is configured */
 				break;
 			default:
 				nw_ifaces.lan1_ip = "";
