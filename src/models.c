@@ -301,26 +301,9 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	nw_if.params.dns = stralloc(l_nw_if->params.dns);
 	nw_if.params.ssid = stralloc(l_nw_if->params.ssid);
 	nw_if.params.pass = stralloc(l_nw_if->params.pass);
-	
-	/* For multi-interface IP fields, preserve empty strings (not "N/A")
-	   This allows auto-detection to work when backend doesn't return these fields */
-	if (l_nw_if->lan1_ip != NULL && strlen(l_nw_if->lan1_ip) > 0) {
-		nw_if.lan1_ip = stralloc(l_nw_if->lan1_ip);
-	} else {
-		nw_if.lan1_ip = "";
-	}
-	
-	if (l_nw_if->lan2_ip != NULL && strlen(l_nw_if->lan2_ip) > 0) {
-		nw_if.lan2_ip = stralloc(l_nw_if->lan2_ip);
-	} else {
-		nw_if.lan2_ip = "";
-	}
-	
-	if (l_nw_if->wifi_ip != NULL && strlen(l_nw_if->wifi_ip) > 0) {
-		nw_if.wifi_ip = stralloc(l_nw_if->wifi_ip);
-	} else {
-		nw_if.wifi_ip = "";
-	}
+	nw_if.lan1_ip = stralloc(l_nw_if->lan1_ip);
+	nw_if.lan2_ip = stralloc(l_nw_if->lan2_ip);
+	nw_if.wifi_ip = stralloc(l_nw_if->wifi_ip);
 }
 
 const models_license_t* models_get_license()
