@@ -582,6 +582,16 @@ int json_helper_update_nw_if(const char* json_str)
 	}
 	nw_if.params.pass = str;
 	
+	/* Parse multi-interface IPs for dual LAN and LAN+WiFi modes */
+	str = json_get_string(json, "lan1_ip");
+	nw_if.lan1_ip = (str != NULL) ? str : "";
+	
+	str = json_get_string(json, "lan2_ip");
+	nw_if.lan2_ip = (str != NULL) ? str : "";
+	
+	str = json_get_string(json, "wifi_ip");
+	nw_if.wifi_ip = (str != NULL) ? str : "";
+	
 	models_set_nw_if(&nw_if);
 
 	cJSON_Delete(json);

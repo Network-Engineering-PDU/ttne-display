@@ -200,6 +200,18 @@ void controller_put_nw_if(const models_nw_if_t* nw_if)
 	cJSON_AddBoolToObject(json, "dhcp", nw_if->dhcp);
 	cJSON_AddStringToObject(json, "eth_interface",
 			nw_if->eth_interface != NULL ? nw_if->eth_interface : "");
+	
+	/* Multi-interface support */
+	if (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0) {
+		cJSON_AddStringToObject(json, "lan1_ip", nw_if->lan1_ip);
+	}
+	if (nw_if->lan2_ip != NULL && strlen(nw_if->lan2_ip) > 0) {
+		cJSON_AddStringToObject(json, "lan2_ip", nw_if->lan2_ip);
+	}
+	if (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0) {
+		cJSON_AddStringToObject(json, "wifi_ip", nw_if->wifi_ip);
+	}
+	
 	cJSON* json_params = cJSON_AddObjectToObject(json, "params");
 	cJSON_AddStringToObject(json_params, "ip", nw_if->params.ip);
 	cJSON_AddStringToObject(json_params, "subnet_mask", nw_if->params.mask);
