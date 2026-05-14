@@ -106,18 +106,23 @@ static uint16_t determine_network_mode(const models_nw_if_t* nw_if)
 	bool has_lan2 = (nw_if->lan2_ip != NULL && strlen(nw_if->lan2_ip) > 0);
 	bool has_wifi_marker = (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0);
 	bool has_ssid = (nw_if->params.ssid != NULL && strlen(nw_if->params.ssid) > 0);
+	bool is_wifi_type = (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC);
+	bool is_eth_type = (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC);
 	
 	/* Determine mode based on multi-interface configuration */
 	if (has_wifi_marker && has_lan1 && has_lan2) {
 		return NW_LAN_WIFI;  /* Both LAN interfaces and WiFi marker */
 	} else if (has_lan1 && has_lan2) {
 		return NW_DUAL_LAN;  /* Both LAN interfaces */
-	} else if ((has_wifi_marker || has_ssid) && !has_lan1 && !has_lan2) {
-		return NW_WIFI_ONLY; /* WiFi marker or SSID present, no LAN IPs */
 	} else if (has_wifi_marker && has_ssid && !has_lan1 && has_lan2) {
 		return NW_LAN_WIFI;  /* WiFi marker and SSID, with one LAN - treat as LAN+WiFi */
 	} else if (has_ssid && has_lan1 && !has_lan2 && has_wifi_marker) {
 		return NW_LAN_WIFI;  /* SSID + LAN1 + wifi_marker = LAN+WiFi */
+	} else if (has_wifi_marker || (has_ssid && is_wifi_type)) {
+		return NW_WIFI_ONLY; /* WiFi marker or SSID + WIFI type = WiFi Only */
+	} else if (is_eth_type && !has_ssid) {
+		/* If type is ETH and no SSID, assume Single LAN (backend doesn't persist LAN fields) */
+		return NW_SINGLE_LAN;
 	} else {
 		return NW_SINGLE_LAN; /* Default to Single LAN */
 	}
@@ -240,7 +245,7 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 		lv_timer_del(timer);
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied...", 0);
+		msg_box_conn = tt_obj_info_box_create("INFO", "Configuration Applied\nJust wait a moment...", 0);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
 	}
