@@ -20,17 +20,20 @@
 static lv_obj_t* menu;
 
 static lv_obj_t* loader_scr;
+static lv_obj_t* selection_scr;
 
 static lv_timer_t* timer;
 
 static lv_obj_t* btn_sensor[MAX_SENSORS];
 static lv_obj_t* lbl_mac[MAX_SENSORS];
+static lv_obj_t* btn_found_sensor[MAX_SENSORS];
 
 static lv_obj_t* sensors_data_page;
 static lv_obj_t* lbl_no_sensors;
 
-static int old_len;
 static int scan_retries;
+static int initial_sensor_count;
+static lv_obj_t* current_main_scr;
 
 /* Function prototypes ********************************************************/
 
@@ -38,9 +41,11 @@ static void menu_cb(lv_event_t* e);
 static void cancel_loader_cb(lv_event_t* e);
 static void add_sensor_cb(lv_event_t* e);
 static void btn_sensor_cb(lv_event_t* e);
+static void btn_found_sensor_cb(lv_event_t* e);
 static void timer_scan_cb(lv_timer_t* timer);
 
 static void update_sensors();
+static void show_found_sensors_selection(int new_sensor_count);
 
 /* Callbacks ******************************************************************/
 
@@ -81,7 +86,7 @@ static void add_sensor_cb(lv_event_t* e)
 			tt_obj_info_box_create("ERROR", "Max number of sensor reached", 1);
 			return;
 		}
-		old_len = len;
+		initial_sensor_count = len;
 		scan_retries = 0;
 		controller_post_start_scan();
 		timer = lv_timer_create(timer_scan_cb, TIMER_SCAN,
@@ -103,6 +108,20 @@ static void btn_sensor_cb(lv_event_t* e)
 	}
 }
 
+static void btn_found_sensor_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+	int sensor_idx = (long)lv_event_get_user_data(e);
+
+	if (code == LV_EVENT_CLICKED) {
+		/* Sensor selected - load the sensor list and return to main screen */
+		controller_get_sensors();
+		lv_scr_load(current_main_scr);
+		lv_obj_del(selection_scr);
+		update_sensors();
+	}
+}
+
 static void timer_scan_cb(lv_timer_t* timer)
 {
 	lv_obj_t* scr = timer->user_data;
@@ -110,26 +129,63 @@ static void timer_scan_cb(lv_timer_t* timer)
 	controller_get_sensors();
 	int len;
 	const models_sensor_t* sensors = models_get_sensor(&len);
-	// old_len global or user_data?
+	int new_sensor_count = len - initial_sensor_count;
+
 	if (scan_retries++ >= MAX_SCAN_RETRIES) {
+		/* Scan timeout - show results */
 		controller_post_stop_scan();
 		lv_timer_del(timer);
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
-		tt_obj_info_box_create("New sensor", "No sensor found", 1);
+
+		if (new_sensor_count > 0) {
+			show_found_sensors_selection(new_sensor_count);
+		} else {
+			tt_obj_info_box_create("New sensor", "No sensor found", 1);
+		}
 	}
-	if (len != old_len) {
-		models_sensor_t new_sensor = sensors[len-1];
-		char msg[100];
-		sprintf(msg, "Found new sensor with mac\n%s", new_sensor.mac);
-		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		tt_obj_info_box_create("New sensor", msg, 0);
-		update_sensors();
+
+	LV_LOG_USER("Searching sensors. Retries: %d (initial=%d, current=%d, new=%d)",
+			scan_retries, initial_sensor_count, len, new_sensor_count);
+}
+
+static void show_found_sensors_selection(int new_sensor_count)
+{
+	int total_len;
+	const models_sensor_t* sensors = models_get_sensor(&total_len);
+
+	/* Create selection screen */
+	selection_scr = lv_obj_create(NULL);
+	lv_obj_set_size(selection_scr, LV_PCT(100), LV_PCT(100));
+	lv_obj_set_flex_flow(selection_scr, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_scroll_dir(selection_scr, LV_DIR_VER);
+
+	/* Title */
+	lv_obj_t* title = lv_label_create(selection_scr);
+	lv_label_set_text(title, "Found Sensors:");
+	lv_obj_set_width(title, LV_PCT(100));
+	lv_obj_set_height(title, 40);
+
+	/* Create buttons for each newly found sensor */
+	int start_idx = total_len - new_sensor_count;
+	for (int i = 0; i < new_sensor_count && i < MAX_SENSORS; i++) {
+		const models_sensor_t* sensor = &sensors[start_idx + i];
+		char btn_text[100];
+		snprintf(btn_text, sizeof(btn_text), "MAC: %s", sensor->mac);
+
+		btn_found_sensor[i] = tt_obj_btn_perc_create(selection_scr, NULL, btn_text, 100);
+		lv_obj_add_event_cb(btn_found_sensor[i], btn_found_sensor_cb, LV_EVENT_CLICKED,
+				(void*)(long)i);
+		lv_obj_set_height(btn_found_sensor[i], 50);
 	}
-	LV_LOG_USER("Searching sensors. Retries: %d (old_len=%d, len=%d)",
-			scan_retries, old_len, len);
+
+	/* Back button */
+	lv_obj_t* btn_back = tt_obj_btn_perc_create(selection_scr, NULL, "Cancel", 100);
+	lv_obj_set_height(btn_back, 50);
+	lv_obj_add_event_cb(btn_back, cancel_loader_cb, LV_EVENT_CLICKED, NULL);
+
+	current_main_scr = lv_scr_act();
+	lv_scr_load(selection_scr);
 }
 
 /* Function definitions *******************************************************/
