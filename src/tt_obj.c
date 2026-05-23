@@ -286,11 +286,12 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 // TODO: fix close button; colors allowed??
 lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
 {
-	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, false);
+	bool add_close_btn = severiry != 0;
+	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, add_close_btn);
 	lv_obj_center(msgbox);
 	lv_obj_set_size(msgbox, LV_PCT(90), LV_SIZE_CONTENT);
 
-	/* No close button available when close button is disabled */
+	/* No close button available when severity is INFO */
 	if (severiry == 0) { // INFO
 		/* Apply info style if needed */
 	}
