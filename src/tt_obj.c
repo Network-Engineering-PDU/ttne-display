@@ -297,17 +297,20 @@ lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
 	lv_obj_t* msgbox;
 
 	if (severiry != 0) {
-		msgbox = lv_msgbox_create(NULL, title, msg, btns, false);
+		msgbox = lv_msgbox_create(NULL, title, msg, btns, true);
 		lv_obj_add_event_cb(msgbox, tt_obj_info_box_cb, LV_EVENT_VALUE_CHANGED, NULL);
-		
-		lv_obj_t* mtx_btns = lv_msgbox_get_btns(msgbox);
-		lv_obj_set_height(mtx_btns, 50);
 	} else {
 		msgbox = lv_msgbox_create(NULL, title, msg, NULL, false);
 	}
 
 	lv_obj_center(msgbox);
 	lv_obj_set_size(msgbox, LV_PCT(90), LV_SIZE_CONTENT);
+	
+	lv_obj_t* msgbox_txt = lv_msgbox_get_text(msgbox);
+	lv_label_set_recolor(msgbox_txt, true);
+
+	lv_obj_t* mtx_btns = lv_msgbox_get_btns(msgbox);
+	lv_obj_set_height(mtx_btns, 50);
 
 	return msgbox;
 }
