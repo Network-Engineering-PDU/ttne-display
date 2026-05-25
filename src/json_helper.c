@@ -351,38 +351,37 @@ int json_helper_update_sensors(const char* json_str)
 
 		err = json_get_int(&sensors[i].id, sensor, "id");
 		if (err != 0) {
-			return 1;
+			continue;
 		}
 		str = json_get_string(sensor, "mac_address");
 		if (str == NULL) {
-			return 1;
+			continue;
 		}
 		sensors[i].mac = str;
 		str = json_get_string(sensor, "name");
-		sensors[i].name = str;
+		sensors[i].name = (str == NULL) ? "" : str;
 
-		cJSON* last_data = cJSON_GetObjectItem(sensor, "last_data");
-		str = json_get_string(last_data, "data_datetime");
-		sensors[i].last_data.datetime = str;
-		err = json_get_float(&sensors[i].last_data.temp, last_data, "temperature");
-		if (err != 0) {
+		cJSON* last_data = cJSON_GetObjectItemCaseSensitive(sensor, "last_data");
+		if (last_data == NULL || cJSON_IsNull(last_data)) {
+			sensors[i].last_data.datetime = "";
 			sensors[i].last_data.temp = NAN;
-		}
-		err = json_get_float(&sensors[i].last_data.humd, last_data, "humidity");
-		if (err != 0) {
 			sensors[i].last_data.humd = NAN;
-		}
-		err = json_get_float(&sensors[i].last_data.pres, last_data, "pressure");
-		if (err != 0) {
 			sensors[i].last_data.pres = NAN;
-		}
-		err = json_get_int(&sensors[i].last_data.rssi, last_data, "rssi");
-		if (err != 0) {
-			sensors[i].last_data.rssi = 1;
-		}
-		err = json_get_int(&sensors[i].last_data.bat, last_data, "battery");
-		if (err != 0) {
+			sensors[i].last_data.rssi = -1;
 			sensors[i].last_data.bat = -1;
+		} else {
+			str = json_get_string(last_data, "data_datetime");
+			sensors[i].last_data.datetime = (str == NULL) ? "" : str;
+			err = json_get_float(&sensors[i].last_data.temp, last_data, "temperature");
+			sensors[i].last_data.temp = (err == 0) ? sensors[i].last_data.temp : NAN;
+			err = json_get_float(&sensors[i].last_data.humd, last_data, "humidity");
+			sensors[i].last_data.humd = (err == 0) ? sensors[i].last_data.humd : NAN;
+			err = json_get_float(&sensors[i].last_data.pres, last_data, "pressure");
+			sensors[i].last_data.pres = (err == 0) ? sensors[i].last_data.pres : NAN;
+			err = json_get_int(&sensors[i].last_data.rssi, last_data, "rssi");
+			sensors[i].last_data.rssi = (err == 0) ? sensors[i].last_data.rssi : -1;
+			err = json_get_int(&sensors[i].last_data.bat, last_data, "battery");
+			sensors[i].last_data.bat = (err == 0) ? sensors[i].last_data.bat : -1;
 		}
 		i++;
 	}
