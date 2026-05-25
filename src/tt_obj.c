@@ -265,14 +265,6 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 }
 
 // TODO: fix close button
-static void tt_obj_info_box_cb(lv_event_t* e)
-{
-	if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
-		lv_obj_t* obj = lv_event_get_current_target(e);
-		lv_msgbox_close(obj);
-	}
-}
-
 lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 		lv_event_cb_t cb)
 {
@@ -291,26 +283,19 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 	return msgbox;
 }
 
+// TODO: fix close button; colors allowed??
 lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
 {
-	static const char* btns[] = {"OK", ""};
-	lv_obj_t* msgbox;
-
-	if (severiry != 0) {
-		msgbox = lv_msgbox_create(NULL, title, msg, btns, true);
-		lv_obj_add_event_cb(msgbox, tt_obj_info_box_cb, LV_EVENT_VALUE_CHANGED, NULL);
-	} else {
-		msgbox = lv_msgbox_create(NULL, title, msg, NULL, false);
-	}
-
+	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, true);
 	lv_obj_center(msgbox);
 	lv_obj_set_size(msgbox, LV_PCT(90), LV_SIZE_CONTENT);
-	
-	lv_obj_t* msgbox_txt = lv_msgbox_get_text(msgbox);
-	lv_label_set_recolor(msgbox_txt, true);
 
-	lv_obj_t* mtx_btns = lv_msgbox_get_btns(msgbox);
-	lv_obj_set_height(mtx_btns, 50);
+	lv_obj_t* close_btn = lv_msgbox_get_close_btn(msgbox);
+	if (severiry == 1) { // ERROR
+		lv_obj_add_style(close_btn, &btn_err_style, LV_STATE_DEFAULT);
+	} else { // INFO
+		lv_obj_add_style(close_btn, &btn_hover_style, LV_STATE_DEFAULT);
+	}
 
 	return msgbox;
 }
