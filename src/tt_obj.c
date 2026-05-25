@@ -265,6 +265,14 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 }
 
 // TODO: fix close button
+static void tt_obj_info_box_cb(lv_event_t* e)
+{
+	if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+		lv_obj_t* obj = lv_event_get_current_target(e);
+		lv_msgbox_close(obj);
+	}
+}
+
 lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 		lv_event_cb_t cb)
 {
@@ -283,11 +291,18 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 	return msgbox;
 }
 
-// TODO: fix close button; colors allowed??
 lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
 {
-	bool add_close_btn = severiry != 0;
-	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, add_close_btn);
+	static const char* btns[] = {"OK", ""};
+	lv_obj_t* msgbox;
+
+	if (severiry != 0) {
+		msgbox = lv_msgbox_create(NULL, title, msg, btns, false);
+		lv_obj_add_event_cb(msgbox, tt_obj_info_box_cb, LV_EVENT_VALUE_CHANGED, NULL);
+	} else {
+		msgbox = lv_msgbox_create(NULL, title, msg, NULL, false);
+	}
+
 	lv_obj_center(msgbox);
 	lv_obj_set_size(msgbox, LV_PCT(90), LV_SIZE_CONTENT);
 
