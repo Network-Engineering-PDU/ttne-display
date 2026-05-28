@@ -80,11 +80,11 @@ static void sensor_data_timer_cb(lv_timer_t* timer)
 		lv_label_set_text(lbl_mac, "No sensor");
 		lv_label_set_text(lbl_name, "");
 		lv_label_set_text(lbl_dt, "");
-		t_obj_card_set_text(card_temp, "#%06X N/A# C");
-		t_obj_card_set_text(card_humd, "#%06X N/A# %%RH");
-		t_obj_card_set_text(card_pres, "#%06X N/A# hPa");
-		t_obj_card_set_text(card_rssi, "#%06X N/A# dBm");
-		t_obj_card_set_text(card_bat, "#%06X N/A# mV");
+		tt_obj_card_set_text(card_temp, "#%06X N/A# C");
+		tt_obj_card_set_text(card_humd, "#%06X N/A# %%RH");
+		tt_obj_card_set_text(card_pres, "#%06X N/A# hPa");
+		tt_obj_card_set_text(card_rssi, "#%06X N/A# dBm");
+		tt_obj_card_set_text(card_bat, "#%06X N/A# mV");
 		return;
 	}
 	char txt[50];
