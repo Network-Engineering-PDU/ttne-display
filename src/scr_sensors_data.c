@@ -141,14 +141,13 @@ lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 
 	lv_obj_set_flex_flow(sensor_data_cont, LV_FLEX_FLOW_ROW_WRAP);
 
-	/* Create card_info first, then add labels to it */
-	card_info = tt_obj_card_create(sensor_data_cont, "", NULL);
 	lbl_mac = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_mac, LV_ALIGN_TOP_MID, 0, 0);
 	lbl_name = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_name, LV_ALIGN_CENTER, 0, 0);
 	lbl_dt = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_dt, LV_ALIGN_BOTTOM_MID, 0, 0);
+	card_info = tt_obj_card_create(sensor_data_cont, "", NULL);
 	card_rssi = tt_obj_card_create(sensor_data_cont, "", ASSET("rssi.png"));
 	card_bat = tt_obj_card_create(sensor_data_cont, "", ASSET("bat.png"));
 	card_temp = tt_obj_card_create(sensor_data_cont, "", ASSET("temp.png"));

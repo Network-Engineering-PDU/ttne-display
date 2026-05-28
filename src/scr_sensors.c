@@ -39,6 +39,7 @@ static lv_obj_t* current_main_scr;
 
 static void menu_cb(lv_event_t* e);
 static void cancel_loader_cb(lv_event_t* e);
+static void selection_cancel_cb(lv_event_t* e);
 static void add_sensor_cb(lv_event_t* e);
 static void btn_sensor_cb(lv_event_t* e);
 static void btn_found_sensor_cb(lv_event_t* e);
@@ -71,7 +72,33 @@ static void cancel_loader_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		LV_LOG_USER("CANCEL");
 		scan_retries = MAX_SCAN_RETRIES;
-		timer_scan_cb(timer);
+		/* If the scan timer is still running, trigger the timer callback
+		 * to stop the scan. If the timer was already deleted, just stop
+		 * the scan and restore the UI. */
+		if (timer) {
+			timer_scan_cb(timer);
+		} else {
+			controller_post_stop_scan();
+			if (loader_scr) {
+				lv_obj_del(loader_scr);
+				loader_scr = NULL;
+			}
+		}
+	}
+}
+
+static void selection_cancel_cb(lv_event_t* e)
+{
+	lv_event_code_t code = lv_event_get_code(e);
+
+	if (code == LV_EVENT_CLICKED) {
+		/* Return to the stored main screen and delete the selection screen */
+		if (current_main_scr) {
+			lv_scr_load(current_main_scr);
+		}
+		if (selection_scr) {
+			lv_obj_del(selection_scr);
+		}
 	}
 }
 
@@ -135,8 +162,12 @@ static void timer_scan_cb(lv_timer_t* timer)
 		/* Scan timeout - show results */
 		controller_post_stop_scan();
 		lv_timer_del(timer);
+		timer = NULL;
 		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
+		if (loader_scr) {
+			lv_obj_del(loader_scr);
+			loader_scr = NULL;
+		}
 
 		if (new_sensor_count > 0) {
 			show_found_sensors_selection(new_sensor_count);
@@ -182,7 +213,7 @@ static void show_found_sensors_selection(int new_sensor_count)
 	/* Back button */
 	lv_obj_t* btn_back = tt_obj_btn_perc_create(selection_scr, NULL, "Cancel", 100);
 	lv_obj_set_height(btn_back, 50);
-	lv_obj_add_event_cb(btn_back, cancel_loader_cb, LV_EVENT_CLICKED, NULL);
+	lv_obj_add_event_cb(btn_back, selection_cancel_cb, LV_EVENT_CLICKED, NULL);
 
 	current_main_scr = lv_scr_act();
 	lv_scr_load(selection_scr);
