@@ -203,55 +203,7 @@ static void update_sensors()
 	for (int i = 0; i < MAX_SENSORS; i++) {
 		if (i < len) {
 			lv_obj_clear_flag(btn_sensor[i], LV_OBJ_FLAG_HIDDEN);
-			char display_text[100];
-			
-			// Display sensor name or MAC address
-			if (sensors[i].name && strlen(sensors[i].name) > 0) {
-				snprintf(display_text, sizeof(display_text), "%s", sensors[i].name);
-			} else {
-				snprintf(display_text, sizeof(display_text), "Sensor %d", i + 1);
-			}
-			
-			// Get button child label and update it
-			lv_obj_t* btn_label = lv_obj_get_child(btn_sensor[i], 0);
-			if (btn_label) {
-				lv_label_set_text(btn_label, display_text);
-			}
-			
-			// Update MAC label at bottom
-			lv_label_set_text(lbl_mac[i], sensors[i].mac);
-			
-			// Create temperature and humidity display
-			char data_text[50];
-			
-			// Check if sensor has valid data
-			if (sensors[i].last_data.datetime && strlen(sensors[i].last_data.datetime) > 0) {
-				// Format: "T: 23.5°C H: 45%"
-				snprintf(data_text, sizeof(data_text), "T: %.1f°C H: %d%%",
-						sensors[i].last_data.temp,
-						(int)sensors[i].last_data.humd);
-			} else {
-				// No data yet
-				snprintf(data_text, sizeof(data_text), "No data");
-			}
-			
-			// Create or update data label if it doesn't exist
-			// Find or create second label in button for data display
-			int child_count = lv_obj_get_child_cnt(btn_sensor[i]);
-			lv_obj_t* data_label = NULL;
-			
-			if (child_count > 1) {
-				data_label = lv_obj_get_child(btn_sensor[i], 1);
-			} else {
-				// Create new label for data
-				data_label = lv_label_create(btn_sensor[i]);
-				lv_obj_align(data_label, LV_ALIGN_CENTER, 0, 8);
-			}
-			
-			if (data_label) {
-				lv_label_set_text(data_label, data_text);
-				lv_obj_set_style_text_font(data_label, &lv_font_montserrat_12, 0);
-			}
+			lv_label_set_text(lbl_mac[i], sensors[i].mac);			
 		} else {
 			lv_obj_add_flag(btn_sensor[i], LV_OBJ_FLAG_HIDDEN);
 		}
