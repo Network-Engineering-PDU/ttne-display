@@ -80,34 +80,34 @@ static void sensor_data_timer_cb(lv_timer_t* timer)
 		lv_label_set_text(lbl_mac, "No sensor");
 		lv_label_set_text(lbl_name, "");
 		lv_label_set_text(lbl_dt, "");
-		tt_obj_card_set_text(card_temp, "#%06X N/A# C", TT_COLOR_GREEN_NE);
-		tt_obj_card_set_text(card_humd, "#%06X N/A# %%RH", TT_COLOR_GREEN_NE);
-		tt_obj_card_set_text(card_pres, "#%06X N/A# hPa", TT_COLOR_GREEN_NE);
-		tt_obj_card_set_text(card_rssi, "#%06X N/A# dBm", TT_COLOR_GREEN_NE);
-		tt_obj_card_set_text(card_bat, "#%06X N/A# mV", TT_COLOR_GREEN_NE);
+		t_obj_card_set_text(card_temp, "#%06X N/A# C");
+		t_obj_card_set_text(card_humd, "#%06X N/A# %%RH");
+		t_obj_card_set_text(card_pres, "#%06X N/A# hPa");
+		t_obj_card_set_text(card_rssi, "#%06X N/A# dBm");
+		t_obj_card_set_text(card_bat, "#%06X N/A# mV");
 		return;
 	}
 	char txt[50];
 	char buff[50];
 	const models_sensor_t* sensor = &sensors[sensor_id];
 	
-	lv_label_set_text(lbl_mac, sensor.mac);
-	lv_label_set_text(lbl_name, sensor.name[0] ? sensor.name : sensor.mac);
-	lv_label_set_text(lbl_dt, sensor.last_data.datetime[0] ? sensor.last_data.datetime : "N/A");
+	lv_label_set_text(lbl_mac, sensor->mac);
+	lv_label_set_text(lbl_name, sensor->name[0] ? sensor->name : sensor->mac);
+	lv_label_set_text(lbl_dt, sensor->last_data.datetime[0] ? sensor->last_data.datetime : "N/A");
 	sprintf(txt, "#%06X %s# C", TT_COLOR_GREEN_NE,
-			f_float(buff, sensor.last_data.temp, "%.2f"));
+			f_float(buff, sensor->last_data.temp, "%.2f"));
 	tt_obj_card_set_text(card_temp, txt);
 	sprintf(txt, "#%06X %s# %%RH", TT_COLOR_GREEN_NE,
-			f_float(buff, sensor.last_data.humd, "%.1f"));
+			f_float(buff, sensor->last_data.humd, "%.1f"));
 	tt_obj_card_set_text(card_humd, txt);
 	sprintf(txt, "#%06X %s# hPa", TT_COLOR_GREEN_NE,
-			f_float(buff, sensor.last_data.pres / 100, "%.2f"));
+			f_float(buff, sensor->last_data.pres / 100, "%.2f"));
 	tt_obj_card_set_text(card_pres, txt);
 	sprintf(txt, "#%06X %s# dBm", TT_COLOR_GREEN_NE,
-			f_int(buff, sensor.last_data.rssi, 0, -200));
+			f_int(buff, sensor->last_data.rssi, 0, -200));
 	tt_obj_card_set_text(card_rssi, txt);
 	sprintf(txt, "#%06X %s# mV", TT_COLOR_GREEN_NE,
-			f_int(buff, sensor.last_data.bat, 5000, 0));
+			f_int(buff, sensor->last_data.bat, 5000, 0));
 	tt_obj_card_set_text(card_bat, txt);
 	//TODO: check bat and set img
 	// if (bat >= BAT_TH_MAX) {
