@@ -76,14 +76,24 @@ static void sensor_data_timer_cb(lv_timer_t* timer)
 	controller_get_sensors();
 	int len;
 	const models_sensor_t* sensors = models_get_sensor(&len);
+	if (len <= 0 || sensor_id < 0 || sensor_id >= len) {
+		lv_label_set_text(lbl_mac, "No sensor");
+		lv_label_set_text(lbl_name, "");
+		lv_label_set_text(lbl_dt, "");
+		tt_obj_card_set_text(card_temp, "#%06X N/A# C", TT_COLOR_GREEN_NE);
+		tt_obj_card_set_text(card_humd, "#%06X N/A# %%RH", TT_COLOR_GREEN_NE);
+		tt_obj_card_set_text(card_pres, "#%06X N/A# hPa", TT_COLOR_GREEN_NE);
+		tt_obj_card_set_text(card_rssi, "#%06X N/A# dBm", TT_COLOR_GREEN_NE);
+		tt_obj_card_set_text(card_bat, "#%06X N/A# mV", TT_COLOR_GREEN_NE);
+		return;
+	}
 	char txt[50];
 	char buff[50];
-	models_sensor_t sensor = sensors[sensor_id];
+	const models_sensor_t* sensor = &sensors[sensor_id];
 	
-	// TODO: Crear un boton de info al que le das y sale un infobox con toda la información restante?
 	lv_label_set_text(lbl_mac, sensor.mac);
-	lv_label_set_text(lbl_name, sensor.name);
-	lv_label_set_text(lbl_dt, sensor.last_data.datetime);
+	lv_label_set_text(lbl_name, sensor.name[0] ? sensor.name : sensor.mac);
+	lv_label_set_text(lbl_dt, sensor.last_data.datetime[0] ? sensor.last_data.datetime : "N/A");
 	sprintf(txt, "#%06X %s# C", TT_COLOR_GREEN_NE,
 			f_float(buff, sensor.last_data.temp, "%.2f"));
 	tt_obj_card_set_text(card_temp, txt);
@@ -141,13 +151,13 @@ lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 
 	lv_obj_set_flex_flow(sensor_data_cont, LV_FLEX_FLOW_ROW_WRAP);
 
+	card_info = tt_obj_card_create(sensor_data_cont, "", NULL);
 	lbl_mac = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_mac, LV_ALIGN_TOP_MID, 0, 0);
 	lbl_name = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_name, LV_ALIGN_CENTER, 0, 0);
 	lbl_dt = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_dt, LV_ALIGN_BOTTOM_MID, 0, 0);
-	card_info = tt_obj_card_create(sensor_data_cont, "", NULL);
 	card_rssi = tt_obj_card_create(sensor_data_cont, "", ASSET("rssi.png"));
 	card_bat = tt_obj_card_create(sensor_data_cont, "", ASSET("bat.png"));
 	card_temp = tt_obj_card_create(sensor_data_cont, "", ASSET("temp.png"));
