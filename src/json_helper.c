@@ -19,6 +19,44 @@ static int json_get_int(int* num, cJSON* json, char* id);
 static int json_get_float(float* num, cJSON* json, char* id);
 static int json_get_bool(bool* bl, cJSON* json, char* id);
 
+static float normalize_phase_vi(float ph)
+{
+	if (ph > 180.0f) {
+		ph -= 360.0f;
+	} else if (ph < -180.0f) {
+		ph += 360.0f;
+	}
+	if (ph > 90.0f) {
+		ph -= 180.0f;
+	} else if (ph < -90.0f) {
+		ph += 180.0f;
+	}
+	return ph;
+}
+
+static void apply_input_power_correction(models_in_data_t* in_data)
+{
+	float ph_rad;
+
+	if (in_data == NULL) {
+		return;
+	}
+
+	in_data->phase = normalize_phase_vi(in_data->phase);
+
+	if (in_data->voltage != 0.0f && in_data->current != 0.0f) {
+		ph_rad = in_data->phase * ((float)M_PI / 180.0f);
+		in_data->active_power = in_data->voltage * in_data->current * cosf(ph_rad);
+		in_data->reactive_power = in_data->voltage * in_data->current * sinf(ph_rad);
+		in_data->apparent_power = in_data->voltage * in_data->current;
+		in_data->power_factor = cosf(ph_rad);
+	}
+
+	if (in_data->energy < 0.0f) {
+		in_data->energy = -in_data->energy;
+	}
+}
+
 /* Callbacks ******************************************************************/
 /* Function definitions *******************************************************/
 
@@ -234,6 +272,7 @@ int json_helper_update_in_data(const char* json_str)
 		return 1;
 	}
 
+	apply_input_power_correction(&in_data);
 	models_set_in_data(&in_data);
 
 	cJSON_Delete(json);
