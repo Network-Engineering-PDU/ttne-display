@@ -63,7 +63,7 @@ include_directories(${CJSON_INCLUDE_DIR})
 
 target_include_directories(lvgl SYSTEM PUBLIC include)
 
-target_link_libraries(cmdisplay PRIVATE lvgl lvgl::drivers ${CURL_LIBRARIES} ${CJSON_LIBRARIES})
+target_link_libraries(cmdisplay PRIVATE lvgl lvgl::drivers ${CURL_LIBRARIES} ${CJSON_LIBRARIES} m)
 if(SIMULATOR_ENABLED)
     target_link_libraries(cmdisplay PRIVATE ${SDL2_LIBRARIES} ${FREETYPE_LIBRARIES})
 endif(SIMULATOR_ENABLED)
