@@ -116,6 +116,15 @@ typedef struct models_sensor_t {
 	sensor_last_data_t last_data;
 } models_sensor_t;
 
+#define MAX_DISCOVERED_SENSORS 16
+
+typedef struct models_discovered_sensor_t {
+	const char* mac;
+	const char* kind;
+	const char* name;
+	int rssi;
+} models_discovered_sensor_t;
+
 
 // SETTINGS
 
@@ -219,6 +228,9 @@ void models_set_out_data(const models_out_data_t* out_data);
 const models_sensor_t* models_get_sensor(int* len);
 const models_sensor_t* models_get_sensor_id(int id);
 void models_set_sensor(const models_sensor_t* l_sensor, int len);
+
+const models_discovered_sensor_t* models_get_discovered(int* len);
+void models_set_discovered(const models_discovered_sensor_t* list, int len);
 
 const models_nw_services_t* models_get_nw_services();
 void models_set_nw_services(const models_nw_services_t* nw_services);

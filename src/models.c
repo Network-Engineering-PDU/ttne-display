@@ -14,6 +14,8 @@ static models_in_data_t in_data;
 static models_out_data_t out_data;
 static models_sensor_t* sensor_list;
 static int sensor_list_len;
+static models_discovered_sensor_t* discovered_list;
+static int discovered_list_len;
 static models_nw_services_t nw_services;
 static models_bt_status_t bt_status;
 static models_nw_info_t nw_info;
@@ -206,6 +208,30 @@ void models_set_sensor(const models_sensor_t* l_sensor, int len)
 		sensor_list[i].last_data.bat = l_sensor[i].last_data.bat;
 	}
 	sensor_list_len = len;
+}
+
+const models_discovered_sensor_t* models_get_discovered(int* len)
+{
+	*len = discovered_list_len;
+	return discovered_list;
+}
+
+void models_set_discovered(const models_discovered_sensor_t* list, int len)
+{
+	for (int i = 0; i < discovered_list_len; i++) {
+		free((void*)discovered_list[i].mac);
+		free((void*)discovered_list[i].kind);
+		free((void*)discovered_list[i].name);
+	}
+	free(discovered_list);
+	discovered_list = malloc(len * sizeof(models_discovered_sensor_t));
+	for (int i = 0; i < len; i++) {
+		discovered_list[i].mac = stralloc(list[i].mac);
+		discovered_list[i].kind = stralloc(list[i].kind);
+		discovered_list[i].name = stralloc(list[i].name);
+		discovered_list[i].rssi = list[i].rssi;
+	}
+	discovered_list_len = len;
 }
 
 const models_nw_services_t* models_get_nw_services()

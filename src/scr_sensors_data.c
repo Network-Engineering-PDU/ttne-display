@@ -9,7 +9,7 @@
 #include "models.h"
 #include "controller.h"
 
-#define TIMER_REFRESH_RATE 60000 // ms
+#define TIMER_REFRESH_RATE 10000 // ms
 
 #define BAT_TH_MAX 3.1
 #define BAT_TH_MED 2.9

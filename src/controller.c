@@ -168,6 +168,73 @@ void controller_get_sensors()
 	http_helper_free(&req);
 }
 
+void controller_post_ble_scan_start()
+{
+	http_get_req_t req;
+	char* url = NE_BASE_URL "api/sensors-scan/start/";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("BLE scan start error");
+	}
+	http_helper_free(&req);
+}
+
+void controller_post_ble_scan_stop()
+{
+	http_get_req_t req;
+	char* url = NE_BASE_URL "api/sensors-scan/stop/";
+	int err = http_helper_post(&req, url, NULL);
+	if (err != 0) {
+		LV_LOG_ERROR("BLE scan stop error");
+	}
+	http_helper_free(&req);
+}
+
+void controller_get_ble_discovered()
+{
+	http_get_req_t req;
+	char* url = NE_BASE_URL "api/sensors-scan/discovered/";
+	int err = http_helper_get(&req, url);
+	if (err == 0 && req.buffer != NULL) {
+		json_helper_update_discovered(req.buffer);
+	}
+	http_helper_free(&req);
+}
+
+void controller_post_ble_confirm_mac(const char* mac)
+{
+	http_get_req_t req;
+	char* url = NE_BASE_URL "api/sensors-scan/confirm/";
+	cJSON* json = cJSON_CreateObject();
+	cJSON* macs = cJSON_CreateArray();
+	cJSON_AddItemToArray(macs, cJSON_CreateString(mac));
+	cJSON_AddItemToObject(json, "macs", macs);
+	char* post_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_post(&req, url, post_data);
+	if (err != 0) {
+		LV_LOG_ERROR("BLE confirm error");
+	}
+	cJSON_free(post_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+}
+
+void controller_post_ble_confirm_all()
+{
+	http_get_req_t req;
+	char* url = NE_BASE_URL "api/sensors-scan/confirm/";
+	cJSON* json = cJSON_CreateObject();
+	cJSON_AddTrueToObject(json, "all");
+	char* post_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_post(&req, url, post_data);
+	if (err != 0) {
+		LV_LOG_ERROR("BLE confirm all error");
+	}
+	cJSON_free(post_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+}
+
 void controller_get_nw_services()
 {
 	http_get_req_t req;

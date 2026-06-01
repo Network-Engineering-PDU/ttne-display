@@ -431,6 +431,49 @@ int json_helper_update_sensors(const char* json_str)
 	return 0;
 }
 
+int json_helper_update_discovered(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_discovered_sensor_t items[MAX_DISCOVERED_SENSORS];
+	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");
+	int i = 0;
+
+	if (!cJSON_IsArray(devices)) {
+		cJSON_Delete(json);
+		return 1;
+	}
+
+	cJSON* dev;
+	cJSON_ArrayForEach(dev, devices) {
+		const char* str;
+		int err;
+
+		if (i == MAX_DISCOVERED_SENSORS) {
+			break;
+		}
+		str = json_get_string(dev, "mac");
+		if (str == NULL) {
+			continue;
+		}
+		items[i].mac = str;
+		str = json_get_string(dev, "kind");
+		items[i].kind = (str == NULL) ? "" : str;
+		str = json_get_string(dev, "name");
+		items[i].name = (str == NULL) ? "" : str;
+		err = json_get_int(&items[i].rssi, dev, "rssi");
+		items[i].rssi = (err == 0) ? items[i].rssi : 0;
+		i++;
+	}
+
+	models_set_discovered(items, i);
+	cJSON_Delete(json);
+	return 0;
+}
+
 int json_helper_update_nw_services(const char* json_str)
 {
 	cJSON* json = cJSON_Parse(json_str);
