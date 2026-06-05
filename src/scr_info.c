@@ -8,20 +8,6 @@
 #include "models.h"
 #include "controller.h"
 
-#ifndef LV_LABEL_LONG_WRAP
-  #ifdef LV_LABEL_LONG_BREAK
-    #define LV_LABEL_LONG_WRAP LV_LABEL_LONG_BREAK
-  #elif defined(LV_LABEL_LONG_DOT)
-    #define LV_LABEL_LONG_WRAP LV_LABEL_LONG_DOT
-  #else
-    #define LV_LABEL_LONG_WRAP 0
-  #endif
-#endif
-
-#ifndef GIT_VERSION
-#define GIT_VERSION "N/A"
-#endif
-
 /* Global variables ***********************************************************/
 
 static lv_obj_t* lbl_name;
@@ -69,9 +55,9 @@ static void refresh_info_display(void)
 	lv_label_set_text(lbl_outlets, str);
 	sprintf(str, "  %s: #%06X %d A", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
 	lv_label_set_text(lbl_rated_curr, str);
-	sprintf(str, "  %s: #%06X %s#", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
+	sprintf(str, "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
 	lv_label_set_text(lbl_controller, str);
-	sprintf(str, "  %s: #%06X %s#", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
+	sprintf(str, "  %s: #%06X %s", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
 	lv_label_set_text(lbl_type, str);
 
 	sprintf(str, "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
@@ -97,14 +83,8 @@ static void menu_cb(lv_event_t* e)
 		if (curr_page == page) {
 			LV_LOG_USER("Info cb - page change detected");
 			printf("[scr_info] Menu callback triggered, fetching fresh data\n");
-			int saved_rated_current = models_get_pdu_info()->rated_current;
 			controller_get_sys_info();
 			controller_get_pdu_info();
-			if (saved_rated_current != 0) {
-				models_pdu_info_t pdu_copy = *models_get_pdu_info();
-				pdu_copy.rated_current = saved_rated_current;
-				models_set_pdu_info(&pdu_copy);
-			}
 			refresh_info_display();
 		}
 	}
@@ -129,8 +109,6 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_controller = tt_obj_label_color_create(info_product_cont, "");
 	lbl_type = tt_obj_label_color_create(info_product_cont, "");
 	lbl_version = tt_obj_label_color_create(info_product_cont, "");
-	lv_label_set_long_mode(lbl_controller, LV_LABEL_LONG_WRAP);
-	lv_label_set_long_mode(lbl_type, LV_LABEL_LONG_WRAP);
 	lbl_om_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pmb_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_display_version = tt_obj_label_color_create(info_product_cont, "");
