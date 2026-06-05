@@ -8,6 +8,16 @@
 #include "models.h"
 #include "controller.h"
 
+#ifndef LV_LABEL_LONG_WRAP
+  #ifdef LV_LABEL_LONG_BREAK
+    #define LV_LABEL_LONG_WRAP LV_LABEL_LONG_BREAK
+  #elif defined(LV_LABEL_LONG_DOT)
+    #define LV_LABEL_LONG_WRAP LV_LABEL_LONG_DOT
+  #else
+    #define LV_LABEL_LONG_WRAP 0
+  #endif
+#endif
+
 #ifndef GIT_VERSION
 #define GIT_VERSION "N/A"
 #endif
@@ -119,8 +129,8 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_controller = tt_obj_label_color_create(info_product_cont, "");
 	lbl_type = tt_obj_label_color_create(info_product_cont, "");
 	lbl_version = tt_obj_label_color_create(info_product_cont, "");
-	lv_label_set_long_mode(lbl_controller, LV_LABEL_LONG_BREAK);
-	lv_label_set_long_mode(lbl_type, LV_LABEL_LONG_BREAK);
+	lv_label_set_long_mode(lbl_controller, LV_LABEL_LONG_WRAP);
+	lv_label_set_long_mode(lbl_type, LV_LABEL_LONG_WRAP);
 	lbl_om_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pmb_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_display_version = tt_obj_label_color_create(info_product_cont, "");
