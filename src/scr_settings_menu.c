@@ -8,6 +8,8 @@
 #include "scr_settings_sys.h"
 #include "scr_settings_upd.h"
 #include "scr_settings_nw_menu.h"
+#include "scr_login.h"
+#include "scr_current.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
 #include "tt_colors.h"

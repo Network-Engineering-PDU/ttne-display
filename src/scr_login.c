@@ -162,10 +162,9 @@ static void login_button_event_cb(lv_event_t * e) {
  * PUBLIC FUNCTIONS
  *********************/
 
-void scr_login_create(void) {
-    /* 1. Get current screen and clear any previous layouts */
-    lv_obj_t * scr = lv_scr_act();
-    lv_obj_clean(scr);
+void scr_login_create(lv_obj_t* l_menu, lv_obj_t* btn) {
+    /* 1. Create a login page in the menu */
+    lv_obj_t * login_page = tt_obj_menu_page_create(l_menu, btn, NULL, "Login");
 
     /* Optionally clear saved credentials at startup to enforce default password */
     if(CLEAR_CREDENTIALS_ON_BOOT) {
@@ -175,18 +174,21 @@ void scr_login_create(void) {
         LV_LOG_USER("CLEAR_CREDENTIALS_ON_BOOT set — removed %s", path);
     }
 
-    /* Keep the page white as requested */
-    lv_obj_set_style_bg_color(scr, lv_color_white(), 0);
+    /* Set white background and center all elements */
+    lv_obj_set_style_bg_color(login_page, lv_color_white(), 0);
+    lv_obj_set_flex_flow(login_page, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(login_page, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+            LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(login_page, 18, 0);
 
     /* 2. "Enter Password" Prompt Label */
-    /* Title placed directly on the white screen, centered */
-    lv_obj_t * lbl_prompt = lv_label_create(scr);
+    lv_obj_t * lbl_prompt = lv_label_create(login_page);
     lv_label_set_text(lbl_prompt, "Enter Password");
-    lv_obj_align(lbl_prompt, LV_ALIGN_CENTER, 0, -60);
     lv_obj_set_style_text_font(lbl_prompt, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_align(lbl_prompt, LV_TEXT_ALIGN_CENTER, 0);
 
     /* 3. Password Input Text Area Box */
-    ta_password = lv_textarea_create(scr);
+    ta_password = lv_textarea_create(login_page);
     lv_textarea_set_password_mode(ta_password, true);  /* Hide password with glyphs '*' */
     lv_textarea_set_one_line(ta_password, true);        /* Keep to a clean single line input */
     lv_textarea_set_placeholder_text(ta_password, "Password");
@@ -203,17 +205,14 @@ void scr_login_create(void) {
     lv_obj_set_style_shadow_ofs_y(ta_password, 4, 0);
     lv_obj_set_style_shadow_color(ta_password, lv_color_hex(0xA8B4C6), 0);
 
-    /* Position directly below the prompt label with spacing */
-    lv_obj_align_to(ta_password, lbl_prompt, LV_ALIGN_OUT_BOTTOM_MID, 0, 14);
-    
     /* Assign action event when enter/ready is pressed on keyboard/keypad */
     lv_obj_add_event_cb(ta_password, password_event_cb, LV_EVENT_READY, NULL);
 
     /* 4. "Don't Request Password again" Checkbox */
-    cb_remember = lv_checkbox_create(scr);
+    cb_remember = lv_checkbox_create(login_page);
     lv_checkbox_set_text(cb_remember, "Don't request password again");
     lv_obj_set_style_text_font(cb_remember, &lv_font_montserrat_12, 0);
-    lv_obj_align_to(cb_remember, ta_password, LV_ALIGN_OUT_BOTTOM_MID, 0, 12);
+    lv_obj_set_style_text_align(cb_remember, LV_TEXT_ALIGN_CENTER, 0);
 
     /* Load stored credentials if present */
     char saved_pwd[128] = {0};
@@ -233,10 +232,9 @@ void scr_login_create(void) {
     }
 
     /* 5. Add LOG IN button */
-    lv_obj_t * btn_login = lv_btn_create(scr);
+    lv_obj_t * btn_login = lv_btn_create(login_page);
     lv_obj_set_width(btn_login, 100);
     lv_obj_set_height(btn_login, 36);
-    lv_obj_align_to(btn_login, cb_remember, LV_ALIGN_OUT_BOTTOM_MID, 0, 12);
     lv_obj_add_event_cb(btn_login, login_button_event_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * lbl_btn = lv_label_create(btn_login);

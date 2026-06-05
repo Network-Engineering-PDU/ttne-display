@@ -22,9 +22,9 @@ extern "C" {
 
 /**
  * @brief Create and initialize the PDU login screen.
- * Clears the current active screen and sets up the password prompt UI.
+ * Creates a menu page in the provided LVGL menu.
  */
-void scr_login_create(void);
+void scr_login_create(lv_obj_t* l_menu, lv_obj_t* btn);
 
 /**
  * @brief Check if the "Don't Request Password again" checkbox is checked.
