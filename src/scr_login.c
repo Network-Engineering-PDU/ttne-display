@@ -97,10 +97,5 @@ void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
     cbx_skip_password = tt_obj_checkbox_create(cont, "Don't request password again", cbx_skip_password_cb);
     lv_obj_set_width(cbx_skip_password, LV_PCT(100));
 
-    lv_obj_t* row = tt_obj_cont_create(cont);
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_width(row, LV_PCT(100));
-
-    tt_obj_btn_mtx_create(row, btn_login_cb, "LOG IN", ASSET("menu.png"));
+    tt_obj_btn_std_create(cont, btn_login_cb, "LOG IN");
 }
