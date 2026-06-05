@@ -45,7 +45,7 @@ void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	menu = l_menu;
 
 	/* Create the settings page directly */
-    lv_obj_t* nw_menu_page = tt_obj_menu_page_create(menu, btn, NULL, "Networks");
+    lv_obj_t* nw_menu_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Networks");
 
 	/* Apply Flex layout directly to the page. 
        In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 
