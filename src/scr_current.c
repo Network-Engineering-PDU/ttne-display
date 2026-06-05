@@ -108,7 +108,7 @@ void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
         lv_obj_t* label = lv_label_create(current_btn);
         lv_label_set_text(label, rated_current_labels[i]);
         lv_obj_set_width(label, LV_PCT(100));
-        lv_label_set_text_align(label, LV_TEXT_ALIGN_CENTER);
+        lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
         current_btns[i] = current_btn;
