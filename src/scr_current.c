@@ -10,6 +10,9 @@
 #include "models.h"
 #include "screen.h"
 
+/* Global variables ***********************************************************/
+static lv_obj_t* menu;
+
 static lv_obj_t* current_btns[6];
 static const int rated_currents[6] = {10, 15, 16, 20, 30, 32};
 static const char* rated_current_labels[6] = {
@@ -58,36 +61,41 @@ static void current_btn_cb(lv_event_t* e)
     tt_obj_info_box_create("Rated Current", msg, 0);
 }
 
-void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
+void scr_current_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {
-    lv_obj_t* current_page = tt_obj_menu_page_create(menu, btn, NULL,
-            "Rated Current");
+    menu = l_menu;
 
-        lv_obj_set_flex_flow(current_page, LV_FLEX_FLOW_ROW_WRAP);
-        lv_obj_set_flex_align(current_page,
-                LV_FLEX_ALIGN_CENTER,
-                LV_FLEX_ALIGN_CENTER,
-                LV_FLEX_ALIGN_CENTER);
-        lv_obj_set_style_pad_row(current_page, 15, 0);
-        lv_obj_set_style_pad_column(current_page, 15, 0);
-        lv_obj_set_style_pad_all(current_page, 10, 0);
+    /* Create the Rated Current page directly */
+    lv_obj_t* current_page = tt_obj_menu_page_create(menu, btn, NULL,"Rated Current");
 
-        const models_pdu_info_t* pdu_info = models_get_pdu_info();
-        int selected_current = pdu_info ? pdu_info->rated_current : 0;
+    /* Apply Flex layout directly to the page. 
+       In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 
+       that can act as containers.
+    */
+    lv_obj_set_flex_flow(current_page, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(
+        current_page,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER
+    );
 
-        /* Create 2x3 grid buttons with fixed 31% width to force 3 columns */
-        for (int i = 0; i < 6; ++i) {
-            lv_obj_t* btn = tt_obj_btn_create(current_page, NULL,
-                    (char*)rated_current_labels[i], NULL,
-                    LV_PCT(31), 88, LV_ALIGN_CENTER);
-            lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
-            lv_obj_add_style(btn, &btn_press_style, LV_STATE_CHECKED);
-            current_btns[i] = btn;
-            lv_obj_add_event_cb(btn, current_btn_cb, LV_EVENT_CLICKED,
-                    (void*)&rated_currents[i]);
+    const models_pdu_info_t* pdu_info = models_get_pdu_info();
+    int selected_current = pdu_info ? pdu_info->rated_current : 0;
 
-            if (rated_currents[i] == selected_current) {
-                lv_obj_add_state(btn, LV_STATE_CHECKED);
-            }
+    /* Create 2x3 grid buttons with fixed 31% width to force 3 columns */
+    for (int i = 0; i < 6; ++i) {
+        lv_obj_t* btn = tt_obj_btn_create(current_page, NULL,
+                (char*)rated_current_labels[i], NULL,
+                LV_PCT(31), 88, LV_ALIGN_CENTER);
+        lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
+        lv_obj_add_style(btn, &btn_press_style, LV_STATE_CHECKED);
+        current_btns[i] = btn;
+        lv_obj_add_event_cb(btn, current_btn_cb, LV_EVENT_CLICKED,
+                (void*)&rated_currents[i]);
+
+        if (rated_currents[i] == selected_current) {
+            lv_obj_add_state(btn, LV_STATE_CHECKED);
         }
+    }
 }
