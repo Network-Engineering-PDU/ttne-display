@@ -110,9 +110,13 @@ void controller_put_pdu_info(const models_pdu_info_t* pdu_info)
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddNumberToObject(json, "rated_current", pdu_info->rated_current);
 	char* put_data = cJSON_PrintUnformatted(json);
+	printf("[controller] Sending PDU info PUT: %s\n", put_data);
 	int err = http_helper_put(&req, url, put_data);
 	if (err != 0) {
-		LV_LOG_ERROR("PDU info PUT error");
+		LV_LOG_ERROR("PDU info PUT error: %d", err);
+		printf("[controller] PDU info PUT failed with error: %d\n", err);
+	} else {
+		printf("[controller] PDU info PUT succeeded\n");
 	}
 	cJSON_Delete(json);
 	free(put_data);

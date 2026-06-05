@@ -54,7 +54,10 @@ static void current_btn_cb(lv_event_t* e)
     models_pdu_info_t new_info = *pdu_info;
     new_info.rated_current = current;
     models_set_pdu_info(&new_info);
+    
+    printf("[scr_current] Setting rated current to %d A\n", current);
     controller_put_pdu_info(&new_info);
+    printf("[scr_current] PUT request sent to backend\n");
 
     select_current_button(current);
 
