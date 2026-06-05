@@ -75,10 +75,11 @@ void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
         const models_pdu_info_t* pdu_info = models_get_pdu_info();
         int selected_current = pdu_info ? pdu_info->rated_current : 0;
 
-        /* Create 2x3 grid buttons using the project's matrix button helper */
+        /* Create 2x3 grid buttons with fixed 31% width to force 3 columns */
         for (int i = 0; i < 6; ++i) {
-            lv_obj_t* btn = tt_obj_btn_mtx_create(current_page, NULL,
-                    (char*)rated_current_labels[i], NULL);
+            lv_obj_t* btn = tt_obj_btn_create(current_page, NULL,
+                    (char*)rated_current_labels[i], NULL,
+                    LV_PCT(31), 88, LV_ALIGN_CENTER);
             lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
             lv_obj_add_style(btn, &btn_press_style, LV_STATE_CHECKED);
             current_btns[i] = btn;
