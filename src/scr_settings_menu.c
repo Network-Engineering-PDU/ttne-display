@@ -8,6 +8,7 @@
 #include "scr_settings_sys.h"
 #include "scr_settings_upd.h"
 #include "scr_settings_nw_menu.h"
+#include "scr_current.h"
 #include "scr_login.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -49,6 +50,8 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
     lv_obj_t* btn_update = tt_obj_btn_mtx_create(settings_page, NULL, "Sys Update", ASSET("menu.png"));
 
+    lv_obj_t* btn_current = tt_obj_btn_mtx_create(settings_page, NULL, "Rated Current", ASSET("menu.png"));
+
     lv_obj_t* btn_login = tt_obj_btn_mtx_create(settings_page, NULL, "Login", ASSET("menu.png"));
 
     /* Navigation links remain the same */
@@ -56,5 +59,6 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
     scr_settings_nw_menu_create(l_menu, btn_nw);
     scr_settings_sys_create(l_menu, btn_sys);
     scr_settings_update_create(l_menu, btn_update);
+    scr_current_create(l_menu, btn_current);
     scr_login_create(l_menu, btn_login);
 }
