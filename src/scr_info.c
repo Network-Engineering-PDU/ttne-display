@@ -59,9 +59,9 @@ static void refresh_info_display(void)
 	lv_label_set_text(lbl_outlets, str);
 	sprintf(str, "  %s: #%06X %d A", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
 	lv_label_set_text(lbl_rated_curr, str);
-	sprintf(str, "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
+	sprintf(str, "  %s: #%06X %s#", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
 	lv_label_set_text(lbl_controller, str);
-	sprintf(str, "  %s: #%06X %s", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
+	sprintf(str, "  %s: #%06X %s#", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
 	lv_label_set_text(lbl_type, str);
 
 	sprintf(str, "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
@@ -119,6 +119,8 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_controller = tt_obj_label_color_create(info_product_cont, "");
 	lbl_type = tt_obj_label_color_create(info_product_cont, "");
 	lbl_version = tt_obj_label_color_create(info_product_cont, "");
+	lv_label_set_long_mode(lbl_controller, LV_LABEL_LONG_BREAK);
+	lv_label_set_long_mode(lbl_type, LV_LABEL_LONG_BREAK);
 	lbl_om_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pmb_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_display_version = tt_obj_label_color_create(info_product_cont, "");
