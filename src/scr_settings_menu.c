@@ -8,7 +8,7 @@
 #include "scr_settings_sys.h"
 #include "scr_settings_upd.h"
 #include "scr_settings_nw_menu.h"
-#include "scr_login.h"
+//#include "scr_login.h"
 #include "scr_current.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -84,7 +84,7 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
     //scr_settings_vis_create(menu, btn_vis);
     scr_settings_nw_menu_create(menu, btn_nw);
     
-    scr_login_create(menu, btn_sys);
+    //scr_login_create(menu, btn_sys);
     //scr_settings_sys_create(menu, btn_sys);
     scr_settings_update_create(menu, btn_update);
 }
