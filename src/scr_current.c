@@ -65,9 +65,9 @@ void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
 
         lv_obj_set_flex_flow(current_page, LV_FLEX_FLOW_ROW_WRAP);
         lv_obj_set_flex_align(current_page,
-            LV_FLEX_ALIGN_CENTER,
-            LV_FLEX_ALIGN_CENTER,
-            LV_FLEX_ALIGN_CENTER);
+                LV_FLEX_ALIGN_CENTER,
+                LV_FLEX_ALIGN_CENTER,
+                LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_row(current_page, 15, 0);
         lv_obj_set_style_pad_column(current_page, 15, 0);
         lv_obj_set_style_pad_all(current_page, 10, 0);
@@ -75,35 +75,18 @@ void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
         const models_pdu_info_t* pdu_info = models_get_pdu_info();
         int selected_current = pdu_info ? pdu_info->rated_current : 0;
 
-        lv_coord_t btn_width = screen_is_landscape() ? LV_PCT(31) : LV_PCT(48);
-        lv_coord_t btn_height = screen_is_landscape() ? 88 : 80;
-
+        /* Create 2x3 grid buttons using the project's matrix button helper */
         for (int i = 0; i < 6; ++i) {
-        lv_obj_t* current_btn = lv_obj_create(current_page);
-        lv_obj_set_size(current_btn, btn_width, btn_height);
-        lv_obj_add_style(current_btn, &btn_style, LV_STATE_DEFAULT);
-        lv_obj_add_style(current_btn, &btn_hover_style, LV_STATE_PRESSED);
-        lv_obj_add_flag(current_btn, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_flag(current_btn, LV_OBJ_FLAG_CHECKABLE);
-        lv_obj_add_style(current_btn, &btn_press_style, LV_STATE_CHECKED);
-        lv_obj_set_flex_flow(current_btn, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(current_btn,
-            LV_FLEX_ALIGN_CENTER,
-            LV_FLEX_ALIGN_CENTER,
-            LV_FLEX_ALIGN_CENTER);
+            lv_obj_t* btn = tt_obj_btn_mtx_create(current_page, NULL,
+                    (char*)rated_current_labels[i], NULL);
+            lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
+            lv_obj_add_style(btn, &btn_press_style, LV_STATE_CHECKED);
+            current_btns[i] = btn;
+            lv_obj_add_event_cb(btn, current_btn_cb, LV_EVENT_CLICKED,
+                    (void*)&rated_currents[i]);
 
-        lv_obj_t* label = lv_label_create(current_btn);
-        lv_label_set_text(label, rated_current_labels[i]);
-        lv_obj_set_width(label, LV_PCT(100));
-        lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-
-        current_btns[i] = current_btn;
-        lv_obj_add_event_cb(current_btn, current_btn_cb, LV_EVENT_CLICKED,
-            (void*)&rated_currents[i]);
-
-        if (rated_currents[i] == selected_current) {
-            lv_obj_add_state(current_btn, LV_STATE_CHECKED);
-        }
+            if (rated_currents[i] == selected_current) {
+                lv_obj_add_state(btn, LV_STATE_CHECKED);
+            }
         }
 }
