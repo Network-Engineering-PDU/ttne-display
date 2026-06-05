@@ -11,6 +11,7 @@ void controller_init();
 bool controller_check_conn();
 void controller_get_sys_info();
 void controller_get_pdu_info();
+void controller_put_pdu_info(const models_pdu_info_t* pdu_info);
 void controller_get_in_sw();
 void controller_get_in_data(int line_id);
 void controller_get_out_sw();

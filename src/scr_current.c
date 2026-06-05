@@ -8,6 +8,7 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "models.h"
+#include "controller.h"
 #include "screen.h"
 
 /* Global variables ***********************************************************/
@@ -53,6 +54,7 @@ static void current_btn_cb(lv_event_t* e)
     models_pdu_info_t new_info = *pdu_info;
     new_info.rated_current = current;
     models_set_pdu_info(&new_info);
+    controller_put_pdu_info(&new_info);
 
     select_current_button(current);
 

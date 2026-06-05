@@ -103,6 +103,22 @@ void controller_get_pdu_info()
 	http_helper_free(&req);
 }
 
+void controller_put_pdu_info(const models_pdu_info_t* pdu_info)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/pdu-info/";
+	cJSON *json = cJSON_CreateObject();
+	cJSON_AddNumberToObject(json, "rated_current", pdu_info->rated_current);
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err != 0) {
+		LV_LOG_ERROR("PDU info PUT error");
+	}
+	cJSON_Delete(json);
+	free(put_data);
+	http_helper_free(&req);
+}
+
 void controller_get_in_sw()
 {
 	http_get_req_t req;
