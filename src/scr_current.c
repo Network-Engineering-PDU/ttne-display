@@ -8,6 +8,7 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "models.h"
+#include "screen.h"
 
 static lv_obj_t* current_btns[6];
 static const int rated_currents[6] = {10, 15, 16, 20, 30, 32};
@@ -62,7 +63,7 @@ void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
     lv_obj_t* current_page = tt_obj_menu_page_create(menu, btn, NULL,
             "Rated Current");
 
-    lv_obj_set_flex_flow(current_page, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_flow(current_page, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(current_page,
             LV_FLEX_ALIGN_CENTER,
             LV_FLEX_ALIGN_CENTER,
@@ -74,11 +75,42 @@ void scr_current_create(lv_obj_t* menu, lv_obj_t* btn)
     const models_pdu_info_t* pdu_info = models_get_pdu_info();
     int selected_current = pdu_info ? pdu_info->rated_current : 0;
 
+    lv_obj_t* row = NULL;
+    lv_coord_t btn_width = screen_is_landscape() ? LV_PCT(31) : LV_PCT(48);
+    lv_coord_t btn_height = screen_is_landscape() ? 88 : 80;
+
     for (int i = 0; i < 6; ++i) {
-        lv_obj_t* current_btn = tt_obj_btn_mtx_create(current_page,
-                NULL, (char*)rated_current_labels[i], NULL);
+        if (i % 3 == 0) {
+            row = tt_obj_cont_create(current_page);
+            lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+            lv_obj_set_flex_align(row,
+                    LV_FLEX_ALIGN_CENTER,
+                    LV_FLEX_ALIGN_CENTER,
+                    LV_FLEX_ALIGN_CENTER);
+            lv_obj_set_style_pad_row(row, 0, 0);
+            lv_obj_set_style_pad_column(row, 15, 0);
+            lv_obj_set_width(row, LV_PCT(100));
+        }
+
+        lv_obj_t* current_btn = lv_obj_create(row);
+        lv_obj_set_size(current_btn, btn_width, btn_height);
+        lv_obj_add_style(current_btn, &btn_style, LV_STATE_DEFAULT);
+        lv_obj_add_style(current_btn, &btn_hover_style, LV_STATE_PRESSED);
+        lv_obj_add_flag(current_btn, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_flag(current_btn, LV_OBJ_FLAG_CHECKABLE);
         lv_obj_add_style(current_btn, &btn_press_style, LV_STATE_CHECKED);
+        lv_obj_set_flex_flow(current_btn, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(current_btn,
+                LV_FLEX_ALIGN_CENTER,
+                LV_FLEX_ALIGN_CENTER,
+                LV_FLEX_ALIGN_CENTER);
+
+        lv_obj_t* label = lv_label_create(current_btn);
+        lv_label_set_text(label, rated_current_labels[i]);
+        lv_obj_set_width(label, LV_PCT(100));
+        lv_label_set_text_align(label, LV_TEXT_ALIGN_CENTER);
+        lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+
         current_btns[i] = current_btn;
         lv_obj_add_event_cb(current_btn, current_btn_cb, LV_EVENT_CLICKED,
                 (void*)&rated_currents[i]);
