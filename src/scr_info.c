@@ -8,6 +8,10 @@
 #include "models.h"
 #include "controller.h"
 
+#ifndef GIT_VERSION
+#define GIT_VERSION "N/A"
+#endif
+
 /* Global variables ***********************************************************/
 
 static lv_obj_t* lbl_name;
@@ -83,8 +87,14 @@ static void menu_cb(lv_event_t* e)
 		if (curr_page == page) {
 			LV_LOG_USER("Info cb - page change detected");
 			printf("[scr_info] Menu callback triggered, fetching fresh data\n");
+			int saved_rated_current = models_get_pdu_info()->rated_current;
 			controller_get_sys_info();
 			controller_get_pdu_info();
+			if (saved_rated_current != 0) {
+				models_pdu_info_t pdu_copy = *models_get_pdu_info();
+				pdu_copy.rated_current = saved_rated_current;
+				models_set_pdu_info(&pdu_copy);
+			}
 			refresh_info_display();
 		}
 	}

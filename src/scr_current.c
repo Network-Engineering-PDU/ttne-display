@@ -15,14 +15,14 @@
 static lv_obj_t* menu;
 
 static lv_obj_t* current_btns[6];
-static const int rated_currents[6] = {10, 15, 16, 20, 30, 32};
+static const int rated_currents[6] = {10, 15, 16, 20, 30, 23};
 static const char* rated_current_labels[6] = {
     "10 A",
     "15 A",
     "16 A",
     "20 A",
     "30 A",
-    "32 A",
+    "23 A",
 };
 
 static void select_current_button(int current)

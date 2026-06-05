@@ -160,6 +160,9 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 		if (res != CURLE_OK) {
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;
+		} else if (retcode < 200 || retcode >= 300) {
+			LV_LOG_ERROR("HTTP PUT failed: status %d\n", retcode);
+			err = 1;
 		}
 	}
 	curl_easy_cleanup(curl);
