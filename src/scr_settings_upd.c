@@ -92,7 +92,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     // Create Dropdown for ON/OFF
     btn_auto = lv_dropdown_create(auto_row);
     lv_dropdown_set_options(btn_auto, "ON\nOFF");
-    lv_dropdown_set_selected(btn_auto, 1);
+    lv_dropdown_set_selected(btn_auto, 0);
     lv_obj_set_size(btn_auto, 70, 40);
     lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_VALUE_CHANGED, NULL);
     

@@ -42,7 +42,7 @@ void controller_init()
 
 	models_nw_if_t nw_if;
 	nw_if.type = UNCONF;
-	nw_if.dhcp = true;
+	nw_if.dhcp = false;
 	nw_if.eth_interface = "";
 	nw_if.params.ip = "";
 	nw_if.params.mask = "";
@@ -55,6 +55,12 @@ void controller_init()
 	nw_if.wifi_ip = "";
 	nw_if.nw_mode = -1;  /* -1 = not set, will auto-detect on load */
 	models_set_nw_if(&nw_if);
+
+	models_update_status_t update_status;
+	update_status.is_pending = false;
+	update_status.auto_update = true;
+	update_status.update_server = "";
+	models_set_update_status(&update_status);
 
 	models_bt_status_t bt_status;
 	bt_status.controller_mac = "";
