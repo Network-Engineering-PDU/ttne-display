@@ -361,10 +361,7 @@ const models_update_status_t* models_get_update_status()
 void models_set_update_status(const models_update_status_t* l_update_status)
 {
 	free((void*)update_status.update_server);
-	free((void*)update_status.pending_source);
 	update_status.is_pending = l_update_status->is_pending;
 	update_status.auto_update = l_update_status->auto_update;
-	update_status.prompt = l_update_status->prompt;
 	update_status.update_server = stralloc(l_update_status->update_server);
-	update_status.pending_source = stralloc(l_update_status->pending_source);
 }

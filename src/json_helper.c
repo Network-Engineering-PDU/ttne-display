@@ -740,16 +740,13 @@ int json_helper_update_update_status(const char* json_str)
 	models_update_status_t update_status = {
 		.is_pending = false,
 		.auto_update = false,
-		.prompt = false,
-		.update_server = "",
-		.pending_source = ""
+		.update_server = ""
 	};
 	
 	cJSON* is_pending = cJSON_GetObjectItemCaseSensitive(json, "is_pending");
 	if (cJSON_IsBool(is_pending)) {
 		update_status.is_pending = is_pending->valueint;
 	} else {
-		cJSON_Delete(json);
 		return 1;
 	}
 
@@ -757,23 +754,12 @@ int json_helper_update_update_status(const char* json_str)
 	if (cJSON_IsBool(auto_update)) {
 		update_status.auto_update = auto_update->valueint;
 	} else {
-		cJSON_Delete(json);
 		return 1;
 	}
 
 	const char* server_str = json_get_string(json, "update_server");
 	if (server_str != NULL) {
 		update_status.update_server = server_str;
-	}
-
-	cJSON* prompt = cJSON_GetObjectItemCaseSensitive(json, "prompt");
-	if (cJSON_IsBool(prompt)) {
-		update_status.prompt = prompt->valueint;
-	}
-
-	const char* source_str = json_get_string(json, "pending_source");
-	if (source_str != NULL) {
-		update_status.pending_source = source_str;
 	}
 	
 	models_set_update_status(&update_status);
