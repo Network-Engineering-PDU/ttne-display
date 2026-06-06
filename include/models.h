@@ -202,7 +202,9 @@ typedef struct models_modbus_t {
 typedef struct models_update_status_t {
 	bool is_pending;
 	bool auto_update;
+	bool prompt;
 	const char* update_server;
+	const char* pending_source;
 } models_update_status_t;
 
 const models_info_t* models_get_info();
