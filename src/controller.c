@@ -15,8 +15,6 @@
 
 /* Global variables ***********************************************************/
 /* Function prototypes ********************************************************/
-static void controller_apply_default_network_settings(void);
-
 /* Callbacks ******************************************************************/
 /* Function definitions *******************************************************/
 /* Public functions ***********************************************************/
@@ -42,7 +40,21 @@ void controller_init()
 	pdu_info.type = "N/A";
 	models_set_pdu_info(&pdu_info);
 
-	controller_apply_default_network_settings();
+	models_nw_if_t nw_if;
+	nw_if.type = UNCONF;
+	nw_if.dhcp = true;
+	nw_if.eth_interface = "";
+	nw_if.params.ip = "";
+	nw_if.params.mask = "";
+	nw_if.params.gw = "";
+	nw_if.params.dns = "";
+	nw_if.params.ssid = "";
+	nw_if.params.pass = "";
+	nw_if.lan1_ip = "";
+	nw_if.lan2_ip = "";
+	nw_if.wifi_ip = "";
+	nw_if.nw_mode = -1;  /* -1 = not set, will auto-detect on load */
+	models_set_nw_if(&nw_if);
 
 	models_bt_status_t bt_status;
 	bt_status.controller_mac = "";
@@ -321,31 +333,6 @@ void controller_post_nw_reset()
 	http_helper_free(&req);
 }
 
-static void controller_apply_default_network_settings()
-{
-	models_nw_if_t nw_if;
-	nw_if.type = UNCONF;
-	nw_if.dhcp = false;
-	nw_if.eth_interface = "eth1";
-	nw_if.params.ip = "192.168.1.100";
-	nw_if.params.mask = "255.255.255.0";
-	nw_if.params.gw = "192.168.1.1";
-	nw_if.params.dns = "8.8.8.8";
-	nw_if.params.ssid = "";
-	nw_if.params.pass = "";
-	nw_if.lan1_ip = "192.168.1.100";
-	nw_if.lan2_ip = "192.168.1.101";
-	nw_if.wifi_ip = "192.168.1.102";
-	nw_if.nw_mode = -1;  /* -1 = not set, will auto-detect on load */
-	models_set_nw_if(&nw_if);
-
-	models_update_status_t update_status;
-	update_status.is_pending = false;
-	update_status.auto_update = true;
-	update_status.update_server = "";
-	models_set_update_status(&update_status);
-}
-
 void controller_post_fact_reset()
 {
 	http_get_req_t req;
@@ -353,8 +340,6 @@ void controller_post_fact_reset()
 	int err = http_helper_post(&req, url, NULL);
 	if (err != 0) {
 		LV_LOG_ERROR("Factory reset error");
-	} else {
-		controller_apply_default_network_settings();
 	}
 	printf("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);

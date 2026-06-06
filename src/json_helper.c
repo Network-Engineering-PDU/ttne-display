@@ -631,42 +631,43 @@ int json_helper_update_nw_if(const char* json_str)
 	cJSON* params = cJSON_GetObjectItem(json, "params");
 
 	str = json_get_string(json, "eth_interface");
-	if (str == NULL && params != NULL) {
+	if (str == NULL) {
 		str = json_get_string(params, "eth_interface");
 	}
 	if (str != NULL) {
 		nw_if.eth_interface = str;
 	}
 
-	if (params == NULL) {
-		cJSON_Delete(json);
-		return 1;
-	}
-
 	str = json_get_string(params, "ip");
 	if (str == NULL) {
-		cJSON_Delete(json);
 		return 1;
 	}
 	nw_if.params.ip = str;
 	str = json_get_string(params, "subnet_mask");
 	if (str == NULL) {
-		cJSON_Delete(json);
 		return 1;
 	}
 	nw_if.params.mask = str;
 	str = json_get_string(params, "gateway_ip");
 	if (str == NULL) {
-		cJSON_Delete(json);
 		return 1;
 	}
 	nw_if.params.gw = str;
 	str = json_get_string(params, "dns");
-	nw_if.params.dns = (str != NULL) ? str : "";
+	if (str == NULL) {
+		return 1;
+	}
+	nw_if.params.dns = str;
 	str = json_get_string(params, "ssid");
-	nw_if.params.ssid = (str != NULL) ? str : "";
+	if (str == NULL) {
+		return 1;
+	}
+	nw_if.params.ssid = str;
 	str = json_get_string(params, "password");
-	nw_if.params.pass = (str != NULL) ? str : "";
+	if (str == NULL) {
+		return 1;
+	}
+	nw_if.params.pass = str;
 	
 	/* Parse multi-interface IPs for dual LAN and LAN+WiFi modes */
 	str = json_get_string(json, "lan1_ip");
@@ -752,6 +753,8 @@ int json_helper_update_update_status(const char* json_str)
 	cJSON* auto_update = cJSON_GetObjectItemCaseSensitive(json, "auto_update");
 	if (cJSON_IsBool(auto_update)) {
 		update_status.auto_update = auto_update->valueint;
+	} else {
+		return 1;
 	}
 
 	const char* server_str = json_get_string(json, "update_server");
