@@ -16,6 +16,8 @@
 #define TIMER_CHECK_UPDATE 1000 
 #define TIMER_POLL_UPDATE_STATUS 2000  // Poll every 2 seconds
 
+#define DEFAULT_UPDATE_SERVER "https://github.com/Network-Engineering-PDU/firmware-update"
+
 #ifdef SIMULATOR_ENABLED
 #define MOUNT_DIR "/home/guille"
 #else
@@ -74,6 +76,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     txt_server = tt_obj_txt_create(main, "IP / DNS", txt_server_cb);
     lv_obj_set_width(txt_server, LV_PCT(100));
     lv_obj_set_height(txt_server, 45); // Height to match the boxy look
+    lv_textarea_set_text(txt_server, DEFAULT_UPDATE_SERVER);
 
     /* 4. Automatic update row (Label + Dropdown) */
     lv_obj_t* auto_row = lv_obj_create(main);
@@ -285,6 +288,9 @@ static void msg_box_factory_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t* obj = lv_event_get_current_target(e);
         if (lv_msgbox_get_active_btn(obj) == 0) {
+            if (txt_server != NULL) {
+                lv_textarea_set_text(txt_server, DEFAULT_UPDATE_SERVER);
+            }
             lv_obj_t* loader_scr = tt_obj_loader_create("Resetting to factory defaults...", NULL);
             lv_scr_load(loader_scr);
             controller_post_fact_reset();
