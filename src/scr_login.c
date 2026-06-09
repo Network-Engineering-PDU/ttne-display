@@ -91,7 +91,7 @@ static void btn_login_cb(lv_event_t* e)
         tt_obj_info_box_create("Login", "Logged in successfully.", 0);
     }
 
-    ttne_display_show_main_page();
+    ttne_display();
     lv_textarea_set_text(txt_password, "");
 }
 
