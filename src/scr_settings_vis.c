@@ -190,12 +190,17 @@ static void update_pdu_info_display()
 
 static int rotation_to_dropdown_index(int rotation)
 {
+    /* If rotation is 3 it's Horizontal, otherwise treat as Vertical selection */
     return rotation == 3 ? 1 : 0;
 }
 
 static int dropdown_index_to_rotation(int index)
 {
-    return index == 1 ? 3 : 0;
+    /* Map dropdown index to rotation value:
+     * index 1 -> Horizontal (rotation 3)
+     * index 0 -> Vertical -> use rotation 2 (180 degrees)
+     */
+    return index == 1 ? 3 : 2;
 }
 
 static void save_pdu_info_field(int field_id, const char* value)
