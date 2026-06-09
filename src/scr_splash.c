@@ -77,7 +77,7 @@ static void splash_timer_cb(lv_timer_t* timer)
 	}
 	const char* iface = get_iface_label(nw_if);
 	//sprintf(str, "%s: %s", "SYSTEM", info->product_name);
-	sprintf(str, "%s: %s", "PowerIT Easy");
+	sprintf(str, "%s", "PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
 	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
 	lv_label_set_text(lbl_ip, str);
