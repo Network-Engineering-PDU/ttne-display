@@ -55,7 +55,20 @@ void ttne_display(void)
 	screen_init();
 	controller_get_sys_info();
 	controller_get_pdu_info();
+	ttne_menu_display();
+}
 
+void ttne_display_idle_cb()
+{
+	scr_splash_show();
+	if (lv_menu_get_cur_main_page(menu) != main_page) {
+		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
+		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
+	}
+}
+
+void ttne_menu_display()
+{
 	uint8_t rotation = config_get_rotation();
 	screen_set_rotation(rotation);
 
@@ -112,13 +125,4 @@ void ttne_display(void)
 	lv_obj_t* menu_scr = lv_scr_act();
 	scr_splash_create(menu_scr);
 	scr_splash_show();
-}
-
-void ttne_display_idle_cb()
-{
-	scr_splash_show();
-	if (lv_menu_get_cur_main_page(menu) != main_page) {
-		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
-		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
-	}
 }

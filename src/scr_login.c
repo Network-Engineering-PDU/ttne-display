@@ -91,7 +91,7 @@ static void btn_login_cb(lv_event_t* e)
         tt_obj_info_box_create("Login", "Logged in successfully.", 0);
     }
 
-    ttne_display();
+    ttne_menu_display();
     lv_textarea_set_text(txt_password, "");
 }
 
@@ -120,10 +120,4 @@ void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
     tt_obj_btn_create(cont, btn_login_cb, "LOG IN", NULL, LV_PCT(100), 50,
             LV_ALIGN_CENTER);
 
-    login_page = lv_obj_get_parent(cont);
-}
-
-lv_obj_t* scr_login_get_page(void)
-{
-    return login_page;
 }
