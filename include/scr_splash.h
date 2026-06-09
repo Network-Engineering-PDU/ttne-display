@@ -19,6 +19,11 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr);
  */
 void scr_splash_show();
 
+/**
+ * @brief Update the splash screen's previous target screen.
+ */
+void scr_splash_set_prev(lv_obj_t* prev_scr);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

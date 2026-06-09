@@ -25,6 +25,9 @@ static lv_obj_t* lbl_ip;
 
 static bool flag_init = false;
 
+/* Stored previous screen for splash to return to (can be updated at runtime) */
+static lv_obj_t* splash_prev = NULL;
+
 /* Function prototypes ********************************************************/
 
 static void splash_cb(lv_event_t* e);
@@ -36,7 +39,8 @@ static const char* get_iface_label(const models_nw_if_t* nw_if);
 static void splash_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* scr = lv_event_get_user_data(e);
+	(void) code;
+	lv_obj_t* scr = splash_prev;
 
 	if (lv_scr_act() != splash_scr) {
 		return;
@@ -44,7 +48,9 @@ static void splash_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_timer_pause(timer_check);
-		lv_scr_load(scr);
+		if (scr != NULL) {
+			lv_scr_load(scr);
+		}
 	}
 }
 
@@ -106,7 +112,9 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 	lv_obj_t* logo = lv_img_create(splash_scr);
 	lv_img_set_src(logo, ASSET("ne_logo.png"));
-	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, prev_scr);
+	/* Store the provided prev screen so it can be updated later if needed */
+	splash_prev = prev_scr;
+	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, NULL);
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
 			"Initializing system...");
@@ -129,6 +137,11 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 	splash_timer_cb(timer_check);
 
 	return splash_scr;
+}
+
+void scr_splash_set_prev(lv_obj_t* prev_scr)
+{
+	splash_prev = prev_scr;
 }
 
 

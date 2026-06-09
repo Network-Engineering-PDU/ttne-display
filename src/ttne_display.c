@@ -63,6 +63,10 @@ void ttne_display(void)
 	if (!config_get_skip_login()) {
 		splash_prev_scr = scr_login_get_page();
 	}
+	else
+	{
+		splash_prev_scr = menu_scr;
+	}
 	scr_splash_create(splash_prev_scr);
 	scr_splash_show();
 }
@@ -131,4 +135,9 @@ void ttne_menu_display()
 	scr_settings_menu_create(menu, btn_settings);
 
 	lv_menu_set_page(menu, main_page);
+}
+
+lv_obj_t* ttne_get_main_page()
+{
+    return main_page;
 }
