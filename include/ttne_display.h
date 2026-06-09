@@ -13,10 +13,6 @@ void ttne_display_idle_cb();
 
 void ttne_menu_display();
 
-/**
- * @brief Get the current main menu page object.
- */
-lv_obj_t* ttne_get_main_page();
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

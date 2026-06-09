@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include "lvgl/lvgl.h"
 #include "scr_splash.h"
@@ -10,9 +9,6 @@
 #include "tt_colors.h"
 #include "controller.h"
 #include "models.h"
-#include "config.h"
-#include "scr_login.h"
-#include "ttne_display.h"
 
 #define TIMER_REFRESH_RATE 10000 // ms
 
@@ -28,8 +24,6 @@ static lv_obj_t* lbl_system;
 static lv_obj_t* lbl_ip;
 
 static bool flag_init = false;
-static bool login_shown = false;
-static lv_obj_t* splash_prev_scr = NULL;
 
 /* Function prototypes ********************************************************/
 
@@ -42,6 +36,7 @@ static const char* get_iface_label(const models_nw_if_t* nw_if);
 static void splash_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* scr = lv_event_get_user_data(e);
 
 	if (lv_scr_act() != splash_scr) {
 		return;
@@ -49,13 +44,7 @@ static void splash_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_timer_pause(timer_check);
-		lv_scr_load(splash_prev_scr);
-		if (flag_init && !login_shown && !config_get_skip_login()) {
-			lv_obj_t* menu = lv_obj_get_parent(ttne_get_main_page());
-			if (menu != NULL) {
-				lv_menu_set_page(menu, scr_login_get_page());
-			}
-		}
+		lv_scr_load(scr);
 	}
 }
 
@@ -117,13 +106,10 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 	lv_obj_t* logo = lv_img_create(splash_scr);
 	lv_img_set_src(logo, ASSET("ne_logo.png"));
-	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, NULL);
-
-	splash_prev_scr = prev_scr;
-	login_shown = config_get_skip_login();
+	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, prev_scr);
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
-		"Initializing system...");
+			"Initializing system...");
 	lv_obj_t* info_cont = tt_obj_cont_create(splash_scr);
 	lv_obj_set_size(info_cont, 200, 60);
 
@@ -146,27 +132,13 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 }
 
 
-void scr_splash_show(bool force)
+void scr_splash_show()
 {
-	if (lv_scr_act() == splash_scr && !force) {
-		return;
+	if (lv_scr_act() != splash_scr) {
+		if (flag_init) {
+			lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
+		}
+		lv_timer_resume(timer_check);
+		lv_scr_load(splash_scr);
 	}
-
-	if (flag_init) {
-		lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
-	}
-	lv_timer_resume(timer_check);
-	lv_scr_load(splash_scr);
-}
-
-void scr_splash_set_prev(lv_obj_t* prev_scr)
-{
-	if (prev_scr != NULL) {
-		splash_prev_scr = prev_scr;
-	}
-}
-
-void scr_splash_login_completed(void)
-{
-	login_shown = true;
 }

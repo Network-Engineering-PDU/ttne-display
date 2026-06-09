@@ -6,7 +6,6 @@
 
 #include "scr_login.h"
 #include "scr_keyboard.h"
-#include "scr_splash.h"
 #include "ttne_display.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
@@ -19,7 +18,6 @@
 static lv_obj_t* txt_password;
 static lv_obj_t* cbx_skip_password;
 static lv_obj_t* login_page;
-static lv_obj_t* login_page_obj;
 static bool skip_password = false;
 
 static void menu_cb(lv_event_t* e);
@@ -93,20 +91,13 @@ static void btn_login_cb(lv_event_t* e)
         tt_obj_info_box_create("Login", "Logged in successfully.", 0);
     }
 
-    scr_splash_login_completed();
-
-    lv_obj_t* menu = lv_obj_get_parent(ttne_get_main_page());
-    if (menu != NULL) {
-        lv_menu_set_page(menu, ttne_get_main_page());
-    }
-
+    ttne_menu_display();
     lv_textarea_set_text(txt_password, "");
 }
 
 void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
 {
     login_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Login");
-    login_page_obj = lv_obj_get_parent(login_page);
     lv_obj_t* cont = tt_obj_cont_create(login_page);
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_all(cont, 20, 0);
@@ -128,9 +119,5 @@ void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
 
     tt_obj_btn_create(cont, btn_login_cb, "LOG IN", NULL, LV_PCT(100), 50,
             LV_ALIGN_CENTER);
-}
 
-lv_obj_t* scr_login_get_page(void)
-{
-    return login_page_obj;
 }

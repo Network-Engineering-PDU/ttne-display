@@ -11,7 +11,6 @@
 
 #include "scr_init.h"
 #include "scr_splash.h"
-#include "scr_login.h"
 #include "scr_info.h"
 #include "scr_alarms.h"
 #include "scr_power.h"
@@ -58,19 +57,13 @@ void ttne_display(void)
 	controller_get_pdu_info();
 	ttne_menu_display();
 	lv_obj_t* menu_scr = lv_scr_act();
-	scr_login_create(menu, NULL);
 	scr_splash_create(menu_scr);
-	scr_splash_show(false);
-}
-
-lv_obj_t* ttne_get_main_page()
-{
-	return main_page;
+	scr_splash_show();
 }
 
 void ttne_display_idle_cb()
 {
-	scr_splash_show(false);
+	scr_splash_show();
 	if (lv_menu_get_cur_main_page(menu) != main_page) {
 		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
 		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);

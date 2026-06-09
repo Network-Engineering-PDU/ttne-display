@@ -45,6 +45,7 @@ static void update_config_file()
 	}
 	fprintf(file, "rotation=%d\n", config.rotation);
 	fprintf(file, "inactivity_time=%d\n", config.inactivity_time);
+	fprintf(file, "skip_login=%d\n", config.skip_login);
 	fprintf(file, "pdu_company=%s\n", config.pdu_company);
 	fprintf(file, "pdu_rack=%s\n", config.pdu_rack);
 	fprintf(file, "pdu_system=%s\n", config.pdu_system);
@@ -85,6 +86,7 @@ void config_init()
 	char* key_pdu_elec_board = "pdu_elec_board";
 	char* key_pdu_breaker = "pdu_breaker";
 	char* key_pdu_service = "pdu_service";
+	char* key_skip_login = "skip_login";
 
 	while (fgets(line, sizeof(line), file) != NULL) {
 		if (strstr(line, key_rotation) != NULL) {
@@ -116,6 +118,9 @@ void config_init()
 			int len = strcspn(value, "\n\r");
 			strncpy(config.pdu_ups, value, len);
 			config.pdu_ups[len] = '\0';
+		}
+		if (strstr(line, key_skip_login) != NULL) {
+			config.skip_login = atoi(line + strlen(key_skip_login) + 1);
 		}
 		if (strstr(line, key_pdu_elec_board) != NULL) {
 			char* value = line + strlen(key_pdu_elec_board) + 1;
