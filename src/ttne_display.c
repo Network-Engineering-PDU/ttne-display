@@ -17,6 +17,7 @@
 #include "scr_outlets.h"
 #include "scr_sensors.h"
 #include "scr_settings_menu.h"
+#include "scr_login.h"
 
 #include "config.h"
 #include "controller.h"
@@ -108,7 +109,11 @@ void ttne_display(void)
 	scr_sensors_create(menu, btn_sensors);
 	scr_settings_menu_create(menu, btn_settings);
 
-	lv_menu_set_page(menu, main_page);
+	if (config_get_skip_login()) {
+		lv_menu_set_page(menu, main_page);
+	} else {
+		lv_menu_set_page(menu, scr_login_get_page());
+	}
 	lv_obj_t* menu_scr = lv_scr_act();
 	scr_splash_create(menu_scr);
 	scr_splash_show();
@@ -120,5 +125,12 @@ void ttne_display_idle_cb()
 	if (lv_menu_get_cur_main_page(menu) != main_page) {
 		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
 		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
+	}
+}
+
+void ttne_display_show_main_page(void)
+{
+	if (menu != NULL && main_page != NULL) {
+		lv_menu_set_page(menu, main_page);
 	}
 }

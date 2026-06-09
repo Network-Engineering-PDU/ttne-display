@@ -39,6 +39,20 @@ void config_set_inactivity_time(int inactivity_time);
 int config_get_inactivity_time();
 
 /**
+ * @brief Set whether the login screen should be skipped.
+ *
+ * @param[in] skip_login 1 to skip the login screen, 0 to show it.
+ */
+void config_set_skip_login(int skip_login);
+
+/**
+ * @brief Get whether the login screen should be skipped.
+ *
+ * @return 1 if login is skipped, 0 otherwise.
+ */
+int config_get_skip_login();
+
+/**
  * @brief Set PDU company name.
  *
  * @param[in] value  Company name string.

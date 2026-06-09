@@ -6,13 +6,18 @@
 
 #include "scr_login.h"
 #include "scr_keyboard.h"
+#include "ttne_display.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
+#include "config.h"
+
+#define LOGIN_PASSWORD "tlj46"
 
 static lv_obj_t* txt_password;
 static lv_obj_t* cbx_skip_password;
+static lv_obj_t* login_page;
 static bool skip_password = false;
 
 static void menu_cb(lv_event_t* e);
@@ -66,10 +71,19 @@ static void btn_login_cb(lv_event_t* e)
     }
 
     const char* password = lv_textarea_get_text(txt_password);
-    if (password == NULL || strlen(password) == 0) {
-        tt_obj_info_box_create("Login error", "Password cannot be empty", 1);
-        return;
+    if (!skip_password) {
+        if (password == NULL || strlen(password) == 0) {
+            tt_obj_info_box_create("Login error", "Password cannot be empty", 1);
+            return;
+        }
+
+        if (strcmp(password, LOGIN_PASSWORD) != 0) {
+            tt_obj_info_box_create("Login error", "Invalid password", 1);
+            return;
+        }
     }
+
+    config_set_skip_login(skip_password ? 1 : 0);
 
     if (skip_password) {
         tt_obj_info_box_create("Login", "Logged in. Password will not be requested again.", 0);
@@ -77,12 +91,13 @@ static void btn_login_cb(lv_event_t* e)
         tt_obj_info_box_create("Login", "Logged in successfully.", 0);
     }
 
+    ttne_display_show_main_page();
     lv_textarea_set_text(txt_password, "");
 }
 
 void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-    lv_obj_t* login_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Login");
+    login_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Login");
     lv_obj_t* cont = tt_obj_cont_create(login_page);
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_all(cont, 20, 0);
@@ -97,6 +112,18 @@ void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
     cbx_skip_password = tt_obj_checkbox_create(cont, "Don't request password again", cbx_skip_password_cb);
     lv_obj_set_width(cbx_skip_password, LV_PCT(100));
 
+    skip_password = config_get_skip_login();
+    if (skip_password) {
+        lv_obj_add_state(cbx_skip_password, LV_STATE_CHECKED);
+    }
+
     tt_obj_btn_create(cont, btn_login_cb, "LOG IN", NULL, LV_PCT(100), 50,
             LV_ALIGN_CENTER);
+
+    login_page = lv_obj_get_parent(cont);
+}
+
+lv_obj_t* scr_login_get_page(void)
+{
+    return login_page;
 }

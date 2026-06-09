@@ -9,6 +9,8 @@ void ttne_display_reset();
 
 void ttne_display(void);
 
+void ttne_display_show_main_page(void);
+
 void ttne_display_idle_cb();
 
 #ifdef __cplusplus
