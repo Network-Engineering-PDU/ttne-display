@@ -133,7 +133,8 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 			"Initializing system...");
 	lbl_power_easy = tt_obj_label_create(splash_scr, "");
 	lv_obj_add_flag(lbl_power_easy, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_set_style_text_font(lbl_power_easy, &lv_font_montserrat_22, 0);
+	lv_obj_set_style_text_font(lbl_power_easy, &lv_font_montserrat_18, 0);
+	lv_obj_set_style_text_align(lbl_power_easy, LV_TEXT_ALIGN_CENTER, 0);
 	lv_obj_align(lbl_power_easy, LV_ALIGN_CENTER, 0, 0);
 
 	lv_obj_t* info_cont = tt_obj_cont_create(splash_scr);
