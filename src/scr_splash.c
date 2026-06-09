@@ -22,7 +22,6 @@ static lv_obj_t* init_spinner;
 
 static lv_obj_t* lbl_system;
 static lv_obj_t* lbl_ip;
-static lv_obj_t* lbl_power_easy;
 
 static bool flag_init = false;
 
@@ -31,7 +30,6 @@ static bool flag_init = false;
 static void splash_cb(lv_event_t* e);
 static void splash_timer_cb(lv_timer_t* timer);
 static const char* get_iface_label(const models_nw_if_t* nw_if);
-static void show_power_easy_message(void);
 
 /* Callbacks ******************************************************************/
 
@@ -50,15 +48,6 @@ static void splash_cb(lv_event_t* e)
 	}
 }
 
-static void show_power_easy_message(void)
-{
-	if (lbl_power_easy == NULL) {
-		return;
-	}
-	lv_label_set_text(lbl_power_easy, "POWER IT EASY");
-	lv_obj_clear_flag(lbl_power_easy, LV_OBJ_FLAG_HIDDEN);
-}
-
 static void splash_timer_cb(lv_timer_t* timer)
 {
 	(void) timer;
@@ -73,10 +62,8 @@ static void splash_timer_cb(lv_timer_t* timer)
 		flag_init = true;
 		lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_obj_del(init_spinner);
-		//show_power_easy_message();
 	}
 	const char* iface = get_iface_label(nw_if);
-	//sprintf(str, "%s: %s", "SYSTEM", info->product_name);
 	sprintf(str, "%s", "PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
 	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
@@ -86,16 +73,7 @@ static void splash_timer_cb(lv_timer_t* timer)
 static const char* get_iface_label(const models_nw_if_t* nw_if)
 {
 	if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
-		return "(WiFi)";
-	}
-
-	bool has_wifi = nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0;
-	bool is_wifi_ip = has_wifi && nw_if->params.ip != NULL && strcmp(nw_if->params.ip, nw_if->wifi_ip) == 0;
-	bool is_not_lan_ip = has_wifi && nw_if->params.ip != NULL &&
-		strcmp(nw_if->params.ip, nw_if->lan1_ip) != 0 &&
-		strcmp(nw_if->params.ip, nw_if->lan2_ip) != 0;
-	if (is_wifi_ip || is_not_lan_ip) {
-		return "(WiFi)";
+		return "(WIFI)";
 	}
 
 	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
@@ -132,12 +110,6 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
 			"Initializing system...");
-	lbl_power_easy = tt_obj_label_create(splash_scr, "");
-	lv_obj_add_flag(lbl_power_easy, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_set_style_text_font(lbl_power_easy, &lv_font_montserrat_18, 0);
-	lv_obj_set_style_text_align(lbl_power_easy, LV_TEXT_ALIGN_CENTER, 0);
-	lv_obj_align(lbl_power_easy, LV_ALIGN_CENTER, 0, 0);
-
 	lv_obj_t* info_cont = tt_obj_cont_create(splash_scr);
 	lv_obj_set_size(info_cont, 200, 60);
 

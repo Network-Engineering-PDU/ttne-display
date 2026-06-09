@@ -29,19 +29,13 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     l_menu = menu;
 
     /* Create the settings page directly */
-    lv_obj_t* settings_sys_page = tt_obj_menu_page_create(l_menu, btn, NULL, "Settings");
+    lv_obj_t* settings_sys_page = tt_obj_menu_page_create(l_menu, btn, NULL, "System Setup");
 
     /* Apply Flex layout directly to the page. 
        In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 
        that can act as containers.
     */
     lv_obj_set_flex_flow(settings_sys_page, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(
-        settings_sys_page,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER,
-        LV_FLEX_ALIGN_CENTER
-    );
 
     /* HUB buttons: Parent is now 'settings_page' instead of 'cont' */
     lv_obj_t* btn_current = tt_obj_btn_mtx_create(settings_sys_page, NULL, " Rated \nCurrent", ASSET("visual.png"));
