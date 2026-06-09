@@ -3,6 +3,7 @@
 
 #include "lvgl/lvgl.h"
 #include "scr_splash.h"
+#include "scr_login.h"
 #include "tt_obj.h"
 #include "screen.h"
 #include "utils.h"
@@ -106,7 +107,13 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 	lv_obj_t* logo = lv_img_create(splash_scr);
 	lv_img_set_src(logo, ASSET("ne_logo.png"));
-	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, prev_scr);
+
+	if (!config_get_skip_login()) {
+		lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, scr_login_get_page());
+	}
+	else {
+		lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, prev_scr);
+	}
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
 			"Initializing system...");
