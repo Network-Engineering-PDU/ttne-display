@@ -85,7 +85,16 @@ static void splash_timer_cb(lv_timer_t* timer)
 static const char* get_iface_label(const models_nw_if_t* nw_if)
 {
 	if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
-		return "(WIFI)";
+		return "(WiFi)";
+	}
+
+	bool has_wifi = nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0;
+	bool is_wifi_ip = has_wifi && nw_if->params.ip != NULL && strcmp(nw_if->params.ip, nw_if->wifi_ip) == 0;
+	bool is_not_lan_ip = has_wifi && nw_if->params.ip != NULL &&
+		strcmp(nw_if->params.ip, nw_if->lan1_ip) != 0 &&
+		strcmp(nw_if->params.ip, nw_if->lan2_ip) != 0;
+	if (is_wifi_ip || is_not_lan_ip) {
+		return "(WiFi)";
 	}
 
 	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
