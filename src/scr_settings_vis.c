@@ -249,13 +249,13 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     // 1. Screen Rotation Row
     lv_obj_t* row_rot = create_setting_row(cont, "Screen rotation");
     dd_rotation = tt_obj_dropdown_create(row_rot, "Vertical\nHorizontal", rotate_cb);
-    lv_obj_set_width(dd_rotation, 100); //180
+    lv_obj_set_width(dd_rotation, 150); //180
     lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(config_get_rotation()));
 
     // 2. Screen Saver Row
     lv_obj_t* row_saver = create_setting_row(cont, "Screen saver (min)");
     txt_screen_saver = tt_obj_txt_create(row_saver, "0", txt_inactivity_cb);
-    lv_obj_set_width(txt_screen_saver, 100); //180
+    lv_obj_set_width(txt_screen_saver, 120); //180
 
     // 3. Section Header
     lv_obj_t* pdu_header = tt_obj_label_create(cont, "PDU location information");
