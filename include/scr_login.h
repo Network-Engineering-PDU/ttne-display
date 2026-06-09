@@ -13,7 +13,7 @@ extern "C" {
  * @param[in] menu      Pointer to the menu.
  * @param[in] btn       Main menu page button.
  */
-void scr_login_create(lv_obj_t* menu, lv_obj_t* btn);
+void scr_login_create();
 
 lv_obj_t* scr_login_get_page(void);
 

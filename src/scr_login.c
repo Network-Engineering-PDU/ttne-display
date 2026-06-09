@@ -15,6 +15,7 @@
 
 #define LOGIN_PASSWORD "tlj46"
 
+static lv_obj_t* menu;
 static lv_obj_t* txt_password;
 static lv_obj_t* cbx_skip_password;
 static lv_obj_t* login_page;
@@ -95,22 +96,25 @@ static void btn_login_cb(lv_event_t* e)
     lv_textarea_set_text(txt_password, "");
 }
 
-void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
+void scr_login_create()
 {
-    lv_obj_t* page = tt_obj_menu_page_create(menu, btn, menu_cb, "Login");
-    login_page = lv_obj_get_parent(page);
-    lv_obj_t* cont = tt_obj_cont_create(page);
-    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_all(cont, 20, 0);
-    lv_obj_set_style_pad_row(cont, 15, 0);
+    menu = lv_menu_create(lv_scr_act());
+	lv_obj_set_size(menu, lv_disp_get_hor_res(NULL), lv_disp_get_ver_res(NULL));
+	login_page = lv_menu_page_create(menu, NULL);
+	lv_obj_t* main_cont = lv_menu_cont_create(login_page);
+    //login_page = lv_obj_get_parent(page);
+    //lv_obj_t* cont = tt_obj_cont_create(page);
+    lv_obj_set_flex_flow(main_cont, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_all(main_cont, 20, 0);
+    lv_obj_set_style_pad_row(main_cont, 15, 0);
 
-    tt_obj_label_color_create(cont, "Enter Password");
+    tt_obj_label_color_create(main_cont, "Enter Password");
 
-    txt_password = tt_obj_txt_create(cont, "Password", txt_password_cb);
+    txt_password = tt_obj_txt_create(main_cont, "Password", txt_password_cb);
     lv_textarea_set_password_mode(txt_password, true);
     lv_textarea_set_text(txt_password, "");
 
-    cbx_skip_password = tt_obj_checkbox_create(cont, "Don't request password again", cbx_skip_password_cb);
+    cbx_skip_password = tt_obj_checkbox_create(main_cont, "Don't request password again", cbx_skip_password_cb);
     lv_obj_set_width(cbx_skip_password, LV_PCT(100));
 
     skip_password = config_get_skip_login();
@@ -118,7 +122,7 @@ void scr_login_create(lv_obj_t* menu, lv_obj_t* btn)
         lv_obj_add_state(cbx_skip_password, LV_STATE_CHECKED);
     }
 
-    tt_obj_btn_create(cont, btn_login_cb, "LOG IN", NULL, LV_PCT(100), 50,
+    tt_obj_btn_create(main_cont, btn_login_cb, "LOG IN", NULL, LV_PCT(100), 50,
             LV_ALIGN_CENTER);
 }
 
