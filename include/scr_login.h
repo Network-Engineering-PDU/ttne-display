@@ -15,6 +15,8 @@ extern "C" {
  */
 void scr_login_create(lv_obj_t* menu, lv_obj_t* btn);
 
+lv_obj_t* scr_login_get_page(void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
