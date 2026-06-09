@@ -56,6 +56,10 @@ void ttne_display(void)
 	controller_get_sys_info();
 	controller_get_pdu_info();
 	ttne_menu_display();
+	lv_menu_set_page(menu, main_page);
+	lv_obj_t* menu_scr = lv_scr_act();
+	scr_splash_create(menu_scr);
+	scr_splash_show();
 }
 
 void ttne_display_idle_cb()
@@ -120,9 +124,4 @@ void ttne_menu_display()
 	scr_outlets_create(menu, btn_outlets);
 	scr_sensors_create(menu, btn_sensors);
 	scr_settings_menu_create(menu, btn_settings);
-
-	lv_menu_set_page(menu, main_page);
-	lv_obj_t* menu_scr = lv_scr_act();
-	scr_splash_create(menu_scr);
-	scr_splash_show();
 }
