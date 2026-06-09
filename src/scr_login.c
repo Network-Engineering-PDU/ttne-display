@@ -6,8 +6,8 @@
 
 #include "scr_login.h"
 #include "scr_keyboard.h"
-#include "ttne_display.h"
 #include "scr_splash.h"
+#include "ttne_display.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
@@ -93,9 +93,13 @@ static void btn_login_cb(lv_event_t* e)
         tt_obj_info_box_create("Login", "Logged in successfully.", 0);
     }
 
-    /* Show main menu and update splash to return to main page so login is not shown again this boot */
-    ttne_menu_display();
-    scr_splash_set_prev(ttne_get_main_page());
+    scr_splash_login_completed();
+
+    lv_obj_t* menu = lv_obj_get_parent(ttne_get_main_page());
+    if (menu != NULL) {
+        lv_menu_set_page(menu, ttne_get_main_page());
+    }
+
     lv_textarea_set_text(txt_password, "");
 }
 

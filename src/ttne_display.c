@@ -59,21 +59,18 @@ void ttne_display(void)
 	ttne_menu_display();
 	lv_obj_t* menu_scr = lv_scr_act();
 	scr_login_create(menu, NULL);
-	lv_obj_t* splash_prev_scr = menu_scr;
-	if (!config_get_skip_login()) {
-		splash_prev_scr = scr_login_get_page();
-	}
-	else
-	{
-		splash_prev_scr = menu_scr;
-	}
-	scr_splash_create(splash_prev_scr);
-	scr_splash_show();
+	scr_splash_create(menu_scr);
+	scr_splash_show(false);
+}
+
+lv_obj_t* ttne_get_main_page()
+{
+	return main_page;
 }
 
 void ttne_display_idle_cb()
 {
-	scr_splash_show();
+	scr_splash_show(false);
 	if (lv_menu_get_cur_main_page(menu) != main_page) {
 		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
 		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
@@ -135,9 +132,4 @@ void ttne_menu_display()
 	scr_settings_menu_create(menu, btn_settings);
 
 	lv_menu_set_page(menu, main_page);
-}
-
-lv_obj_t* ttne_get_main_page()
-{
-    return main_page;
 }
