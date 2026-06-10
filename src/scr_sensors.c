@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "lvgl/lvgl.h"
 
@@ -135,6 +136,27 @@ static void finish_selection_and_return(void)
 	update_sensors();
 }
 
+static bool open_sensor_by_mac(const char* mac)
+{
+	int len;
+	const models_sensor_t* sensors;
+
+	if (mac == NULL || mac[0] == '\0') {
+		return false;
+	}
+
+	controller_get_sensors();
+	sensors = models_get_sensor(&len);
+	for (int i = 0; i < len; i++) {
+		if (sensors[i].mac != NULL && strcmp(sensors[i].mac, mac) == 0) {
+			scr_sensors_data_set_sensor(i + 1);
+			lv_menu_set_page(menu, sensors_data_page);
+			return true;
+		}
+	}
+	return false;
+}
+
 static void btn_found_sensor_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -145,11 +167,17 @@ static void btn_found_sensor_cb(lv_event_t* e)
 		const models_discovered_sensor_t* devices =
 				models_get_discovered(&len);
 		if (sensor_idx >= 0 && sensor_idx < len) {
+			char mac[32];
+			snprintf(mac, sizeof(mac), "%s", devices[sensor_idx].mac);
 			controller_post_ble_confirm_mac(devices[sensor_idx].mac);
+			finish_selection_and_return();
+			if (!open_sensor_by_mac(mac)) {
+				tt_obj_info_box_create("Sensor added",
+						"Sensor registered.\nOpen it to view live data.", 1);
+			}
+			return;
 		}
 		finish_selection_and_return();
-		tt_obj_info_box_create("Sensor added",
-				"Sensor registered.\nOpen it to view live data.", 1);
 	}
 }
 
