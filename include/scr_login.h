@@ -10,12 +10,11 @@ extern "C" {
 /**
  * @brief Creates the login screen.
  *
- * @param[in] menu      Pointer to the menu.
- * @param[in] btn       Main menu page button.
+ * @param[in] main_menu_scr  Screen to navigate to after successful login.
+ *
+ * @return Login screen object.
  */
-void scr_login_create();
-
-lv_obj_t* scr_login_get_page(void);
+lv_obj_t* scr_login_create(lv_obj_t* main_menu_scr);
 
 #ifdef __cplusplus
 } /* extern "C" */

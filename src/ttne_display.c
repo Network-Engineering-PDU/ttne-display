@@ -11,6 +11,7 @@
 
 #include "scr_init.h"
 #include "scr_splash.h"
+#include "scr_login.h"
 #include "scr_info.h"
 #include "scr_alarms.h"
 #include "scr_power.h"
@@ -49,15 +50,21 @@ static void menu_header_cb(lv_event_t* e)
 
 void ttne_display(void)
 {
+	lv_obj_t* menu_scr;
+
 	config_init();
 	tt_styles_init();
 	controller_init();
 	screen_init();
 	controller_get_sys_info();
 	controller_get_pdu_info();
+
+	menu_scr = lv_obj_create(NULL);
+	lv_scr_load(menu_scr);
 	ttne_menu_display();
-	lv_obj_t* menu_scr = lv_scr_act();
-	scr_splash_create(menu_scr);
+
+	lv_obj_t* login_scr = scr_login_create(menu_scr);
+	scr_splash_create(menu_scr, login_scr);
 	scr_splash_show();
 }
 

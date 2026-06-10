@@ -3,8 +3,8 @@
 
 #include "lvgl/lvgl.h"
 #include "scr_splash.h"
-#include "scr_login.h"
 #include "tt_obj.h"
+#include "config.h"
 #include "screen.h"
 #include "utils.h"
 #include "tt_colors.h"
@@ -16,6 +16,10 @@
 /* Global variables ***********************************************************/
 
 static lv_obj_t* splash_scr;
+static lv_obj_t* menu_scr_ref;
+static lv_obj_t* login_scr_ref;
+static lv_obj_t* nav_target;
+static bool session_authenticated = false;
 
 static lv_timer_t* timer_check;
 
@@ -30,6 +34,7 @@ static bool flag_init = false;
 
 static void splash_cb(lv_event_t* e);
 static void splash_timer_cb(lv_timer_t* timer);
+static void splash_refresh_nav_target(void);
 static const char* get_iface_label(const models_nw_if_t* nw_if);
 
 /* Callbacks ******************************************************************/
@@ -37,15 +42,14 @@ static const char* get_iface_label(const models_nw_if_t* nw_if);
 static void splash_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* scr = lv_event_get_user_data(e);
 
 	if (lv_scr_act() != splash_scr) {
 		return;
 	}
-	if (code == LV_EVENT_CLICKED) {
+	if (code == LV_EVENT_CLICKED && nav_target != NULL) {
 		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_timer_pause(timer_check);
-		lv_scr_load(scr);
+		lv_scr_load(nav_target);
 	}
 }
 
@@ -95,8 +99,27 @@ static const char* get_iface_label(const models_nw_if_t* nw_if)
 /* Function definitions *******************************************************/
 /* Public functions ***********************************************************/
 
-lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
+static void splash_refresh_nav_target(void)
 {
+	if (config_get_skip_login() || session_authenticated) {
+		nav_target = menu_scr_ref;
+	} else {
+		nav_target = login_scr_ref;
+	}
+}
+
+void scr_splash_on_login_success(void)
+{
+	session_authenticated = true;
+	splash_refresh_nav_target();
+}
+
+lv_obj_t* scr_splash_create(lv_obj_t* menu_scr, lv_obj_t* login_scr)
+{
+	menu_scr_ref = menu_scr;
+	login_scr_ref = login_scr;
+	session_authenticated = false;
+
 	splash_scr = lv_obj_create(NULL);
 
 	lv_obj_set_size(splash_scr, LV_PCT(100), LV_PCT(100));
@@ -108,12 +131,8 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 	lv_obj_t* logo = lv_img_create(splash_scr);
 	lv_img_set_src(logo, ASSET("ne_logo.png"));
 
-	if (!config_get_skip_login()) {
-		lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, scr_login_get_page());
-	}
-	else {
-		lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, prev_scr);
-	}
+	splash_refresh_nav_target();
+	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, NULL);
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
 			"Initializing system...");
@@ -141,6 +160,7 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 void scr_splash_show()
 {
+	splash_refresh_nav_target();
 	if (lv_scr_act() != splash_scr) {
 		if (flag_init) {
 			lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
