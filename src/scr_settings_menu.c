@@ -42,13 +42,13 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
     );
 
     /* HUB buttons: Parent is now 'settings_page' instead of 'cont' */
-    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(settings_page, NULL, "Visual", ASSET("visual.png"));
+    lv_obj_t* btn_vis = tt_obj_btn_mtx_create(settings_page, NULL, "Visual", ASSET("visualization.png"));
 
     lv_obj_t* btn_nw = tt_obj_btn_mtx_create(settings_page, NULL, "Networks", ASSET("network.png"));
 
-    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(settings_page, NULL, "Sys Setup", ASSET("menu.png"));
+    lv_obj_t* btn_sys = tt_obj_btn_mtx_create(settings_page, NULL, "Sys Setup", ASSET("sys_setup.png"));
 
-    lv_obj_t* btn_update = tt_obj_btn_mtx_create(settings_page, NULL, "Sys Update", ASSET("menu.png"));
+    lv_obj_t* btn_update = tt_obj_btn_mtx_create(settings_page, NULL, "Sys Update", ASSET("sys_update.png"));
 
     //lv_obj_t* btn_login = tt_obj_btn_mtx_create(settings_page, NULL, "Login", ASSET("menu.png"));
 
