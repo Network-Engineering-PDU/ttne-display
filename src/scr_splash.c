@@ -11,7 +11,7 @@
 #include "controller.h"
 #include "models.h"
 
-#define TIMER_REFRESH_RATE 10000 // ms
+#define TIMER_REFRESH_RATE 2000 // ms
 
 /* Global variables ***********************************************************/
 
@@ -77,11 +77,13 @@ static void splash_timer_cb(lv_timer_t* timer)
 	const models_nw_if_t* nw_if = models_get_nw_if();
 	// TODO: remove tap cb al inicializar la pantalla
 	// TODO: check a started_flag
-	if (!flag_init && strcmp(info->product_name, "N/A") != 0) { // API iniciada
+	if (!flag_init && (strcmp(info->product_name, "N/A") != 0
+			|| controller_check_conn())) {
 		flag_init = true;
-		splash_set_tap_enabled(true);
-		lv_obj_del(init_spinner);
-		init_spinner = NULL;
+		if (init_spinner != NULL) {
+			lv_obj_del(init_spinner);
+			init_spinner = NULL;
+		}
 	}
 	const char* iface = get_iface_label(nw_if);
 	sprintf(str, "%s", "PowerIT Easy");
@@ -167,23 +169,12 @@ lv_obj_t* scr_splash_create(lv_obj_t* menu_scr, lv_obj_t* login_scr)
 	lv_obj_set_size(tap_overlay, LV_PCT(100), LV_PCT(100));
 	lv_obj_clear_flag(tap_overlay, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_add_event_cb(tap_overlay, splash_cb, LV_EVENT_CLICKED, NULL);
-	splash_set_tap_enabled(false);
 	lv_obj_move_foreground(tap_overlay);
+	splash_set_tap_enabled(true);
 
 	timer_check = lv_timer_create(splash_timer_cb, TIMER_REFRESH_RATE, NULL);
 	lv_timer_pause(timer_check);
 	splash_timer_cb(timer_check);
-
-#ifdef SIMULATOR_ENABLED
-	if (!flag_init) {
-		flag_init = true;
-		splash_set_tap_enabled(true);
-		if (init_spinner != NULL) {
-			lv_obj_del(init_spinner);
-			init_spinner = NULL;
-		}
-	}
-#endif
 
 	return splash_scr;
 }
@@ -192,11 +183,9 @@ lv_obj_t* scr_splash_create(lv_obj_t* menu_scr, lv_obj_t* login_scr)
 void scr_splash_show()
 {
 	splash_refresh_nav_target();
+	splash_set_tap_enabled(true);
+	lv_timer_resume(timer_check);
 	if (lv_scr_act() != splash_scr) {
-		if (flag_init) {
-			splash_set_tap_enabled(true);
-		}
-		lv_timer_resume(timer_check);
 		lv_scr_load(splash_scr);
 	}
 }
