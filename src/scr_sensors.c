@@ -98,10 +98,14 @@ static void add_sensor_cb(lv_event_t* e)
 		}
 		discovered_count = 0;
 		scan_retries = 0;
-		controller_post_ble_scan_start();
+		if (!controller_post_ble_scan_start()) {
+			tt_obj_info_box_create("ERROR",
+					"Could not start BLE scan.\nCheck Bluetooth service.", 1);
+			return;
+		}
 		timer = lv_timer_create(timer_scan_cb, TIMER_SCAN,
 				lv_scr_act());
-		loader_scr = tt_obj_loader_create("Searching BLE sensors...",
+		loader_scr = tt_obj_loader_create("Searching nearest sensors...",
 				cancel_loader_cb);
 		lv_scr_load(loader_scr);
 	}
@@ -113,6 +117,7 @@ static void btn_sensor_cb(lv_event_t* e)
 	int sensor_id = (long)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_CLICKED) {
+		controller_get_sensors();
 		scr_sensors_data_set_sensor(sensor_id);
 		lv_menu_set_page(menu, sensors_data_page);
 	}
@@ -143,6 +148,8 @@ static void btn_found_sensor_cb(lv_event_t* e)
 			controller_post_ble_confirm_mac(devices[sensor_idx].mac);
 		}
 		finish_selection_and_return();
+		tt_obj_info_box_create("Sensor added",
+				"Sensor registered.\nOpen it to view live data.", 1);
 	}
 }
 
@@ -153,6 +160,8 @@ static void btn_add_all_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		controller_post_ble_confirm_all();
 		finish_selection_and_return();
+		tt_obj_info_box_create("Sensors added",
+				"Sensors registered.\nOpen one to view live data.", 1);
 	}
 }
 
@@ -212,7 +221,7 @@ static void show_found_sensors_selection(void)
 	lv_obj_set_scroll_dir(selection_scr, LV_DIR_VER);
 
 	lv_obj_t* title = lv_label_create(selection_scr);
-	lv_label_set_text(title, "Found BLE Sensors:");
+	lv_label_set_text(title, "Nearest sensors (strongest signal):");
 	lv_obj_set_width(title, LV_PCT(100));
 	lv_obj_set_height(title, 40);
 
@@ -224,8 +233,10 @@ static void show_found_sensors_selection(void)
 
 	for (int i = 0; i < len && i < MAX_SENSORS; i++) {
 		char btn_text[120];
-		snprintf(btn_text, sizeof(btn_text), "%s %s (%d dBm)",
-				devices[i].kind, devices[i].mac, devices[i].rssi);
+		const char* label = (devices[i].name != NULL &&
+				devices[i].name[0] != '\0') ? devices[i].name : devices[i].kind;
+		snprintf(btn_text, sizeof(btn_text), "#%d %s %s (%d dBm)",
+				i + 1, label, devices[i].mac, devices[i].rssi);
 
 		btn_found_sensor[i] = tt_obj_btn_perc_create(selection_scr, NULL,
 				btn_text, 100);
@@ -256,7 +267,14 @@ static void update_sensors(void)
 	}
 	for (int i = 0; i < MAX_SENSORS; i++) {
 		if (i < len) {
+			char label[40];
 			lv_obj_clear_flag(btn_sensor[i], LV_OBJ_FLAG_HIDDEN);
+			if (sensors[i].name != NULL && sensors[i].name[0] != '\0') {
+				snprintf(label, sizeof(label), "%s", sensors[i].name);
+			} else {
+				snprintf(label, sizeof(label), "SENSOR %d", i + 1);
+			}
+			lv_label_set_text(lv_obj_get_child(btn_sensor[i], 0), label);
 			lv_label_set_text(lbl_mac[i], sensors[i].mac);
 		} else {
 			lv_obj_add_flag(btn_sensor[i], LV_OBJ_FLAG_HIDDEN);
@@ -289,4 +307,6 @@ void scr_sensors_create(lv_obj_t* l_menu, lv_obj_t* btn)
 		lv_obj_align(lbl_mac[i], LV_ALIGN_BOTTOM_MID, 0, 0);
 		lv_obj_set_scroll_dir(btn_sensor[i], LV_DIR_NONE);
 	}
+
+	update_sensors();
 }

@@ -19,6 +19,7 @@ static bool running = false;
 static int sensor_id;
 static char title[50];
 static char sensor_mac[64];
+static lv_obj_t* sensor_data_page;
 
 static lv_obj_t* lbl_mac;
 static lv_obj_t* lbl_name;
@@ -222,9 +223,10 @@ const char* f_float(char* buffer, float num, const char* format)
 
 lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 {
-	sprintf(title, "TTNULL");
+	sprintf(title, "Sensors");
 	lv_obj_t* sensor_data_cont = tt_obj_menu_page_create(menu, NULL, menu_cb,
 			title);
+	sensor_data_page = lv_obj_get_parent(sensor_data_cont);
 
 	lv_obj_set_flex_flow(sensor_data_cont, LV_FLEX_FLOW_ROW_WRAP);
 
@@ -246,7 +248,21 @@ lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 
 void scr_sensors_data_set_sensor(int l_sensor)
 {
+	int len;
+	const models_sensor_t* sensors = models_get_sensor(&len);
+
 	sensor_id = l_sensor - 1;
 	sensor_mac[0] = '\0';
-	sprintf(title, "Sensors / Sensor %d", l_sensor);
+
+	if (sensor_id >= 0 && sensor_id < len &&
+			sensors[sensor_id].name != NULL &&
+			sensors[sensor_id].name[0] != '\0') {
+		snprintf(title, sizeof(title), "Sensors / %s",
+				sensors[sensor_id].name);
+	} else {
+		snprintf(title, sizeof(title), "Sensors / Sensor %d", l_sensor);
+	}
+	if (sensor_data_page != NULL) {
+		lv_menu_set_page_title(sensor_data_page, title);
+	}
 }

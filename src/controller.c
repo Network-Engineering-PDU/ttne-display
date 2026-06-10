@@ -217,15 +217,31 @@ bool controller_get_sensor_live(const char* mac)
 	return err == 0;
 }
 
-void controller_post_ble_scan_start()
+bool controller_post_ble_scan_start()
 {
 	http_get_req_t req;
 	char* url = NE_BASE_URL "api/sensors-scan/start/";
 	int err = http_helper_post(&req, url, NULL);
-	if (err != 0) {
+	bool ok = false;
+
+	if (err == 0 && req.buffer != NULL) {
+		cJSON* json = cJSON_Parse(req.buffer);
+		if (json != NULL) {
+			cJSON* result = cJSON_GetObjectItemCaseSensitive(json, "result");
+			cJSON* ok_field = cJSON_GetObjectItemCaseSensitive(json, "ok");
+			if ((result != NULL && cJSON_IsString(result) &&
+					strcmp(result->valuestring, "OK") == 0) ||
+					(ok_field != NULL && cJSON_IsTrue(ok_field))) {
+				ok = true;
+			}
+			cJSON_Delete(json);
+		}
+	}
+	if (!ok) {
 		LV_LOG_ERROR("BLE scan start error");
 	}
 	http_helper_free(&req);
+	return ok;
 }
 
 void controller_post_ble_scan_stop()
