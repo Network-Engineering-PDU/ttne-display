@@ -63,7 +63,7 @@ void scr_settings_nw_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	lv_obj_t* btn_ethernet = tt_obj_btn_mtx_create(nw_menu_page, NULL, "NW Setup", ASSET("nw_setup.png"));
 	lv_obj_t* btn_snmp = tt_obj_btn_mtx_create(nw_menu_page, NULL, "SNMP", ASSET("snmp.png"));
 	lv_obj_t* btn_modbus = tt_obj_btn_mtx_create(nw_menu_page, NULL, "Modbus", ASSET("modbus.png"));
-	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(nw_menu_page, NULL, "SSH", ASSET("ssh.png"));
+	lv_obj_t* btn_ssh = tt_obj_btn_mtx_create(nw_menu_page, NULL, "SSH", ASSET("ssh_.png"));
 	lv_obj_t* btn_bluetooth = tt_obj_btn_mtx_create(nw_menu_page, NULL, "Bluetooth", ASSET("rssi.png"));
 	lv_obj_t* btn_ntp_sntp = tt_obj_btn_mtx_create(nw_menu_page, NULL, "NTP-SNTP", ASSET("ntp_sntp.png"));
 

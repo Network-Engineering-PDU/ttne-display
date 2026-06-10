@@ -50,12 +50,9 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
     lv_obj_t* btn_update = tt_obj_btn_mtx_create(settings_page, NULL, "Sys Update", ASSET("sys_update.png"));
 
-    //lv_obj_t* btn_login = tt_obj_btn_mtx_create(settings_page, NULL, "Login", ASSET("menu.png"));
-
     /* Navigation links remain the same */
     scr_settings_vis_create(l_menu, btn_vis);
     scr_settings_nw_menu_create(l_menu, btn_nw);
     scr_settings_sys_create(l_menu, btn_sys);
     scr_settings_update_create(l_menu, btn_update);
-    //scr_login_create(l_menu, btn_login);
 }
