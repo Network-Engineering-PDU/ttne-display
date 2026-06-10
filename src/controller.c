@@ -188,6 +188,35 @@ void controller_get_sensors()
 	http_helper_free(&req);
 }
 
+bool controller_get_sensor_live(const char* mac)
+{
+	http_get_req_t req;
+	char url[256];
+	char mac_query[32];
+	int err;
+	size_t j = 0;
+	size_t i;
+
+	if (mac == NULL || mac[0] == '\0') {
+		return false;
+	}
+	for (i = 0; mac[i] != '\0' && j + 1 < sizeof(mac_query); i++) {
+		if (mac[i] != ':' && mac[i] != '-') {
+			mac_query[j++] = mac[i];
+		}
+	}
+	mac_query[j] = '\0';
+	snprintf(url, sizeof(url), NE_BASE_URL "api/sensors-scan/live/?mac=%s", mac_query);
+	err = http_helper_get(&req, url);
+	if (err != 0 || req.buffer == NULL) {
+		http_helper_free(&req);
+		return false;
+	}
+	err = json_helper_update_sensor_live(req.buffer);
+	http_helper_free(&req);
+	return err == 0;
+}
+
 void controller_post_ble_scan_start()
 {
 	http_get_req_t req;

@@ -18,6 +18,7 @@ void controller_get_out_sw();
 void controller_put_out_sw(const models_out_sw_t* out_sw, int line_id);
 void controller_get_out_data(int line_id);
 void controller_get_sensors();
+bool controller_get_sensor_live(const char* mac);
 void controller_post_ble_scan_start();
 void controller_post_ble_scan_stop();
 void controller_get_ble_discovered();

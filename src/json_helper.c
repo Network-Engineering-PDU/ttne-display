@@ -474,6 +474,51 @@ int json_helper_update_discovered(const char* json_str)
 	return 0;
 }
 
+int json_helper_update_sensor_live(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");
+	if (!cJSON_IsArray(devices) || cJSON_GetArraySize(devices) == 0) {
+		cJSON_Delete(json);
+		return 1;
+	}
+
+	cJSON* dev = cJSON_GetArrayItem(devices, 0);
+	models_sensor_live_t live;
+	const char* str;
+	int err;
+
+	str = json_get_string(dev, "mac");
+	live.mac = (str == NULL) ? "" : str;
+	str = json_get_string(dev, "kind");
+	live.kind = (str == NULL) ? "" : str;
+	str = json_get_string(dev, "name");
+	live.name = (str == NULL) ? "" : str;
+	str = json_get_string(dev, "last_seen");
+	live.last_seen = (str == NULL) ? "" : str;
+
+	err = json_get_float(&live.temp, dev, "temperature_c");
+	live.temp = (err == 0) ? live.temp : NAN;
+	err = json_get_float(&live.humd, dev, "humidity_pct");
+	live.humd = (err == 0) ? live.humd : NAN;
+	err = json_get_float(&live.pres, dev, "pressure_hpa");
+	live.pres = (err == 0) ? live.pres : NAN;
+	err = json_get_int(&live.rssi, dev, "rssi");
+	live.rssi = (err == 0) ? live.rssi : -1;
+	err = json_get_int(&live.bat_mv, dev, "battery_mv");
+	live.bat_mv = (err == 0) ? live.bat_mv : -1;
+	err = json_get_int(&live.bat_pct, dev, "battery_pct");
+	live.bat_pct = (err == 0) ? live.bat_pct : -1;
+
+	models_set_sensor_live(&live);
+	cJSON_Delete(json);
+	return 0;
+}
+
 int json_helper_update_nw_services(const char* json_str)
 {
 	cJSON* json = cJSON_Parse(json_str);

@@ -12,6 +12,7 @@ int json_helper_update_in_sw(const char* json_str);
 int json_helper_update_in_data(const char* json_str);
 int json_helper_update_sensors(const char* json_str);
 int json_helper_update_discovered(const char* json_str);
+int json_helper_update_sensor_live(const char* json_str);
 int json_helper_update_out_sw(const char* json_str);
 int json_helper_update_out_data(const char* json_str);
 int json_helper_update_nw_services(const char* json_str);

@@ -125,6 +125,19 @@ typedef struct models_discovered_sensor_t {
 	int rssi;
 } models_discovered_sensor_t;
 
+typedef struct models_sensor_live_t {
+	const char* mac;
+	const char* kind;
+	const char* name;
+	const char* last_seen;
+	float temp;
+	float humd;
+	float pres;
+	int rssi;
+	int bat_mv;
+	int bat_pct;
+} models_sensor_live_t;
+
 
 // SETTINGS
 
@@ -231,6 +244,9 @@ void models_set_sensor(const models_sensor_t* l_sensor, int len);
 
 const models_discovered_sensor_t* models_get_discovered(int* len);
 void models_set_discovered(const models_discovered_sensor_t* list, int len);
+
+const models_sensor_live_t* models_get_sensor_live(void);
+void models_set_sensor_live(const models_sensor_live_t* live);
 
 const models_nw_services_t* models_get_nw_services();
 void models_set_nw_services(const models_nw_services_t* nw_services);

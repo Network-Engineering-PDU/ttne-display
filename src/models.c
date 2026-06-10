@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <lvgl/lvgl.h>
 #include <string.h>
 #include "models.h"
@@ -16,6 +17,7 @@ static models_sensor_t* sensor_list;
 static int sensor_list_len;
 static models_discovered_sensor_t* discovered_list;
 static int discovered_list_len;
+static models_sensor_live_t sensor_live;
 static models_nw_services_t nw_services;
 static models_bt_status_t bt_status;
 static models_nw_info_t nw_info;
@@ -232,6 +234,30 @@ void models_set_discovered(const models_discovered_sensor_t* list, int len)
 		discovered_list[i].rssi = list[i].rssi;
 	}
 	discovered_list_len = len;
+}
+
+const models_sensor_live_t* models_get_sensor_live(void)
+{
+	return &sensor_live;
+}
+
+void models_set_sensor_live(const models_sensor_live_t* live)
+{
+	free((void*)sensor_live.mac);
+	free((void*)sensor_live.kind);
+	free((void*)sensor_live.name);
+	free((void*)sensor_live.last_seen);
+
+	sensor_live.mac = stralloc(live->mac);
+	sensor_live.kind = stralloc(live->kind);
+	sensor_live.name = stralloc(live->name);
+	sensor_live.last_seen = stralloc(live->last_seen);
+	sensor_live.temp = live->temp;
+	sensor_live.humd = live->humd;
+	sensor_live.pres = live->pres;
+	sensor_live.rssi = live->rssi;
+	sensor_live.bat_mv = live->bat_mv;
+	sensor_live.bat_pct = live->bat_pct;
 }
 
 const models_nw_services_t* models_get_nw_services()

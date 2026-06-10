@@ -11,8 +11,9 @@
 #include "controller.h"
 
 #define MAX_SENSORS 8
-#define TIMER_SCAN 6000 // ms
-#define MAX_SCAN_RETRIES 10 // 10*6000ms = 60 seconds scan timeout
+#define TIMER_SCAN 2000 // ms
+#define MIN_SCAN_POLLS 3
+#define MAX_SCAN_RETRIES 30 // 30 * 2s = 60 seconds scan timeout
 
 
 /* Global variables ***********************************************************/
@@ -45,8 +46,9 @@ static void btn_found_sensor_cb(lv_event_t* e);
 static void btn_add_all_cb(lv_event_t* e);
 static void timer_scan_cb(lv_timer_t* timer);
 
-static void update_sensors();
-static void show_found_sensors_selection();
+static void update_sensors(void);
+static void finish_scan_and_show(void);
+static void show_found_sensors_selection(void);
 
 /* Callbacks ******************************************************************/
 
@@ -78,10 +80,7 @@ static void cancel_loader_cb(lv_event_t* e)
 			lv_scr_load(current_main_scr);
 			return;
 		}
-		scan_retries = MAX_SCAN_RETRIES;
-		if (timer != NULL) {
-			timer_scan_cb(timer);
-		}
+		finish_scan_and_show();
 	}
 }
 
@@ -157,30 +156,49 @@ static void btn_add_all_cb(lv_event_t* e)
 	}
 }
 
-static void timer_scan_cb(lv_timer_t* timer)
+static void finish_scan_and_show(void)
 {
-	lv_obj_t* scr = timer->user_data;
+	lv_obj_t* scr = NULL;
 
-	controller_get_ble_discovered();
-	int len;
-	models_get_discovered(&len);
-	discovered_count = len;
-
-	if (scan_retries++ >= MAX_SCAN_RETRIES) {
-		controller_post_ble_scan_stop();
+	if (timer != NULL) {
+		scr = (lv_obj_t*)timer->user_data;
 		lv_timer_del(timer);
+		timer = NULL;
+	}
+	controller_post_ble_scan_stop();
+	if (loader_scr != NULL && lv_scr_act() == loader_scr) {
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
-
-		if (discovered_count > 0) {
-			show_found_sensors_selection();
-		} else {
-			tt_obj_info_box_create("New sensor", "No BLE sensor found", 1);
-		}
+		loader_scr = NULL;
 	}
+
+	if (discovered_count > 0) {
+		show_found_sensors_selection();
+	} else {
+		tt_obj_info_box_create("New sensor", "No BLE sensor found", 1);
+	}
+}
+
+static void timer_scan_cb(lv_timer_t* timer)
+{
+	int len;
+
+	controller_get_ble_discovered();
+	models_get_discovered(&len);
+	discovered_count = len;
+	scan_retries++;
 
 	LV_LOG_USER("Searching BLE sensors. Retries: %d (found=%d)",
 			scan_retries, discovered_count);
+
+	if (discovered_count > 0 && scan_retries >= MIN_SCAN_POLLS) {
+		finish_scan_and_show();
+		return;
+	}
+
+	if (scan_retries >= MAX_SCAN_RETRIES) {
+		finish_scan_and_show();
+	}
 }
 
 static void show_found_sensors_selection(void)
@@ -226,7 +244,7 @@ static void show_found_sensors_selection(void)
 
 /* Function definitions *******************************************************/
 
-static void update_sensors()
+static void update_sensors(void)
 {
 	controller_get_sensors();
 	int len;
