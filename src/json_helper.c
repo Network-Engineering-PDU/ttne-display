@@ -498,8 +498,6 @@ int json_helper_update_sensor_live(const char* json_str)
 	live.kind = (str == NULL) ? "" : str;
 	str = json_get_string(dev, "name");
 	live.name = (str == NULL) ? "" : str;
-	str = json_get_string(dev, "last_seen");
-	live.last_seen = (str == NULL) ? "" : str;
 
 	err = json_get_float(&live.temp, dev, "temperature_c");
 	live.temp = (err == 0) ? live.temp : NAN;

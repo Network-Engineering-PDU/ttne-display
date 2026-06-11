@@ -10,7 +10,7 @@
 #include "models.h"
 #include "controller.h"
 
-#define TIMER_REFRESH_RATE 2000 // ms
+#define TIMER_REFRESH_RATE 1000 // ms
 
 /* Global variables ***********************************************************/
 
@@ -23,7 +23,6 @@ static lv_obj_t* sensor_data_page;
 
 static lv_obj_t* lbl_mac;
 static lv_obj_t* lbl_name;
-static lv_obj_t* lbl_dt;
 static lv_obj_t* card_info;
 static lv_obj_t* card_temp;
 static lv_obj_t* card_humd;
@@ -92,7 +91,6 @@ static void sensor_data_apply(const models_sensor_live_t* live,
 	int bat_pct = live->bat_pct;
 	const char* name = live->name;
 	const char* kind = live->kind;
-	const char* last_seen = live->last_seen;
 
 	if (stored != NULL) {
 		if (name == NULL || name[0] == '\0') {
@@ -117,10 +115,6 @@ static void sensor_data_apply(const models_sensor_live_t* live,
 				bat_mv = (int)stored->last_data.bat;
 			}
 		}
-		if ((last_seen == NULL || last_seen[0] == '\0') &&
-				stored->last_data.datetime != NULL) {
-			last_seen = stored->last_data.datetime;
-		}
 	}
 
 	if (kind != NULL && kind[0] != '\0') {
@@ -131,7 +125,6 @@ static void sensor_data_apply(const models_sensor_live_t* live,
 	}
 
 	lv_label_set_text(lbl_mac, live->mac);
-	lv_label_set_text(lbl_dt, (last_seen != NULL) ? last_seen : "");
 
 	sprintf(txt, "#%06X %s# C", TT_COLOR_GREEN_NE,
 			f_float(buff, temp, "%.2f"));
@@ -183,7 +176,6 @@ static void sensor_data_timer_cb(lv_timer_t* timer)
 			.mac = sensors[sensor_id].mac,
 			.kind = "",
 			.name = sensors[sensor_id].name,
-			.last_seen = sensors[sensor_id].last_data.datetime,
 			.temp = sensors[sensor_id].last_data.temp,
 			.humd = sensors[sensor_id].last_data.humd,
 			.pres = sensors[sensor_id].last_data.pres,
@@ -235,8 +227,6 @@ lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 	lv_obj_align(lbl_mac, LV_ALIGN_TOP_MID, 0, 0);
 	lbl_name = tt_obj_label_create(card_info, "");
 	lv_obj_align(lbl_name, LV_ALIGN_CENTER, 0, 0);
-	lbl_dt = tt_obj_label_create(card_info, "");
-	lv_obj_align(lbl_dt, LV_ALIGN_BOTTOM_MID, 0, 0);
 	card_rssi = tt_obj_card_create(sensor_data_cont, "", ASSET("rssi.png"));
 	card_bat = tt_obj_card_create(sensor_data_cont, "", ASSET("bat.png"));
 	card_temp = tt_obj_card_create(sensor_data_cont, "", ASSET("temp.png"));

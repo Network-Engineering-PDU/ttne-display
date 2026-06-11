@@ -129,7 +129,6 @@ typedef struct models_sensor_live_t {
 	const char* mac;
 	const char* kind;
 	const char* name;
-	const char* last_seen;
 	float temp;
 	float humd;
 	float pres;

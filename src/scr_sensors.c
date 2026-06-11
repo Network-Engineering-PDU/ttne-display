@@ -220,6 +220,7 @@ static void finish_scan_and_show(void)
 
 static void timer_scan_cb(lv_timer_t* timer)
 {
+	(void)timer;
 	int len;
 
 	controller_get_ble_discovered();

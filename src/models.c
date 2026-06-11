@@ -246,12 +246,10 @@ void models_set_sensor_live(const models_sensor_live_t* live)
 	free((void*)sensor_live.mac);
 	free((void*)sensor_live.kind);
 	free((void*)sensor_live.name);
-	free((void*)sensor_live.last_seen);
 
 	sensor_live.mac = stralloc(live->mac);
 	sensor_live.kind = stralloc(live->kind);
 	sensor_live.name = stralloc(live->name);
-	sensor_live.last_seen = stralloc(live->last_seen);
 	sensor_live.temp = live->temp;
 	sensor_live.humd = live->humd;
 	sensor_live.pres = live->pres;
