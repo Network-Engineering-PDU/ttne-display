@@ -9,6 +9,7 @@
 #include "scr_splash.h"
 #include "tt_obj.h"
 #include "tt_colors.h"
+#include "tt_styles.h"
 #include "config.h"
 #include "screen.h"
 
@@ -96,20 +97,27 @@ lv_obj_t* scr_login_create(lv_obj_t* main_menu_scr)
 	menu_scr = main_menu_scr;
 
 	login_scr = lv_obj_create(NULL);
-	lv_obj_set_size(login_scr, LV_PCT(100), LV_PCT(100));
+	lv_obj_set_size(login_scr, lv_disp_get_hor_res(NULL),
+			lv_disp_get_ver_res(NULL));
 	lv_obj_set_style_radius(login_scr, 0, 0);
 	lv_obj_set_style_bg_color(login_scr, lv_color_hex(TT_COLOR_BG1), 0);
+	lv_obj_set_scrollbar_mode(login_scr, LV_SCROLLBAR_MODE_OFF);
 
 	lv_obj_t* cont = tt_obj_cont_create(login_scr);
 	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_all(cont, 20, 0);
 	lv_obj_set_style_pad_row(cont, 15, 0);
-	lv_obj_set_width(cont, LV_PCT(90));
 
 	if (screen_is_landscape()) {
+		lv_obj_set_width(cont, LV_PCT(90));
 		lv_obj_align(cont, LV_ALIGN_CENTER, 0, 0);
 	} else {
-		lv_obj_align(cont, LV_ALIGN_CENTER, 0, -30);
+		lv_obj_set_size(cont, lv_disp_get_hor_res(NULL),
+				lv_disp_get_ver_res(NULL));
+		lv_obj_add_style(cont, &invisible_cont_style, LV_STATE_DEFAULT);
+		lv_obj_set_style_bg_color(cont, lv_color_hex(TT_COLOR_BG1), 0);
+		lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, 0);
+		lv_obj_align(cont, LV_ALIGN_CENTER, 0, 0);
 	}
 
 	tt_obj_label_color_create(cont, "Enter Password");
