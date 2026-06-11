@@ -11,8 +11,7 @@
 #include "controller.h"
 #include "models.h"
 
-#define TIMER_REFRESH_RATE 5000 // ms
-#define SPLASH_MAX_WAIT_POLLS 3
+#define TIMER_REFRESH_RATE 2000 // ms
 
 /* Global variables ***********************************************************/
 
@@ -31,7 +30,6 @@ static lv_obj_t* lbl_system;
 static lv_obj_t* lbl_ip;
 
 static bool flag_init = false;
-static int init_poll_count = 0;
 
 /* Function prototypes ********************************************************/
 
@@ -91,11 +89,7 @@ static void splash_timer_cb(lv_timer_t* timer)
 		iface = get_iface_label(nw_if);
 	}
 
-	if (!flag_init) {
-		init_poll_count++;
-	}
-
-	if (!flag_init && (api_ready || init_poll_count >= SPLASH_MAX_WAIT_POLLS)) {
+	if (!flag_init && api_ready) {
 		flag_init = true;
 		splash_set_tap_enabled(true);
 		lv_obj_del(init_spinner);
@@ -187,7 +181,7 @@ lv_obj_t* scr_splash_create(lv_obj_t* menu_scr, lv_obj_t* login_scr)
 	lv_obj_set_size(tap_overlay, LV_PCT(100), LV_PCT(100));
 	lv_obj_clear_flag(tap_overlay, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_add_event_cb(tap_overlay, splash_cb, LV_EVENT_CLICKED, NULL);
-	splash_set_tap_enabled(true);
+	splash_set_tap_enabled(false);
 	lv_obj_move_foreground(tap_overlay);
 
 	timer_check = lv_timer_create(splash_timer_cb, TIMER_REFRESH_RATE, NULL);
@@ -206,5 +200,6 @@ void scr_splash_show()
 		}
 		lv_timer_resume(timer_check);
 		lv_scr_load(splash_scr);
+		lv_timer_ready(timer_check);
 	}
 }

@@ -14,15 +14,12 @@
 #include "config.h"
 #include "screen.h"
 
-#define TIMER_ROT 5000 // ms
-
 extern void reset_program();
 
 /* Global variables ***********************************************************/
 
 static lv_obj_t* dd_rotation;
 static lv_obj_t* txt_screen_saver;
-static lv_timer_t* timer_rot;
 static lv_obj_t* msg_box_rot;
 
 /* PDU location information pointers */
@@ -39,9 +36,7 @@ static void save_pdu_info_field(int field_id, const char* value);
 
 static int rotation_to_dropdown_index(int rotation);
 static int dropdown_index_to_rotation(int index);
-static void revert_rot();
 static void msg_box_rot_cb(lv_event_t* e);
-static void timer_rot_cb(lv_timer_t* timer);
 static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text);
 
 /* Callbacks ******************************************************************/
@@ -75,24 +70,16 @@ static void rotate_cb(lv_event_t* e)
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED) {
         uint16_t rotation = dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation));
-        screen_set_rotation(rotation);
-
-        if (timer_rot) {
-            lv_timer_del(timer_rot);
-            timer_rot = NULL;
-        }
         if (msg_box_rot) {
             lv_obj_del(msg_box_rot);
             msg_box_rot = NULL;
         }
 
-        timer_rot = lv_timer_create(timer_rot_cb, TIMER_ROT, NULL);
-
         const char* orientation = (rotation == 3) ? "Horizontal" : "Vertical";
         char msg[300];
         sprintf(msg, "Are you sure you want to save screen orientation?\n"
                 "Orientation: " TT_COLOR_GREEN_NE_STR " %s#\n"
-                "(changes will be reverted in 5 seconds)",
+                "The display will restart to apply the change.",
                 orientation);
                 
         msg_box_rot = tt_obj_msg_box_create("Screen rotation", msg, NULL, msg_box_rot_cb);
@@ -133,45 +120,22 @@ static void txt_pdu_info_cb(lv_event_t* e)
     }
 }
 
-static void timer_rot_cb(lv_timer_t* timer)
-{
-    if (msg_box_rot) {
-        lv_msgbox_close(msg_box_rot);
-        msg_box_rot = NULL;
-    }
-    if (timer) {
-        lv_timer_del(timer);
-    }
-    timer_rot = NULL;
-    revert_rot();
-}
-
 static void msg_box_rot_cb(lv_event_t* e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t* obj = lv_event_get_current_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
-        if (timer_rot) {
-            lv_timer_del(timer_rot);
-            timer_rot = NULL;
-        }
         if (lv_msgbox_get_active_btn(obj) == 0) { // YES
             config_set_rotation(dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation)));
             reset_program();
         } else {
-            revert_rot();
+            lv_dropdown_set_selected(dd_rotation,
+                    rotation_to_dropdown_index(config_get_rotation()));
         }
         lv_msgbox_close(obj);
         msg_box_rot = NULL;
     }
-}
-
-static void revert_rot()
-{
-    int rotation = config_get_rotation();
-    screen_set_rotation(rotation);
-    lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(rotation));
 }
 
 /* Helper Logic ***************************************************************/

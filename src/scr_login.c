@@ -52,6 +52,9 @@ static void login_success_msg_timer_cb(lv_timer_t* timer)
 	if (msgbox != NULL && lv_obj_is_valid(msgbox)) {
 		lv_obj_del_async(msgbox);
 	}
+	scr_splash_on_login_success();
+	lv_scr_load(menu_scr);
+	lv_textarea_set_text(txt_password, "");
 }
 
 static void btn_login_cb(lv_event_t* e)
@@ -72,10 +75,6 @@ static void btn_login_cb(lv_event_t* e)
 	}
 
 	config_set_skip_login(skip_password ? 1 : 0);
-
-	scr_splash_on_login_success();
-	lv_scr_load(menu_scr);
-	lv_textarea_set_text(txt_password, "");
 
 	lv_obj_t* msgbox;
 	if (skip_password) {
@@ -113,7 +112,7 @@ lv_obj_t* scr_login_create(lv_obj_t* main_menu_scr)
 	tt_obj_label_color_create(cont, "Enter Password");
 
 	txt_password = tt_obj_txt_create(cont, "Password", txt_password_cb);
-	lv_textarea_set_password_mode(txt_password, true);
+	lv_textarea_set_password_mode(txt_password, false);
 	lv_textarea_set_text(txt_password, "");
 
 	cbx_skip_password = tt_obj_checkbox_create(cont,
