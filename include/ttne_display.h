@@ -11,8 +11,6 @@ void ttne_display(void);
 
 void ttne_display_idle_cb();
 
-void ttne_menu_display();
-
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

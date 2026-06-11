@@ -11,13 +11,12 @@
 
 #include "scr_init.h"
 #include "scr_splash.h"
-#include "scr_login.h"
 #include "scr_info.h"
 #include "scr_alarms.h"
 #include "scr_power.h"
 #include "scr_outlets.h"
 #include "scr_sensors.h"
-#include "scr_settings_menu.h"
+#include "scr_settings.h"
 
 #include "config.h"
 #include "controller.h"
@@ -50,33 +49,13 @@ static void menu_header_cb(lv_event_t* e)
 
 void ttne_display(void)
 {
-	lv_obj_t* menu_scr;
-
 	config_init();
 	tt_styles_init();
 	controller_init();
 	screen_init();
+	controller_get_sys_info();
+	controller_get_pdu_info();
 
-	menu_scr = lv_obj_create(NULL);
-	lv_scr_load(menu_scr);
-	ttne_menu_display();
-
-	lv_obj_t* login_scr = scr_login_create(menu_scr);
-	scr_splash_create(menu_scr, login_scr);
-	scr_splash_show();
-}
-
-void ttne_display_idle_cb()
-{
-	scr_splash_show();
-	if (lv_menu_get_cur_main_page(menu) != main_page) {
-		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
-		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
-	}
-}
-
-void ttne_menu_display()
-{
 	uint8_t rotation = config_get_rotation();
 	screen_set_rotation(rotation);
 
@@ -122,12 +101,35 @@ void ttne_menu_display()
 	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS",
 			ASSET("settings.png"));
 
+	// Notifications test
+	// lv_obj_t* notif_cont = tt_obj_cont_create(btn_alarms);
+	// lv_obj_t* lbl = tt_obj_label_create(notif_cont, "1");
+	// lv_obj_align(lbl, LV_ALIGN_TOP_RIGHT, 0, 0);
+	// lv_obj_align(notif_cont, LV_ALIGN_TOP_RIGHT, 0, 0);
+	// lv_obj_set_style_bg_color(notif_cont, lv_color_hex(TT_COLOR_ERROR), 0);
+	// lv_obj_set_style_border_color(notif_cont, lv_color_hex(TT_COLOR_ERROR), 0);
+	// lv_obj_set_size(notif_cont, 15, 15);
+	// lv_obj_set_style_radius(notif_cont, LV_RADIUS_CIRCLE, 0);
+	// Notifications test
+
 	scr_info_create(menu, btn_info);
 	scr_alarms_create(menu, btn_alarms);
 	scr_power_create(menu, btn_power);
 	scr_outlets_create(menu, btn_outlets);
 	scr_sensors_create(menu, btn_sensors);
-	scr_settings_menu_create(menu, btn_settings);
+	scr_settings_create(menu, btn_settings);
 
 	lv_menu_set_page(menu, main_page);
+	lv_obj_t* menu_scr = lv_scr_act();
+	scr_splash_create(menu_scr);
+	scr_splash_show();
+}
+
+void ttne_display_idle_cb()
+{
+	scr_splash_show();
+	if (lv_menu_get_cur_main_page(menu) != main_page) {
+		lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
+		lv_event_send(menu_header_btn, LV_EVENT_CLICKED, menu);
+	}
 }

@@ -11,19 +11,12 @@ void controller_init();
 bool controller_check_conn();
 void controller_get_sys_info();
 void controller_get_pdu_info();
-void controller_put_pdu_info(const models_pdu_info_t* pdu_info);
 void controller_get_in_sw();
 void controller_get_in_data(int line_id);
 void controller_get_out_sw();
 void controller_put_out_sw(const models_out_sw_t* out_sw, int line_id);
 void controller_get_out_data(int line_id);
 void controller_get_sensors();
-bool controller_get_sensor_live(const char* mac);
-bool controller_post_ble_scan_start();
-void controller_post_ble_scan_stop();
-void controller_get_ble_discovered();
-void controller_post_ble_confirm_mac(const char* mac);
-void controller_post_ble_confirm_all();
 void controller_get_nw_services();
 void controller_get_nw_info();
 void controller_get_nw_if();
@@ -43,13 +36,6 @@ void controller_post_start_modbus();
 void controller_post_stop_modbus();
 void controller_put_modbus(const models_modbus_t* modbus);
 void controller_get_modbus();
-void controller_post_start_bluetooth();
-void controller_post_stop_bluetooth();
-void controller_get_bluetooth();
-void controller_put_bluetooth(bool powered, bool pairable, bool discoverable);
-void controller_post_bluetooth_scan(bool enable);
-void controller_post_bluetooth_device_action(const char* mac, const char* action);
-void controller_post_bluetooth_pairing_response(bool accept);
 
 #ifdef __cplusplus
 } /* extern "C" */

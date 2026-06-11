@@ -28,49 +28,8 @@ static lv_obj_t* lbl_uptime;
 /* Function prototypes ********************************************************/
 
 static void menu_cb(lv_event_t* e);
-static void refresh_info_display(void);
 
 /* Callbacks ******************************************************************/
-
-static void refresh_info_display(void)
-{
-	char str[100];
-	const models_info_t* info = models_get_info();
-	const models_pdu_info_t* pdu_info = models_get_pdu_info();
-
-	printf("[scr_info] Refreshing display with rated_current=%d\n", pdu_info->rated_current);
-
-	sprintf(str, "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, info->product_name);
-	lv_label_set_text(lbl_name, str);
-	sprintf(str, "  %s: #%06X %s", "PN", TT_COLOR_GREEN_NE, info->product_pn);
-	lv_label_set_text(lbl_pn, str);
-	sprintf(str, "  %s: #%06X %s", "SN", TT_COLOR_GREEN_NE, info->product_sn);
-	lv_label_set_text(lbl_sn, str);
-	sprintf(str, "  %s: #%06X %s", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
-	lv_label_set_text(lbl_mac, str);
-	sprintf(str, "  %s: #%06X %s", "IP", TT_COLOR_GREEN_NE, info->ip);
-	lv_label_set_text(lbl_ip, str);
-
-	sprintf(str, "  %s: #%06X %d", "Outlets", TT_COLOR_GREEN_NE, pdu_info->n_outlets);
-	lv_label_set_text(lbl_outlets, str);
-	sprintf(str, "  %s: #%06X %d A", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
-	lv_label_set_text(lbl_rated_curr, str);
-	sprintf(str, "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
-	lv_label_set_text(lbl_controller, str);
-	sprintf(str, "  %s: #%06X %s", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
-	lv_label_set_text(lbl_type, str);
-
-	sprintf(str, "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
-	lv_label_set_text(lbl_version, str);
-	sprintf(str, "  %s: #%06X %s", "OM version", TT_COLOR_GREEN_NE, info->om_version);
-	lv_label_set_text(lbl_om_version, str);
-	sprintf(str, "  %s: #%06X %s", "PMB version", TT_COLOR_GREEN_NE, info->pmb_version);
-	lv_label_set_text(lbl_pmb_version, str);
-	sprintf(str, "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, GIT_VERSION);
-	lv_label_set_text(lbl_display_version, str);
-	sprintf(str, "  %s: #%06X %s", "Uptime (HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
-	lv_label_set_text(lbl_uptime, str);
-}
 
 static void menu_cb(lv_event_t* e)
 {
@@ -81,11 +40,43 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* curr_page = lv_event_get_user_data(e);
 		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
 		if (curr_page == page) {
-			LV_LOG_USER("Info cb - page change detected");
-			printf("[scr_info] Menu callback triggered, fetching fresh data\n");
+			LV_LOG_USER("Info cb");
 			controller_get_sys_info();
 			controller_get_pdu_info();
-			refresh_info_display();
+			char str[100];
+			const models_info_t* info = models_get_info();
+			const models_pdu_info_t* pdu_info = models_get_pdu_info();
+
+			sprintf(str, "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, info->product_name);
+			lv_label_set_text(lbl_name, str);
+			sprintf(str, "  %s: #%06X %s", "PN", TT_COLOR_GREEN_NE, info->product_pn);
+			lv_label_set_text(lbl_pn, str);
+			sprintf(str, "  %s: #%06X %s", "SN", TT_COLOR_GREEN_NE, info->product_sn);
+			lv_label_set_text(lbl_sn, str);
+			sprintf(str, "  %s: #%06X %s", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
+			lv_label_set_text(lbl_mac, str);
+			sprintf(str, "  %s: #%06X %s", "IP", TT_COLOR_GREEN_NE, info->ip);
+			lv_label_set_text(lbl_ip, str);
+
+			sprintf(str, "  %s: #%06X %d", "Outlets", TT_COLOR_GREEN_NE, pdu_info->n_outlets);
+			lv_label_set_text(lbl_outlets, str);
+			sprintf(str, "  %s: #%06X %d", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
+			lv_label_set_text(lbl_rated_curr, str);
+			sprintf(str, "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
+			lv_label_set_text(lbl_controller, str);
+			sprintf(str, "  %s: #%06X %s", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
+			lv_label_set_text(lbl_type, str);
+
+			sprintf(str, "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
+			lv_label_set_text(lbl_version, str);
+			sprintf(str, "  %s: #%06X %s", "OM version", TT_COLOR_GREEN_NE, info->om_version);
+			lv_label_set_text(lbl_om_version, str);
+			sprintf(str, "  %s: #%06X %s", "PMB version", TT_COLOR_GREEN_NE, info->pmb_version);
+			lv_label_set_text(lbl_pmb_version, str);
+			sprintf(str, "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, GIT_VERSION);
+			lv_label_set_text(lbl_display_version, str);
+			sprintf(str, "  %s: #%06X %s", "Uptime (HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
+			lv_label_set_text(lbl_uptime, str);
 		}
 	}
 }

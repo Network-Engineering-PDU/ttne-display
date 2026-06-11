@@ -19,44 +19,6 @@ static int json_get_int(int* num, cJSON* json, char* id);
 static int json_get_float(float* num, cJSON* json, char* id);
 static int json_get_bool(bool* bl, cJSON* json, char* id);
 
-static float normalize_phase_vi(float ph)
-{
-	if (ph > 180.0f) {
-		ph -= 360.0f;
-	} else if (ph < -180.0f) {
-		ph += 360.0f;
-	}
-	if (ph > 90.0f) {
-		ph -= 180.0f;
-	} else if (ph < -90.0f) {
-		ph += 180.0f;
-	}
-	return ph;
-}
-
-static void apply_input_power_correction(models_in_data_t* in_data)
-{
-	float ph_rad;
-
-	if (in_data == NULL) {
-		return;
-	}
-
-	in_data->phase = normalize_phase_vi(in_data->phase);
-
-	if (in_data->voltage != 0.0f && in_data->current != 0.0f) {
-		ph_rad = in_data->phase * ((float)M_PI / 180.0f);
-		in_data->active_power = in_data->voltage * in_data->current * cosf(ph_rad);
-		in_data->reactive_power = in_data->voltage * in_data->current * sinf(ph_rad);
-		in_data->apparent_power = in_data->voltage * in_data->current;
-		in_data->power_factor = cosf(ph_rad);
-	}
-
-	if (in_data->energy < 0.0f) {
-		in_data->energy = -in_data->energy;
-	}
-}
-
 /* Callbacks ******************************************************************/
 /* Function definitions *******************************************************/
 
@@ -272,7 +234,6 @@ int json_helper_update_in_data(const char* json_str)
 		return 1;
 	}
 
-	apply_input_power_correction(&in_data);
 	models_set_in_data(&in_data);
 
 	cJSON_Delete(json);
@@ -390,37 +351,38 @@ int json_helper_update_sensors(const char* json_str)
 
 		err = json_get_int(&sensors[i].id, sensor, "id");
 		if (err != 0) {
-			continue;
+			return 1;
 		}
 		str = json_get_string(sensor, "mac_address");
 		if (str == NULL) {
-			continue;
+			return 1;
 		}
 		sensors[i].mac = str;
 		str = json_get_string(sensor, "name");
-		sensors[i].name = (str == NULL) ? "" : str;
+		sensors[i].name = str;
 
-		cJSON* last_data = cJSON_GetObjectItemCaseSensitive(sensor, "last_data");
-		if (last_data == NULL || cJSON_IsNull(last_data)) {
-			sensors[i].last_data.datetime = "";
+		cJSON* last_data = cJSON_GetObjectItem(sensor, "last_data");
+		str = json_get_string(last_data, "data_datetime");
+		sensors[i].last_data.datetime = str;
+		err = json_get_float(&sensors[i].last_data.temp, last_data, "temperature");
+		if (err != 0) {
 			sensors[i].last_data.temp = NAN;
+		}
+		err = json_get_float(&sensors[i].last_data.humd, last_data, "humidity");
+		if (err != 0) {
 			sensors[i].last_data.humd = NAN;
+		}
+		err = json_get_float(&sensors[i].last_data.pres, last_data, "pressure");
+		if (err != 0) {
 			sensors[i].last_data.pres = NAN;
-			sensors[i].last_data.rssi = -1;
+		}
+		err = json_get_int(&sensors[i].last_data.rssi, last_data, "rssi");
+		if (err != 0) {
+			sensors[i].last_data.rssi = 1;
+		}
+		err = json_get_int(&sensors[i].last_data.bat, last_data, "battery");
+		if (err != 0) {
 			sensors[i].last_data.bat = -1;
-		} else {
-			str = json_get_string(last_data, "data_datetime");
-			sensors[i].last_data.datetime = (str == NULL) ? "" : str;
-			err = json_get_float(&sensors[i].last_data.temp, last_data, "temperature");
-			sensors[i].last_data.temp = (err == 0) ? sensors[i].last_data.temp : NAN;
-			err = json_get_float(&sensors[i].last_data.humd, last_data, "humidity");
-			sensors[i].last_data.humd = (err == 0) ? sensors[i].last_data.humd : NAN;
-			err = json_get_float(&sensors[i].last_data.pres, last_data, "pressure");
-			sensors[i].last_data.pres = (err == 0) ? sensors[i].last_data.pres : NAN;
-			err = json_get_int(&sensors[i].last_data.rssi, last_data, "rssi");
-			sensors[i].last_data.rssi = (err == 0) ? sensors[i].last_data.rssi : -1;
-			err = json_get_int(&sensors[i].last_data.bat, last_data, "battery");
-			sensors[i].last_data.bat = (err == 0) ? sensors[i].last_data.bat : -1;
 		}
 		i++;
 	}
@@ -428,92 +390,6 @@ int json_helper_update_sensors(const char* json_str)
 	models_set_sensor(sensors, i);
 	cJSON_Delete(json);
 
-	return 0;
-}
-
-int json_helper_update_discovered(const char* json_str)
-{
-	cJSON* json = cJSON_Parse(json_str);
-	if (json == NULL) {
-		return 1;
-	}
-
-	models_discovered_sensor_t items[MAX_DISCOVERED_SENSORS];
-	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");
-	int i = 0;
-
-	if (!cJSON_IsArray(devices)) {
-		cJSON_Delete(json);
-		return 1;
-	}
-
-	cJSON* dev;
-	cJSON_ArrayForEach(dev, devices) {
-		const char* str;
-		int err;
-
-		if (i == MAX_DISCOVERED_SENSORS) {
-			break;
-		}
-		str = json_get_string(dev, "mac");
-		if (str == NULL) {
-			continue;
-		}
-		items[i].mac = str;
-		str = json_get_string(dev, "kind");
-		items[i].kind = (str == NULL) ? "" : str;
-		str = json_get_string(dev, "name");
-		items[i].name = (str == NULL) ? "" : str;
-		err = json_get_int(&items[i].rssi, dev, "rssi");
-		items[i].rssi = (err == 0) ? items[i].rssi : 0;
-		i++;
-	}
-
-	models_set_discovered(items, i);
-	cJSON_Delete(json);
-	return 0;
-}
-
-int json_helper_update_sensor_live(const char* json_str)
-{
-	cJSON* json = cJSON_Parse(json_str);
-	if (json == NULL) {
-		return 1;
-	}
-
-	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");
-	if (!cJSON_IsArray(devices) || cJSON_GetArraySize(devices) == 0) {
-		cJSON_Delete(json);
-		return 1;
-	}
-
-	cJSON* dev = cJSON_GetArrayItem(devices, 0);
-	models_sensor_live_t live;
-	const char* str;
-	int err;
-
-	str = json_get_string(dev, "mac");
-	live.mac = (str == NULL) ? "" : str;
-	str = json_get_string(dev, "kind");
-	live.kind = (str == NULL) ? "" : str;
-	str = json_get_string(dev, "name");
-	live.name = (str == NULL) ? "" : str;
-
-	err = json_get_float(&live.temp, dev, "temperature_c");
-	live.temp = (err == 0) ? live.temp : NAN;
-	err = json_get_float(&live.humd, dev, "humidity_pct");
-	live.humd = (err == 0) ? live.humd : NAN;
-	err = json_get_float(&live.pres, dev, "pressure_hpa");
-	live.pres = (err == 0) ? live.pres : NAN;
-	err = json_get_int(&live.rssi, dev, "rssi");
-	live.rssi = (err == 0) ? live.rssi : -1;
-	err = json_get_int(&live.bat_mv, dev, "battery_mv");
-	live.bat_mv = (err == 0) ? live.bat_mv : -1;
-	err = json_get_int(&live.bat_pct, dev, "battery_pct");
-	live.bat_pct = (err == 0) ? live.bat_pct : -1;
-
-	models_set_sensor_live(&live);
-	cJSON_Delete(json);
 	return 0;
 }
 
@@ -542,77 +418,9 @@ int json_helper_update_nw_services(const char* json_str)
 		return 1;
 	}
 	nw_services.ssh = bl;
-	err = json_get_bool(&bl, json, "bluetooth");
-	nw_services.bluetooth = (err == 0) ? bl : false;
 	
 	models_set_nw_services(&nw_services);
 
-	cJSON_Delete(json);
-
-	return 0;
-}
-
-int json_helper_update_bt_status(const char* json_str)
-{
-	cJSON* json = cJSON_Parse(json_str);
-	if (json == NULL) {
-		return 1;
-	}
-
-	models_bt_status_t bt_status;
-	const char* str;
-	bool bl;
-	int err;
-
-	str = json_get_string(json, "controller_mac");
-	bt_status.controller_mac = str ? str : "";
-	str = json_get_string(json, "name");
-	bt_status.name = str ? str : "";
-	err = json_get_bool(&bl, json, "powered");
-	bt_status.powered = (err == 0) ? bl : false;
-	err = json_get_bool(&bl, json, "pairable");
-	bt_status.pairable = (err == 0) ? bl : false;
-	err = json_get_bool(&bl, json, "discoverable");
-	bt_status.discoverable = (err == 0) ? bl : false;
-	err = json_get_bool(&bl, json, "discovering");
-	bt_status.discovering = (err == 0) ? bl : false;
-	err = json_get_bool(&bl, json, "pairing_request");
-	bt_status.pairing_request = (err == 0) ? bl : false;
-	str = json_get_string(json, "pairing_mac");
-	bt_status.pairing_mac = str ? str : "";
-	str = json_get_string(json, "pairing_name");
-	bt_status.pairing_name = str ? str : "";
-	str = json_get_string(json, "pairing_passkey");
-	bt_status.pairing_passkey = str ? str : "";
-	bt_status.device_count = 0;
-
-	cJSON* devices = cJSON_GetObjectItemCaseSensitive(json, "devices");
-	if (cJSON_IsArray(devices)) {
-		cJSON* device = NULL;
-		cJSON_ArrayForEach(device, devices) {
-			if (bt_status.device_count >= MAX_BT_DEVICES) {
-				break;
-			}
-			models_bt_device_t* bt_device = &bt_status.devices[bt_status.device_count];
-			str = json_get_string(device, "mac");
-			bt_device->mac = str ? str : "";
-			str = json_get_string(device, "name");
-			bt_device->name = str ? str : bt_device->mac;
-			err = json_get_bool(&bl, device, "paired");
-			bt_device->paired = (err == 0) ? bl : false;
-			err = json_get_bool(&bl, device, "trusted");
-			bt_device->trusted = (err == 0) ? bl : false;
-			err = json_get_bool(&bl, device, "connected");
-			bt_device->connected = (err == 0) ? bl : false;
-			err = json_get_int(&bt_device->rssi, device, "rssi");
-			if (err != 0) {
-				bt_device->rssi = 0;
-			}
-			bt_status.device_count++;
-		}
-	}
-
-	models_set_bt_status(&bt_status);
 	cJSON_Delete(json);
 
 	return 0;
@@ -663,23 +471,8 @@ int json_helper_update_nw_if(const char* json_str)
 		return 1;
 	}
 	nw_if.dhcp = bl;
-	
-	/* Parse network mode (optional, defaults to -1 if not present, meaning use auto-detect) */
-	int mode = -1;
-	err = json_get_int(&mode, json, "nw_mode");
-	nw_if.nw_mode = mode;  /* Keep -1 if not found in JSON */
-	
-	nw_if.eth_interface = "";
 
 	cJSON* params = cJSON_GetObjectItem(json, "params");
-
-	str = json_get_string(json, "eth_interface");
-	if (str == NULL) {
-		str = json_get_string(params, "eth_interface");
-	}
-	if (str != NULL) {
-		nw_if.eth_interface = str;
-	}
 
 	str = json_get_string(params, "ip");
 	if (str == NULL) {
@@ -711,16 +504,6 @@ int json_helper_update_nw_if(const char* json_str)
 		return 1;
 	}
 	nw_if.params.pass = str;
-	
-	/* Parse multi-interface IPs for dual LAN and LAN+WiFi modes */
-	str = json_get_string(json, "lan1_ip");
-	nw_if.lan1_ip = (str != NULL) ? str : "";
-	
-	str = json_get_string(json, "lan2_ip");
-	nw_if.lan2_ip = (str != NULL) ? str : "";
-	
-	str = json_get_string(json, "wifi_ip");
-	nw_if.wifi_ip = (str != NULL) ? str : "";
 	
 	models_set_nw_if(&nw_if);
 
@@ -767,45 +550,6 @@ int json_helper_update_modbus(const char* json_str)
 	}
 	
 	models_set_modbus(&modbus);
-
-	cJSON_Delete(json);
-
-	return 0;
-}
-
-int json_helper_update_update_status(const char* json_str)
-{
-	cJSON* json = cJSON_Parse(json_str);
-	if (json == NULL) {
-		return 1;
-	}
-
-	models_update_status_t update_status = {
-		.is_pending = false,
-		.auto_update = false,
-		.update_server = ""
-	};
-	
-	cJSON* is_pending = cJSON_GetObjectItemCaseSensitive(json, "is_pending");
-	if (cJSON_IsBool(is_pending)) {
-		update_status.is_pending = is_pending->valueint;
-	} else {
-		return 1;
-	}
-
-	cJSON* auto_update = cJSON_GetObjectItemCaseSensitive(json, "auto_update");
-	if (cJSON_IsBool(auto_update)) {
-		update_status.auto_update = auto_update->valueint;
-	} else {
-		return 1;
-	}
-
-	const char* server_str = json_get_string(json, "update_server");
-	if (server_str != NULL) {
-		update_status.update_server = server_str;
-	}
-	
-	models_set_update_status(&update_status);
 
 	cJSON_Delete(json);
 
