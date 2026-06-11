@@ -76,9 +76,9 @@ static void cancel_loader_cb(lv_event_t* e)
 		LV_LOG_USER("CANCEL");
 		if (selection_scr != NULL) {
 			controller_post_ble_scan_stop();
+			lv_scr_load(current_main_scr);
 			lv_obj_del(selection_scr);
 			selection_scr = NULL;
-			lv_scr_load(current_main_scr);
 			return;
 		}
 		finish_scan_and_show();
@@ -129,10 +129,12 @@ static void finish_selection_and_return(void)
 	controller_post_ble_scan_stop();
 	controller_get_sensors();
 	if (selection_scr != NULL) {
+		lv_scr_load(current_main_scr);
 		lv_obj_del(selection_scr);
 		selection_scr = NULL;
+	} else if (current_main_scr != NULL) {
+		lv_scr_load(current_main_scr);
 	}
-	lv_scr_load(current_main_scr);
 	update_sensors();
 }
 
