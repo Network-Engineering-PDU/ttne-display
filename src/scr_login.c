@@ -14,6 +14,7 @@
 #include "screen.h"
 
 #define LOGIN_PASSWORD "tlj46"
+#define LOGIN_SUCCESS_MSG_MS 3000
 
 static lv_obj_t* login_scr;
 static lv_obj_t* menu_scr;
@@ -24,6 +25,7 @@ static bool skip_password = false;
 static void txt_password_cb(lv_event_t* e);
 static void cbx_skip_password_cb(lv_event_t* e);
 static void btn_login_cb(lv_event_t* e);
+static void login_success_msg_timer_cb(lv_timer_t* timer);
 
 static void txt_password_cb(lv_event_t* e)
 {
@@ -41,6 +43,14 @@ static void cbx_skip_password_cb(lv_event_t* e)
 	if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
 		lv_obj_t* obj = lv_event_get_target(e);
 		skip_password = (lv_obj_get_state(obj) & LV_STATE_CHECKED) != 0;
+	}
+}
+
+static void login_success_msg_timer_cb(lv_timer_t* timer)
+{
+	lv_obj_t* msgbox = lv_timer_get_user_data(timer);
+	if (msgbox != NULL && lv_obj_is_valid(msgbox)) {
+		lv_obj_del_async(msgbox);
 	}
 }
 
@@ -63,15 +73,20 @@ static void btn_login_cb(lv_event_t* e)
 
 	config_set_skip_login(skip_password ? 1 : 0);
 
-	if (skip_password) {
-		tt_obj_info_box_create("Login", "Logged in. Password will not be requested again.", 0);
-	} else {
-		tt_obj_info_box_create("Login", "Logged in successfully.", 0);
-	}
-
 	scr_splash_on_login_success();
 	lv_scr_load(menu_scr);
 	lv_textarea_set_text(txt_password, "");
+
+	lv_obj_t* msgbox;
+	if (skip_password) {
+		msgbox = tt_obj_info_box_create("Login",
+				"Logged in. Password will not be requested again.", 0);
+	} else {
+		msgbox = tt_obj_info_box_create("Login", "Logged in successfully.", 0);
+	}
+	lv_timer_t* timer = lv_timer_create(login_success_msg_timer_cb,
+			LOGIN_SUCCESS_MSG_MS, msgbox);
+	lv_timer_set_repeat_count(timer, 1);
 }
 
 lv_obj_t* scr_login_create(lv_obj_t* main_menu_scr)

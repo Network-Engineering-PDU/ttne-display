@@ -56,8 +56,6 @@ void ttne_display(void)
 	tt_styles_init();
 	controller_init();
 	screen_init();
-	controller_get_sys_info();
-	controller_get_pdu_info();
 
 	menu_scr = lv_obj_create(NULL);
 	lv_scr_load(menu_scr);

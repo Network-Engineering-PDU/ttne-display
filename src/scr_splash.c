@@ -11,7 +11,8 @@
 #include "controller.h"
 #include "models.h"
 
-#define TIMER_REFRESH_RATE 10000 // ms
+#define TIMER_REFRESH_RATE 5000 // ms
+#define SPLASH_MAX_WAIT_POLLS 3
 
 /* Global variables ***********************************************************/
 
@@ -30,6 +31,7 @@ static lv_obj_t* lbl_system;
 static lv_obj_t* lbl_ip;
 
 static bool flag_init = false;
+static int init_poll_count = 0;
 
 /* Function prototypes ********************************************************/
 
@@ -71,22 +73,38 @@ static void splash_timer_cb(lv_timer_t* timer)
 {
 	(void) timer;
 	controller_get_sys_info();
-	controller_get_nw_if();
 	char str[100];
 	const models_info_t* info = models_get_info();
-	const models_nw_if_t* nw_if = models_get_nw_if();
-	// TODO: remove tap cb al inicializar la pantalla
-	// TODO: check a started_flag
-	if (!flag_init && strcmp(info->product_name, "N/A") != 0) { // API iniciada
+	const char* product_name = info->product_name;
+	const char* ip = info->ip;
+	const char* iface = "";
+	bool api_ready = product_name != NULL && product_name[0] != '\0' &&
+			strcmp(product_name, "N/A") != 0;
+
+	if (api_ready) {
+		controller_get_nw_if();
+		const models_nw_if_t* nw_if = models_get_nw_if();
+		if (nw_if->params.ip != NULL && nw_if->params.ip[0] != '\0' &&
+				strcmp(nw_if->params.ip, "N/A") != 0) {
+			ip = nw_if->params.ip;
+		}
+		iface = get_iface_label(nw_if);
+	}
+
+	if (!flag_init) {
+		init_poll_count++;
+	}
+
+	if (!flag_init && (api_ready || init_poll_count >= SPLASH_MAX_WAIT_POLLS)) {
 		flag_init = true;
 		splash_set_tap_enabled(true);
 		lv_obj_del(init_spinner);
 		init_spinner = NULL;
 	}
-	const char* iface = get_iface_label(nw_if);
+
 	sprintf(str, "%s", "PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
-	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
+	sprintf(str, "%s: %s %s", "IP", (ip != NULL) ? ip : "Starting...", iface);
 	lv_label_set_text(lbl_ip, str);
 }
 
@@ -161,18 +179,19 @@ lv_obj_t* scr_splash_create(lv_obj_t* menu_scr, lv_obj_t* login_scr)
 
 	lbl_system = tt_obj_label_create(info_cont, NULL);
 	lbl_ip = tt_obj_label_create(info_cont, NULL);
+	lv_label_set_text(lbl_system, "PowerIT Easy");
+	lv_label_set_text(lbl_ip, "IP: Starting...");
 
 	tap_overlay = lv_obj_create(splash_scr);
 	lv_obj_remove_style_all(tap_overlay);
 	lv_obj_set_size(tap_overlay, LV_PCT(100), LV_PCT(100));
 	lv_obj_clear_flag(tap_overlay, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_add_event_cb(tap_overlay, splash_cb, LV_EVENT_CLICKED, NULL);
-	splash_set_tap_enabled(false);
+	splash_set_tap_enabled(true);
 	lv_obj_move_foreground(tap_overlay);
 
 	timer_check = lv_timer_create(splash_timer_cb, TIMER_REFRESH_RATE, NULL);
 	lv_timer_pause(timer_check);
-	splash_timer_cb(timer_check);
 
 	return splash_scr;
 }
