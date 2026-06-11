@@ -38,6 +38,20 @@ void config_set_inactivity_time(int inactivity_time);
  */
 int config_get_inactivity_time();
 
+/**
+ * @brief Set whether login should be skipped on future boots.
+ *
+ * @param[in] skip_login  1 to skip login, 0 to require login.
+ */
+void config_set_skip_login(int skip_login);
+
+/**
+ * @brief Get whether login should be skipped on future boots.
+ *
+ * @return 1 if login should be skipped, 0 otherwise.
+ */
+int config_get_skip_login();
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

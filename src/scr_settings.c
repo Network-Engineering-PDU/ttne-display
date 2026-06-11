@@ -427,6 +427,7 @@ static void msg_box_fact_reset_cb(lv_event_t* e)
 			lv_obj_add_event_cb(loader_scr, loader_cb,
 					LV_EVENT_ALL, lv_scr_act());
 			lv_scr_load(loader_scr);
+			config_set_skip_login(0);
 			controller_post_fact_reset();
 		}
 		lv_msgbox_close(obj);

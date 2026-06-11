@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include "lvgl/lvgl.h"
+
 /**
  * @brief Creates the splash screen.
  * 
@@ -13,6 +15,13 @@ extern "C" {
  * @return Splash screen object
  */
 lv_obj_t* scr_splash_create(lv_obj_t* prev_scr);
+
+/**
+ * @brief Set the screen opened when the splash screen is clicked.
+ *
+ * @param[in] next_scr Screen to open.
+ */
+void scr_splash_set_next_scr(lv_obj_t* next_scr);
 
 /**
  * @brief Show the splash screen.

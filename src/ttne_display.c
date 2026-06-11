@@ -11,6 +11,7 @@
 
 #include "scr_init.h"
 #include "scr_splash.h"
+#include "scr_login.h"
 #include "scr_info.h"
 #include "scr_alarms.h"
 #include "scr_power.h"
@@ -121,7 +122,8 @@ void ttne_display(void)
 
 	lv_menu_set_page(menu, main_page);
 	lv_obj_t* menu_scr = lv_scr_act();
-	scr_splash_create(menu_scr);
+	lv_obj_t* login_scr = scr_login_create(menu_scr);
+	scr_splash_create(scr_login_is_required() ? login_scr : menu_scr);
 	scr_splash_show();
 }
 

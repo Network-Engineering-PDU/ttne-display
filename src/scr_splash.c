@@ -14,6 +14,7 @@
 /* Global variables ***********************************************************/
 
 static lv_obj_t* splash_scr;
+static lv_obj_t* next_scr;
 
 static lv_timer_t* timer_check;
 
@@ -34,7 +35,6 @@ static void splash_timer_cb(lv_timer_t* timer);
 static void splash_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* scr = lv_event_get_user_data(e);
 
 	if (lv_scr_act() != splash_scr) {
 		return;
@@ -42,7 +42,9 @@ static void splash_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_timer_pause(timer_check);
-		lv_scr_load(scr);
+		if (next_scr != NULL) {
+			lv_scr_load(next_scr);
+		}
 	}
 }
 
@@ -79,6 +81,7 @@ static void splash_timer_cb(lv_timer_t* timer)
 lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 {
 	splash_scr = lv_obj_create(NULL);
+	next_scr = prev_scr;
 
 	lv_obj_set_size(splash_scr, LV_PCT(100), LV_PCT(100));
 	lv_obj_set_style_radius(splash_scr, 0, 0);
@@ -113,6 +116,10 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 	return splash_scr;
 }
 
+void scr_splash_set_next_scr(lv_obj_t* l_next_scr)
+{
+	next_scr = l_next_scr;
+}
 
 void scr_splash_show()
 {
