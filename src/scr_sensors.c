@@ -48,6 +48,7 @@ static void btn_add_all_cb(lv_event_t* e);
 static void timer_scan_cb(lv_timer_t* timer);
 
 static void update_sensors(void);
+static void cancel_scan_and_return(void);
 static void finish_scan_and_show(void);
 static void show_found_sensors_selection(void);
 
@@ -75,13 +76,10 @@ static void cancel_loader_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		LV_LOG_USER("CANCEL");
 		if (selection_scr != NULL) {
-			controller_post_ble_scan_stop();
-			lv_scr_load(current_main_scr);
-			lv_obj_del(selection_scr);
-			selection_scr = NULL;
+			cancel_scan_and_return();
 			return;
 		}
-		finish_scan_and_show();
+		cancel_scan_and_return();
 	}
 }
 
@@ -136,6 +134,40 @@ static void finish_selection_and_return(void)
 		lv_scr_load(current_main_scr);
 	}
 	update_sensors();
+}
+
+static void cancel_scan_and_return(void)
+{
+	lv_obj_t* scr = current_main_scr;
+
+	if (timer != NULL) {
+		if (scr == NULL) {
+			scr = (lv_obj_t*)timer->user_data;
+		}
+		lv_timer_del(timer);
+		timer = NULL;
+	}
+
+	controller_post_ble_scan_stop();
+
+	if (selection_scr != NULL) {
+		if (scr != NULL) {
+			lv_scr_load(scr);
+		}
+		lv_obj_del(selection_scr);
+		selection_scr = NULL;
+	}
+
+	if (loader_scr != NULL) {
+		if (scr != NULL && lv_scr_act() == loader_scr) {
+			lv_scr_load(scr);
+		}
+		lv_obj_del(loader_scr);
+		loader_scr = NULL;
+	}
+
+	discovered_count = 0;
+	scan_retries = 0;
 }
 
 static bool open_sensor_by_mac(const char* mac)
