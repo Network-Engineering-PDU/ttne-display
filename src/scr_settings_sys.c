@@ -43,8 +43,11 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* btn_info = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Info", ASSET("info.png"));
 
+    lv_obj_t* btn_support = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Support", ASSET("support.png"));
+
     /* Navigation links remain the same */
     scr_current_create(l_menu, btn_current);
     scr_settings_sys_info_create(l_menu, btn_info);
-    
+    scr_settings_support_create(l_menu, btn_support);
+
 }
