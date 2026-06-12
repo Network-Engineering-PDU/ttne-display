@@ -669,25 +669,12 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network Setup");
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
-	lv_obj_t* conn_row = lv_obj_create(nw_cont2);
-	lv_obj_set_size(conn_row, LV_PCT(100), LV_SIZE_CONTENT);
-	lv_obj_set_flex_flow(conn_row, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(conn_row, LV_FLEX_ALIGN_START,
-			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_scrollbar_mode(conn_row, LV_SCROLLBAR_MODE_OFF);
-	lv_obj_clear_flag(conn_row, LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_style_bg_opa(conn_row, LV_OPA_0, 0);
-	lv_obj_set_style_border_width(conn_row, 0, 0);
-	lv_obj_set_style_pad_all(conn_row, 0, 0);
-	lv_obj_set_style_pad_column(conn_row, 4, 0);
-
-	lv_obj_t* lbl_conn = tt_obj_label_create(conn_row, "Connection type");
-	lv_obj_set_width(lbl_conn, LV_PCT(50));
+	lv_obj_t* lbl_conn = tt_obj_label_create(nw_cont2, "Connection type");
 	lv_label_set_long_mode(lbl_conn, LV_LABEL_LONG_SCROLL_CIRCULAR);
 	lv_obj_set_scrollbar_mode(lbl_conn, LV_SCROLLBAR_MODE_OFF);
 
-	lv_obj_t* controls_cont = lv_obj_create(conn_row);
-	lv_obj_set_size(controls_cont, LV_PCT(50), LV_SIZE_CONTENT);
+	lv_obj_t* controls_cont = lv_obj_create(nw_cont2);
+	lv_obj_set_size(controls_cont, LV_PCT(100), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(controls_cont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(controls_cont, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
