@@ -49,6 +49,6 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     /* Navigation links remain the same */
     scr_current_create(l_menu, btn_current);
     scr_settings_sys_info_create(l_menu, btn_info);
-    scr_settings_support_create(l_menu, btn_support);
+    scr_support_create(l_menu, btn_support);
 
 }
