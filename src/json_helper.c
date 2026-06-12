@@ -472,6 +472,21 @@ int json_helper_update_nw_if(const char* json_str)
 	}
 	nw_if.dhcp = bl;
 
+	str = json_get_string(json, "eth_interface");
+	nw_if.eth_interface = str != NULL ? str : "";
+
+	err = json_get_int(&nw_if.nw_mode, json, "nw_mode");
+	if (err != 0) {
+		nw_if.nw_mode = -1;
+	}
+
+	str = json_get_string(json, "lan1_ip");
+	nw_if.lan1_ip = str != NULL ? str : "";
+	str = json_get_string(json, "lan2_ip");
+	nw_if.lan2_ip = str != NULL ? str : "";
+	str = json_get_string(json, "wifi_ip");
+	nw_if.wifi_ip = str != NULL ? str : "";
+
 	cJSON* params = cJSON_GetObjectItem(json, "params");
 
 	str = json_get_string(params, "ip");
@@ -509,6 +524,101 @@ int json_helper_update_nw_if(const char* json_str)
 
 	cJSON_Delete(json);
 
+	return 0;
+}
+
+int json_helper_update_bt_status(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_bt_status_t bt_status;
+	const char* str;
+	int err;
+
+	str = json_get_string(json, "controller_mac");
+	bt_status.controller_mac = str != NULL ? str : "";
+	str = json_get_string(json, "name");
+	bt_status.name = str != NULL ? str : "";
+
+	err = json_get_bool(&bt_status.powered, json, "powered");
+	if (err != 0) {
+		bt_status.powered = false;
+	}
+	err = json_get_bool(&bt_status.pairable, json, "pairable");
+	if (err != 0) {
+		bt_status.pairable = false;
+	}
+	err = json_get_bool(&bt_status.discoverable, json, "discoverable");
+	if (err != 0) {
+		bt_status.discoverable = false;
+	}
+	err = json_get_bool(&bt_status.discovering, json, "discovering");
+	if (err != 0) {
+		bt_status.discovering = false;
+	}
+	err = json_get_bool(&bt_status.pairing_request, json, "pairing_request");
+	if (err != 0) {
+		bt_status.pairing_request = false;
+	}
+	str = json_get_string(json, "pairing_mac");
+	bt_status.pairing_mac = str != NULL ? str : "";
+	str = json_get_string(json, "pairing_name");
+	bt_status.pairing_name = str != NULL ? str : "";
+	str = json_get_string(json, "pairing_passkey");
+	bt_status.pairing_passkey = str != NULL ? str : "";
+
+	bt_status.device_count = 0;
+	cJSON* devices = cJSON_GetObjectItem(json, "devices");
+	if (devices != NULL && cJSON_IsArray(devices)) {
+		cJSON* device;
+		cJSON_ArrayForEach(device, devices) {
+			if (bt_status.device_count >= MAX_BT_DEVICES) {
+				break;
+			}
+			models_bt_device_t* bt_device =
+					&bt_status.devices[bt_status.device_count];
+			str = json_get_string(device, "mac");
+			bt_device->mac = str != NULL ? str : "";
+			str = json_get_string(device, "name");
+			bt_device->name = str != NULL ? str : "";
+			err = json_get_bool(&bt_device->paired, device, "paired");
+			if (err != 0) {
+				bt_device->paired = false;
+			}
+			err = json_get_bool(&bt_device->connected, device, "connected");
+			if (err != 0) {
+				bt_device->connected = false;
+			}
+			bt_status.device_count++;
+		}
+	}
+
+	models_set_bt_status(&bt_status);
+	cJSON_Delete(json);
+
+	return 0;
+}
+
+int json_helper_update_sensor_live(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+	cJSON_Delete(json);
+	return 0;
+}
+
+int json_helper_update_discovered(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+	cJSON_Delete(json);
 	return 0;
 }
 

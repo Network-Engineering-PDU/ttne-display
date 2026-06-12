@@ -93,6 +93,7 @@ static void save_nw_if_async(const models_nw_if_t* nw_if);
 static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if);
 static void free_nw_if(models_nw_if_t* nw_if);
 static uint16_t determine_network_mode(const models_nw_if_t* nw_if);
+static const char* stralloc_local(const char* str);
 
 /* Callbacks ******************************************************************/
 
@@ -290,14 +291,29 @@ static void loader_cb(lv_event_t* e)
 static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if)
 {
 	models_nw_if_t copy = *nw_if;
-	copy.params.ip = strdup(nw_if->params.ip);
-	copy.params.mask = strdup(nw_if->params.mask);
-	copy.params.gw = strdup(nw_if->params.gw);
-	copy.params.dns = strdup(nw_if->params.dns);
-	copy.params.ssid = strdup(nw_if->params.ssid);
-	copy.params.pass = strdup(nw_if->params.pass);
-	copy.eth_interface = strdup(nw_if->eth_interface != NULL ? nw_if->eth_interface : "");
+	copy.params.ip = stralloc_local(nw_if->params.ip);
+	copy.params.mask = stralloc_local(nw_if->params.mask);
+	copy.params.gw = stralloc_local(nw_if->params.gw);
+	copy.params.dns = stralloc_local(nw_if->params.dns);
+	copy.params.ssid = stralloc_local(nw_if->params.ssid);
+	copy.params.pass = stralloc_local(nw_if->params.pass);
+	copy.eth_interface = stralloc_local(nw_if->eth_interface);
+	copy.lan1_ip = stralloc_local(nw_if->lan1_ip);
+	copy.lan2_ip = stralloc_local(nw_if->lan2_ip);
+	copy.wifi_ip = stralloc_local(nw_if->wifi_ip);
 	return copy;
+}
+
+static const char* stralloc_local(const char* str)
+{
+	if (str == NULL) {
+		str = "";
+	}
+	char* dest = malloc(strlen(str) + 1);
+	if (dest != NULL) {
+		strcpy(dest, str);
+	}
+	return dest;
 }
 
 static void free_nw_if(models_nw_if_t* nw_if)
@@ -309,6 +325,9 @@ static void free_nw_if(models_nw_if_t* nw_if)
 	free((void*)nw_if->params.ssid);
 	free((void*)nw_if->params.pass);
 	free((void*)nw_if->eth_interface);
+	free((void*)nw_if->lan1_ip);
+	free((void*)nw_if->lan2_ip);
+	free((void*)nw_if->wifi_ip);
 }
 
 static void save_nw_if_async(const models_nw_if_t* nw_if)

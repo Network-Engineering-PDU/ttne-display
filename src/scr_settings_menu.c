@@ -1,20 +1,12 @@
 #include "lvgl/lvgl.h"
 
 #include "scr_settings_menu.h"
-#include "scr_settings_nw.h"
+#include "scr_settings_vis.h"
+#include "scr_settings_nw_menu.h"
+#include "scr_settings_sys.h"
 #include "scr_settings_upd.h"
 #include "tt_obj.h"
 #include "utils.h"
-
-static void create_placeholder_page(lv_obj_t* menu, lv_obj_t* btn,
-		char* title, char* message);
-
-static void create_placeholder_page(lv_obj_t* menu, lv_obj_t* btn,
-		char* title, char* message)
-{
-	lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, title);
-	tt_obj_label_color_create(cont, message);
-}
 
 void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 {

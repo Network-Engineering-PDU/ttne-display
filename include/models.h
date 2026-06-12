@@ -8,6 +8,7 @@ extern "C" {
 #include <stdbool.h>
 
 #define MAX_ALARMS 100
+#define MAX_BT_DEVICES 8
 
 // INFO
 
@@ -142,7 +143,12 @@ typedef struct models_nw_info_t {
 typedef struct models_nw_if_t {
 	nw_type_t type;
 	bool dhcp;
+	const char* eth_interface;
 	nw_if_params_t params;
+	const char* lan1_ip;
+	const char* lan2_ip;
+	const char* wifi_ip;
+	int nw_mode;
 } models_nw_if_t;
 
 typedef struct models_nw_services_t {
@@ -178,6 +184,28 @@ typedef struct models_update_status_t {
 	bool update_busy;
 	const char* pending_source;
 } models_update_status_t;
+
+typedef struct models_bt_device_t {
+	const char* mac;
+	const char* name;
+	bool paired;
+	bool connected;
+} models_bt_device_t;
+
+typedef struct models_bt_status_t {
+	const char* controller_mac;
+	const char* name;
+	bool powered;
+	bool pairable;
+	bool discoverable;
+	bool discovering;
+	bool pairing_request;
+	const char* pairing_mac;
+	const char* pairing_name;
+	const char* pairing_passkey;
+	int device_count;
+	models_bt_device_t devices[MAX_BT_DEVICES];
+} models_bt_status_t;
 
 const models_info_t* models_get_info();
 void models_set_info(const models_info_t* info);
@@ -220,6 +248,9 @@ void models_set_modbus(const models_modbus_t* modbus);
 
 const models_update_status_t* models_get_update_status();
 void models_set_update_status(const models_update_status_t* update_status);
+
+const models_bt_status_t* models_get_bt_status();
+void models_set_bt_status(const models_bt_status_t* bt_status);
 
 // const models_settings_t* models_get_settings();
 // void models_set_settings(models_settings_t* settings);

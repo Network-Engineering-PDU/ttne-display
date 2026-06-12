@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_snmp.h"
 #include "tt_obj.h"
