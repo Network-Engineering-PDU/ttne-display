@@ -2,6 +2,7 @@
 #include <cjson/cJSON.h>
 #include <stdio.h>
 #include <strings.h>
+#include <stdlib.h>
 
 #include "controller.h"
 #include "models.h"
@@ -49,6 +50,26 @@ void controller_init()
 	nw_if.params.ssid = "";
 	nw_if.params.pass = "";
 	models_set_nw_if(&nw_if);
+
+	models_update_status_t update_status;
+	update_status.is_pending = false;
+	update_status.auto_update = false;
+	update_status.update_server = "";
+	update_status.installed_version = "";
+	update_status.available_version = "";
+	update_status.last_check_time = "";
+	update_status.last_update_time = "";
+	update_status.ota_status = "idle";
+	update_status.last_error = "";
+	update_status.download_progress = 0;
+	update_status.check_interval_hours = 24;
+	update_status.ota_enabled = true;
+	update_status.ota_provider = "";
+	update_status.active_update_source = "";
+	update_status.update_phase = "idle";
+	update_status.update_busy = false;
+	update_status.pending_source = "";
+	models_set_update_status(&update_status);
 }
 
 bool controller_check_conn()
@@ -376,5 +397,55 @@ void controller_post_stop_modbus()
 		LV_LOG_ERROR("Modbus stop error");
 	}
 	printf("Buffer received: %s\n", req.buffer);
+	http_helper_free(&req);
+}
+
+void controller_get_update_status()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/update-status";
+	http_helper_get(&req, url);
+	int err = json_helper_update_update_status(req.buffer);
+	if (err != 0) {
+		LV_LOG_ERROR("Error updating update status");
+	}
+	http_helper_free(&req);
+}
+
+void controller_put_update_settings(bool auto_update,
+		const char* update_server)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/update-settings";
+	cJSON *json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "auto_update", auto_update);
+	cJSON_AddStringToObject(json, "update_server", update_server);
+	cJSON_AddNumberToObject(json, "check_interval_hours", 24);
+	cJSON_AddBoolToObject(json, "ota_enabled", true);
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err != 0) {
+		LV_LOG_ERROR("Update settings error");
+	}
+	printf("Buffer received: %s\n", req.buffer);
+	free(put_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+}
+
+void controller_post_update_confirm(bool confirm)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/update-confirm";
+	cJSON *json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "confirm", confirm);
+	char* post_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_post(&req, url, post_data);
+	if (err != 0) {
+		LV_LOG_ERROR("Update confirm error");
+	}
+	printf("Buffer received: %s\n", req.buffer);
+	free(post_data);
+	cJSON_Delete(json);
 	http_helper_free(&req);
 }

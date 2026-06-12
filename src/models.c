@@ -19,6 +19,7 @@ static models_nw_info_t nw_info;
 static models_nw_if_t nw_if;
 static models_license_t license;
 static models_modbus_t modbus;
+static models_update_status_t update_status;
 
 /* Function prototypes ********************************************************/
 
@@ -271,4 +272,46 @@ const models_modbus_t* models_get_modbus()
 void models_set_modbus(const models_modbus_t* l_modbus)
 {
 	modbus.addr = l_modbus->addr;
+}
+
+const models_update_status_t* models_get_update_status()
+{
+	return &update_status;
+}
+
+void models_set_update_status(const models_update_status_t* l_update_status)
+{
+	free((void*)update_status.update_server);
+	free((void*)update_status.installed_version);
+	free((void*)update_status.available_version);
+	free((void*)update_status.last_check_time);
+	free((void*)update_status.last_update_time);
+	free((void*)update_status.ota_status);
+	free((void*)update_status.last_error);
+	free((void*)update_status.ota_provider);
+	free((void*)update_status.active_update_source);
+	free((void*)update_status.update_phase);
+	free((void*)update_status.pending_source);
+
+	update_status.is_pending = l_update_status->is_pending;
+	update_status.auto_update = l_update_status->auto_update;
+	update_status.update_server = stralloc(l_update_status->update_server);
+	update_status.installed_version =
+			stralloc(l_update_status->installed_version);
+	update_status.available_version =
+			stralloc(l_update_status->available_version);
+	update_status.last_check_time = stralloc(l_update_status->last_check_time);
+	update_status.last_update_time =
+			stralloc(l_update_status->last_update_time);
+	update_status.ota_status = stralloc(l_update_status->ota_status);
+	update_status.last_error = stralloc(l_update_status->last_error);
+	update_status.download_progress = l_update_status->download_progress;
+	update_status.check_interval_hours = l_update_status->check_interval_hours;
+	update_status.ota_enabled = l_update_status->ota_enabled;
+	update_status.ota_provider = stralloc(l_update_status->ota_provider);
+	update_status.active_update_source =
+			stralloc(l_update_status->active_update_source);
+	update_status.update_phase = stralloc(l_update_status->update_phase);
+	update_status.update_busy = l_update_status->update_busy;
+	update_status.pending_source = stralloc(l_update_status->pending_source);
 }

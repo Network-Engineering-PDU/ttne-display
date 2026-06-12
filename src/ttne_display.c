@@ -17,7 +17,7 @@
 #include "scr_power.h"
 #include "scr_outlets.h"
 #include "scr_sensors.h"
-#include "scr_settings.h"
+#include "scr_settings_menu.h"
 
 #include "config.h"
 #include "controller.h"
@@ -118,7 +118,7 @@ void ttne_display(void)
 	scr_power_create(menu, btn_power);
 	scr_outlets_create(menu, btn_outlets);
 	scr_sensors_create(menu, btn_sensors);
-	scr_settings_create(menu, btn_settings);
+	scr_settings_menu_create(menu, btn_settings);
 
 	lv_menu_set_page(menu, main_page);
 	lv_obj_t* menu_scr = lv_scr_act();

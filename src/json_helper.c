@@ -555,3 +555,61 @@ int json_helper_update_modbus(const char* json_str)
 
 	return 0;
 }
+
+int json_helper_update_update_status(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_update_status_t update_status;
+	int err;
+
+	err = json_get_bool(&update_status.is_pending, json, "is_pending");
+	if (err != 0) {
+		cJSON_Delete(json);
+		return 1;
+	}
+	err = json_get_bool(&update_status.auto_update, json, "auto_update");
+	if (err != 0) {
+		cJSON_Delete(json);
+		return 1;
+	}
+	update_status.update_server = json_get_string(json, "update_server");
+	update_status.installed_version = json_get_string(json, "installed_version");
+	update_status.available_version = json_get_string(json, "available_version");
+	update_status.last_check_time = json_get_string(json, "last_check_time");
+	update_status.last_update_time = json_get_string(json, "last_update_time");
+	update_status.ota_status = json_get_string(json, "ota_status");
+	update_status.last_error = json_get_string(json, "last_error");
+	err = json_get_int(&update_status.download_progress, json,
+			"download_progress");
+	if (err != 0) {
+		update_status.download_progress = 0;
+	}
+	err = json_get_int(&update_status.check_interval_hours, json,
+			"check_interval_hours");
+	if (err != 0) {
+		update_status.check_interval_hours = 24;
+	}
+	err = json_get_bool(&update_status.ota_enabled, json, "ota_enabled");
+	if (err != 0) {
+		update_status.ota_enabled = true;
+	}
+	update_status.ota_provider = json_get_string(json, "ota_provider");
+	update_status.active_update_source =
+			json_get_string(json, "active_update_source");
+	update_status.update_phase = json_get_string(json, "update_phase");
+	err = json_get_bool(&update_status.update_busy, json, "update_busy");
+	if (err != 0) {
+		update_status.update_busy = false;
+	}
+	update_status.pending_source = json_get_string(json, "pending_source");
+
+	models_set_update_status(&update_status);
+
+	cJSON_Delete(json);
+
+	return 0;
+}
