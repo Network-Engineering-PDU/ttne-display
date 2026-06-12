@@ -39,11 +39,14 @@ static void splash_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
 
+	if (code == LV_EVENT_CLICKED) {
+		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
+	}
+
 	if (lv_scr_act() != splash_scr) {
 		return;
 	}
 	if (code == LV_EVENT_CLICKED) {
-		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_timer_pause(timer_check);
 		if (next_scr != NULL) {
 			lv_scr_load(next_scr);
@@ -69,7 +72,6 @@ static void splash_update_display(void)
 	// Check if initialization is complete
 	if (!flag_init && strcmp(info->product_name, "N/A") != 0) {
 		flag_init = true;
-		lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		if (init_spinner != NULL) {
 			lv_obj_del(init_spinner);
 			init_spinner = NULL;
@@ -130,7 +132,7 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 
 	lv_obj_t* logo = lv_img_create(splash_scr);
 	lv_img_set_src(logo, ASSET("ne_logo.png"));
-	lv_obj_add_event_cb(lv_layer_top(), splash_cb, LV_EVENT_ALL, prev_scr);
+	lv_obj_add_event_cb(splash_scr, splash_cb, LV_EVENT_CLICKED, prev_scr);
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
 			"Initializing system...");
@@ -163,9 +165,7 @@ void scr_splash_set_next_scr(lv_obj_t* l_next_scr)
 void scr_splash_show()
 {
 	if (lv_scr_act() != splash_scr) {
-		if (flag_init) {
-			lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
-		}
+		lv_obj_clear_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_timer_resume(timer_check);
 		lv_scr_load(splash_scr);
 	}
