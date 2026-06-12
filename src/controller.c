@@ -70,6 +70,13 @@ void controller_init()
 	bt_status.pairing_passkey = "";
 	bt_status.device_count = 0;
 	models_set_bt_status(&bt_status);
+
+	models_update_status_t update_status;
+	update_status.is_pending = false;
+	update_status.auto_update = false;
+	update_status.update_server = "";
+	update_status.check_interval_hours = 24;
+	models_set_update_status(&update_status);
 }
 
 bool controller_check_conn()
@@ -680,13 +687,15 @@ void controller_post_update_confirm(bool confirm)
 	http_helper_free(&req);
 }
 
-void controller_put_update_settings(bool auto_update, const char* update_server)
+void controller_put_update_settings(bool auto_update, const char* update_server,
+		int check_interval_hours)
 {
 	http_get_req_t req;
 	char* url = BASE_URL "settings/update-settings";
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddBoolToObject(json, "auto_update", auto_update);
 	cJSON_AddStringToObject(json, "update_server", update_server ? update_server : "");
+	cJSON_AddNumberToObject(json, "check_interval_hours", check_interval_hours);
 	char* put_data = cJSON_PrintUnformatted(json);
 	int err = http_helper_put(&req, url, put_data);
 	if (err != 0) {
@@ -697,18 +706,50 @@ void controller_put_update_settings(bool auto_update, const char* update_server)
 	http_helper_free(&req);
 }
 
+static void update_local_update_settings(bool auto_update,
+		const char* update_server, int check_interval_hours)
+{
+	const models_update_status_t* current = models_get_update_status();
+	char server[256];
+	snprintf(server, sizeof(server), "%s", update_server != NULL ? update_server : "");
+
+	models_update_status_t update_status = {
+		.is_pending = current->is_pending,
+		.auto_update = auto_update,
+		.update_server = server,
+		.check_interval_hours = check_interval_hours
+	};
+	models_set_update_status(&update_status);
+}
+
 void controller_set_update_server(const char* server)
 {
 	const models_update_status_t* update_status = models_get_update_status();
-	controller_put_update_settings(update_status->auto_update, server);
+	controller_put_update_settings(update_status->auto_update, server,
+			update_status->check_interval_hours);
+	update_local_update_settings(update_status->auto_update, server,
+			update_status->check_interval_hours);
 	LV_LOG_USER("Update server set to: %s", server);
 }
 
 void controller_set_auto_update(bool enabled)
 {
 	const models_update_status_t* update_status = models_get_update_status();
-	controller_put_update_settings(enabled, update_status->update_server);
+	controller_put_update_settings(enabled, update_status->update_server,
+			update_status->check_interval_hours);
+	update_local_update_settings(enabled, update_status->update_server,
+			update_status->check_interval_hours);
 	LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
+}
+
+void controller_set_update_check_interval(int check_interval_hours)
+{
+	const models_update_status_t* update_status = models_get_update_status();
+	controller_put_update_settings(update_status->auto_update,
+			update_status->update_server, check_interval_hours);
+	update_local_update_settings(update_status->auto_update,
+			update_status->update_server, check_interval_hours);
+	LV_LOG_USER("OTA check interval: %d hours", check_interval_hours);
 }
 
 /* ============================================================================

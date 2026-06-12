@@ -215,6 +215,7 @@ typedef struct models_update_status_t {
 	bool is_pending;
 	bool auto_update;
 	const char* update_server;
+	int check_interval_hours;
 } models_update_status_t;
 
 const models_info_t* models_get_info();

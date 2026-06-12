@@ -27,6 +27,7 @@
 /* Global variables ***********************************************************/
 static lv_obj_t* txt_server;
 static lv_obj_t* btn_auto; // This is now a dropdown
+static lv_obj_t* dd_period;
 static lv_timer_t* timer_check_update;
 static lv_timer_t* timer_poll_update_status;  // Timer for polling update status
 static char update_dev[20];
@@ -39,6 +40,7 @@ static void timer_poll_update_status_cb(lv_timer_t* timer);
 static void loader_cb(lv_event_t* e);
 static void txt_server_cb(lv_event_t* e);
 static void btn_auto_cb(lv_event_t* e);
+static void dd_period_cb(lv_event_t* e);
 static void btn_update_cb(lv_event_t* e);
 static void btn_reboot_cb(lv_event_t* e);
 static void btn_factory_cb(lv_event_t* e);
@@ -47,6 +49,8 @@ static void msg_box_update_confirmation_cb(lv_event_t* e);
 static void msg_box_reboot_cb(lv_event_t* e);
 static void msg_box_factory_cb(lv_event_t* e);
 static void update_controls_from_status(const models_update_status_t* update_status);
+static uint16_t period_sel_from_hours(int hours);
+static int period_hours_from_sel(uint16_t sel);
 
 static char* get_last_element(const char* str) {
     char *last_element = NULL;
@@ -106,6 +110,21 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_border_color(btn_auto, lv_color_white(), 0);
     lv_obj_set_style_border_width(btn_auto, 2, 0);
 
+    lv_obj_t* period_row = lv_obj_create(main);
+    lv_obj_set_size(period_row, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(period_row, 0, 0);
+    lv_obj_set_style_border_side(period_row, LV_BORDER_SIDE_NONE, 0);
+    lv_obj_clear_flag(period_row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_flex_flow(period_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(period_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t* lbl_period = lv_label_create(period_row);
+    lv_label_set_text(lbl_period, "OTA Periodic Checks");
+    lv_obj_set_flex_grow(lbl_period, 1);
+
+    dd_period = tt_obj_dropdown_create(period_row, "Hourly\nDaily\nWeekly\nMonthly", dd_period_cb);
+    lv_obj_set_size(dd_period, 100, 40);
+
     /* 5. Bottom buttons */
     tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb2.png"));
     tt_obj_btn_mtx_create(main, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
@@ -157,6 +176,14 @@ static void update_controls_from_status(const models_update_status_t* update_sta
         }
     }
 
+    if (dd_period != NULL) {
+        uint16_t expected_sel =
+                period_sel_from_hours(update_status->check_interval_hours);
+        if (lv_dropdown_get_selected(dd_period) != expected_sel) {
+            lv_dropdown_set_selected(dd_period, expected_sel);
+        }
+    }
+
     if (txt_server != NULL &&
         update_status->update_server != NULL &&
         strcmp(update_status->update_server, "N/A") != 0 &&
@@ -173,6 +200,43 @@ static void btn_auto_cb(lv_event_t* e) {
         bool enabled = (sel == 0); // 0 is ON, 1 is OFF
         LV_LOG_USER("Auto-update changed to: %s", enabled ? "ON" : "OFF");
         controller_set_auto_update(enabled);
+    }
+}
+
+static void dd_period_cb(lv_event_t* e) {
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_target(e);
+        int hours = period_hours_from_sel(lv_dropdown_get_selected(obj));
+        LV_LOG_USER("OTA periodic check interval changed to: %d hours", hours);
+        controller_set_update_check_interval(hours);
+    }
+}
+
+static uint16_t period_sel_from_hours(int hours) {
+    switch (hours) {
+        case 1:
+            return 0;
+        case 168:
+            return 2;
+        case 720:
+            return 3;
+        case 24:
+        default:
+            return 1;
+    }
+}
+
+static int period_hours_from_sel(uint16_t sel) {
+    switch (sel) {
+        case 0:
+            return 1;
+        case 2:
+            return 168;
+        case 3:
+            return 720;
+        case 1:
+        default:
+            return 24;
     }
 }
 

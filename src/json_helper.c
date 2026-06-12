@@ -801,7 +801,8 @@ int json_helper_update_update_status(const char* json_str)
 	models_update_status_t update_status = {
 		.is_pending = false,
 		.auto_update = false,
-		.update_server = ""
+		.update_server = "",
+		.check_interval_hours = 24
 	};
 	
 	cJSON* is_pending = cJSON_GetObjectItemCaseSensitive(json, "is_pending");
@@ -821,6 +822,12 @@ int json_helper_update_update_status(const char* json_str)
 	const char* server_str = json_get_string(json, "update_server");
 	if (server_str != NULL) {
 		update_status.update_server = server_str;
+	}
+
+	cJSON* check_interval_hours =
+			cJSON_GetObjectItemCaseSensitive(json, "check_interval_hours");
+	if (cJSON_IsNumber(check_interval_hours)) {
+		update_status.check_interval_hours = check_interval_hours->valueint;
 	}
 	
 	models_set_update_status(&update_status);
