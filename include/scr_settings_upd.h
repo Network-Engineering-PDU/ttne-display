@@ -1,12 +1,18 @@
 #ifndef SCR_SETTINGS_UPD_H
 #define SCR_SETTINGS_UPD_H
 
+#include "lvgl/lvgl.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "lvgl/lvgl.h"
-
+/**
+ * @brief Creates the update settings screen.
+ *
+ * @param[in] menu      Pointer to menu.
+ * @param[in] btn       Main menu page button.
+ */
 void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn);
 
 #ifdef __cplusplus

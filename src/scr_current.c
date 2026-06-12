@@ -46,6 +46,7 @@ static void current_btn_cb(lv_event_t* e)
         return;
     }
 
+    lv_obj_t* btn = lv_event_get_current_target(e);
     const int* current_ptr = lv_event_get_user_data(e);
     int current = current_ptr ? *current_ptr : 0;
 

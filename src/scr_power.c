@@ -52,6 +52,11 @@ static void power_timer_cb();
 static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
 		float data2, float data3);
 
+static float positive_energy(float energy)
+{
+	return energy < 0.0f ? -energy : energy;
+}
+
 static void get_in_sw();
 
 /* Callbacks ******************************************************************/
@@ -113,7 +118,7 @@ static void power_timer_cb()
 	float tot_e = 0.0;
 	for (int i = 0; i < N_INPUTS; i++) {
 		tot_p += in_data[i].active_power;
-		tot_e += in_data[i].energy;
+		tot_e += (in_data[i].energy < 0.0f) ? -in_data[i].energy : in_data[i].energy;
 	}
 
 	char label[100];
@@ -139,8 +144,8 @@ static void power_timer_cb()
 			in_data[1+(n_phases*i)].phase, in_data[2+(n_phases*i)].phase);
 		set_line_label(lbl_line_f[i], "f (Hz)", in_data[0+(n_phases*i)].frequency,
 			in_data[1+(n_phases*i)].frequency, in_data[2+(n_phases*i)].frequency);
-		set_line_label(lbl_line_e[i], "E (Wh)", in_data[0+(n_phases*i)].energy,
-			in_data[1+(n_phases*i)].energy, in_data[2+(n_phases*i)].energy);
+		set_line_label(lbl_line_e[i], "E (Wh)", positive_energy(in_data[0+(n_phases*i)].energy),
+			positive_energy(in_data[1+(n_phases*i)].energy), positive_energy(in_data[2+(n_phases*i)].energy));
 	}
 }
 

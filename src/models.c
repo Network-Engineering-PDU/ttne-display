@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <lvgl/lvgl.h>
 #include <string.h>
 #include "models.h"
@@ -14,13 +15,16 @@ static models_in_data_t in_data;
 static models_out_data_t out_data;
 static models_sensor_t* sensor_list;
 static int sensor_list_len;
+static models_discovered_sensor_t* discovered_list;
+static int discovered_list_len;
+static models_sensor_live_t sensor_live;
 static models_nw_services_t nw_services;
+static models_bt_status_t bt_status;
 static models_nw_info_t nw_info;
 static models_nw_if_t nw_if;
 static models_license_t license;
 static models_modbus_t modbus;
 static models_update_status_t update_status;
-static models_bt_status_t bt_status;
 
 /* Function prototypes ********************************************************/
 
@@ -208,6 +212,52 @@ void models_set_sensor(const models_sensor_t* l_sensor, int len)
 	sensor_list_len = len;
 }
 
+const models_discovered_sensor_t* models_get_discovered(int* len)
+{
+	*len = discovered_list_len;
+	return discovered_list;
+}
+
+void models_set_discovered(const models_discovered_sensor_t* list, int len)
+{
+	for (int i = 0; i < discovered_list_len; i++) {
+		free((void*)discovered_list[i].mac);
+		free((void*)discovered_list[i].kind);
+		free((void*)discovered_list[i].name);
+	}
+	free(discovered_list);
+	discovered_list = malloc(len * sizeof(models_discovered_sensor_t));
+	for (int i = 0; i < len; i++) {
+		discovered_list[i].mac = stralloc(list[i].mac);
+		discovered_list[i].kind = stralloc(list[i].kind);
+		discovered_list[i].name = stralloc(list[i].name);
+		discovered_list[i].rssi = list[i].rssi;
+	}
+	discovered_list_len = len;
+}
+
+const models_sensor_live_t* models_get_sensor_live(void)
+{
+	return &sensor_live;
+}
+
+void models_set_sensor_live(const models_sensor_live_t* live)
+{
+	free((void*)sensor_live.mac);
+	free((void*)sensor_live.kind);
+	free((void*)sensor_live.name);
+
+	sensor_live.mac = stralloc(live->mac);
+	sensor_live.kind = stralloc(live->kind);
+	sensor_live.name = stralloc(live->name);
+	sensor_live.temp = live->temp;
+	sensor_live.humd = live->humd;
+	sensor_live.pres = live->pres;
+	sensor_live.rssi = live->rssi;
+	sensor_live.bat_mv = live->bat_mv;
+	sensor_live.bat_pct = live->bat_pct;
+}
+
 const models_nw_services_t* models_get_nw_services()
 {
 	return &nw_services;
@@ -218,6 +268,49 @@ void models_set_nw_services(const models_nw_services_t* l_nw_services)
 	nw_services.ssh = l_nw_services->ssh;
 	nw_services.snmp = l_nw_services->snmp;
 	nw_services.modbus = l_nw_services->modbus;
+	nw_services.bluetooth = l_nw_services->bluetooth;
+}
+
+const models_bt_status_t* models_get_bt_status()
+{
+	return &bt_status;
+}
+
+void models_set_bt_status(const models_bt_status_t* l_bt_status)
+{
+	free((void*)bt_status.controller_mac);
+	free((void*)bt_status.name);
+	free((void*)bt_status.pairing_mac);
+	free((void*)bt_status.pairing_name);
+	free((void*)bt_status.pairing_passkey);
+	for (int i = 0; i < bt_status.device_count; i++) {
+		free((void*)bt_status.devices[i].mac);
+		free((void*)bt_status.devices[i].name);
+	}
+
+	bt_status.controller_mac = stralloc(l_bt_status->controller_mac);
+	bt_status.name = stralloc(l_bt_status->name);
+	bt_status.powered = l_bt_status->powered;
+	bt_status.pairable = l_bt_status->pairable;
+	bt_status.discoverable = l_bt_status->discoverable;
+	bt_status.discovering = l_bt_status->discovering;
+	bt_status.pairing_request = l_bt_status->pairing_request;
+	bt_status.pairing_mac = stralloc(l_bt_status->pairing_mac);
+	bt_status.pairing_name = stralloc(l_bt_status->pairing_name);
+	bt_status.pairing_passkey = stralloc(l_bt_status->pairing_passkey);
+	bt_status.device_count = l_bt_status->device_count;
+
+	if (bt_status.device_count > MAX_BT_DEVICES) {
+		bt_status.device_count = MAX_BT_DEVICES;
+	}
+	for (int i = 0; i < bt_status.device_count; i++) {
+		bt_status.devices[i].mac = stralloc(l_bt_status->devices[i].mac);
+		bt_status.devices[i].name = stralloc(l_bt_status->devices[i].name);
+		bt_status.devices[i].paired = l_bt_status->devices[i].paired;
+		bt_status.devices[i].trusted = l_bt_status->devices[i].trusted;
+		bt_status.devices[i].connected = l_bt_status->devices[i].connected;
+		bt_status.devices[i].rssi = l_bt_status->devices[i].rssi;
+	}
 }
 
 const models_nw_info_t* models_get_nw_info()
@@ -237,19 +330,20 @@ void models_set_nw_info(const models_nw_info_t* l_nw_info)
 
 void models_set_nw_if(const models_nw_if_t* l_nw_if)
 {
-	free((void*)nw_if.eth_interface);
 	free((void*)nw_if.params.ip);
 	free((void*)nw_if.params.mask);
 	free((void*)nw_if.params.gw);
 	free((void*)nw_if.params.dns);
 	free((void*)nw_if.params.ssid);
 	free((void*)nw_if.params.pass);
+	free((void*)nw_if.eth_interface);
 	free((void*)nw_if.lan1_ip);
 	free((void*)nw_if.lan2_ip);
 	free((void*)nw_if.wifi_ip);
 
 	nw_if.type = l_nw_if->type;
 	nw_if.dhcp = l_nw_if->dhcp;
+	nw_if.nw_mode = l_nw_if->nw_mode;
 	nw_if.eth_interface = stralloc(l_nw_if->eth_interface);
 	nw_if.params.ip = stralloc(l_nw_if->params.ip);
 	nw_if.params.mask = stralloc(l_nw_if->params.mask);
@@ -260,7 +354,6 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	nw_if.lan1_ip = stralloc(l_nw_if->lan1_ip);
 	nw_if.lan2_ip = stralloc(l_nw_if->lan2_ip);
 	nw_if.wifi_ip = stralloc(l_nw_if->wifi_ip);
-	nw_if.nw_mode = l_nw_if->nw_mode;
 }
 
 const models_license_t* models_get_license()
@@ -292,75 +385,7 @@ const models_update_status_t* models_get_update_status()
 void models_set_update_status(const models_update_status_t* l_update_status)
 {
 	free((void*)update_status.update_server);
-	free((void*)update_status.installed_version);
-	free((void*)update_status.available_version);
-	free((void*)update_status.last_check_time);
-	free((void*)update_status.last_update_time);
-	free((void*)update_status.ota_status);
-	free((void*)update_status.last_error);
-	free((void*)update_status.ota_provider);
-	free((void*)update_status.active_update_source);
-	free((void*)update_status.update_phase);
-	free((void*)update_status.pending_source);
-
 	update_status.is_pending = l_update_status->is_pending;
 	update_status.auto_update = l_update_status->auto_update;
 	update_status.update_server = stralloc(l_update_status->update_server);
-	update_status.installed_version =
-			stralloc(l_update_status->installed_version);
-	update_status.available_version =
-			stralloc(l_update_status->available_version);
-	update_status.last_check_time = stralloc(l_update_status->last_check_time);
-	update_status.last_update_time =
-			stralloc(l_update_status->last_update_time);
-	update_status.ota_status = stralloc(l_update_status->ota_status);
-	update_status.last_error = stralloc(l_update_status->last_error);
-	update_status.download_progress = l_update_status->download_progress;
-	update_status.check_interval_hours = l_update_status->check_interval_hours;
-	update_status.ota_enabled = l_update_status->ota_enabled;
-	update_status.ota_provider = stralloc(l_update_status->ota_provider);
-	update_status.active_update_source =
-			stralloc(l_update_status->active_update_source);
-	update_status.update_phase = stralloc(l_update_status->update_phase);
-	update_status.update_busy = l_update_status->update_busy;
-	update_status.pending_source = stralloc(l_update_status->pending_source);
-}
-
-const models_bt_status_t* models_get_bt_status()
-{
-	return &bt_status;
-}
-
-void models_set_bt_status(const models_bt_status_t* l_bt_status)
-{
-	free((void*)bt_status.controller_mac);
-	free((void*)bt_status.name);
-	free((void*)bt_status.pairing_mac);
-	free((void*)bt_status.pairing_name);
-	free((void*)bt_status.pairing_passkey);
-	for (int i = 0; i < bt_status.device_count; i++) {
-		free((void*)bt_status.devices[i].mac);
-		free((void*)bt_status.devices[i].name);
-	}
-
-	bt_status.controller_mac = stralloc(l_bt_status->controller_mac);
-	bt_status.name = stralloc(l_bt_status->name);
-	bt_status.powered = l_bt_status->powered;
-	bt_status.pairable = l_bt_status->pairable;
-	bt_status.discoverable = l_bt_status->discoverable;
-	bt_status.discovering = l_bt_status->discovering;
-	bt_status.pairing_request = l_bt_status->pairing_request;
-	bt_status.pairing_mac = stralloc(l_bt_status->pairing_mac);
-	bt_status.pairing_name = stralloc(l_bt_status->pairing_name);
-	bt_status.pairing_passkey = stralloc(l_bt_status->pairing_passkey);
-	bt_status.device_count = l_bt_status->device_count;
-	if (bt_status.device_count > MAX_BT_DEVICES) {
-		bt_status.device_count = MAX_BT_DEVICES;
-	}
-	for (int i = 0; i < bt_status.device_count; i++) {
-		bt_status.devices[i].mac = stralloc(l_bt_status->devices[i].mac);
-		bt_status.devices[i].name = stralloc(l_bt_status->devices[i].name);
-		bt_status.devices[i].paired = l_bt_status->devices[i].paired;
-		bt_status.devices[i].connected = l_bt_status->devices[i].connected;
-	}
 }

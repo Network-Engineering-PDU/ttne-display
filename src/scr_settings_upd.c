@@ -9,7 +9,6 @@
 #include "utils.h"
 #include "models.h"
 #include "controller.h"
-#include "config.h"
 #include "runbg.h"
 
 #define TIMER_MSG_BOX_PERIOD 10000 
@@ -105,10 +104,15 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_border_color(btn_auto, lv_color_white(), 0);
     lv_obj_set_style_border_width(btn_auto, 2, 0);
 
-    /* 5. Action Buttons */
-    tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb.png"));
-    tt_obj_btn_mtx_create(main, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
-    tt_obj_btn_mtx_create(main, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
+    /* 5. Bottom Buttons row (Three Action Buttons) */
+    lv_obj_t* row = tt_obj_cont_create(main);
+    lv_obj_set_width(row, LV_PCT(100));
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "  Update\nFrom USB", ASSET("usb.png"));
+    lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
+    lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
     
     /* Start polling for pending updates from remote server */
     // Delete any existing timer to prevent duplicates
@@ -269,15 +273,10 @@ static void timer_check_update_cb(lv_timer_t* timer) {
 }
 
 static void msg_box_reboot_cb(lv_event_t* e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t* obj = lv_event_get_current_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-            char* txt = lv_event_get_user_data(e);
-            lv_obj_t* loader_scr = tt_obj_loader_create(txt, NULL);
-            lv_obj_add_event_cb(loader_scr, loader_cb,
-                    LV_EVENT_ALL, lv_scr_act());
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        if (lv_msgbox_get_active_btn(obj) == 0) {
+            lv_obj_t* loader_scr = tt_obj_loader_create("Rebooting Device...", NULL);
             lv_scr_load(loader_scr);
             controller_post_reboot();
         }
@@ -286,17 +285,14 @@ static void msg_box_reboot_cb(lv_event_t* e) {
 }
 
 static void msg_box_factory_cb(lv_event_t* e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t* obj = lv_event_get_current_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-            char* txt = lv_event_get_user_data(e);
-            lv_obj_t* loader_scr = tt_obj_loader_create(txt, NULL);
-            lv_obj_add_event_cb(loader_scr, loader_cb,
-                    LV_EVENT_ALL, lv_scr_act());
+    if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* obj = lv_event_get_current_target(e);
+        if (lv_msgbox_get_active_btn(obj) == 0) {
+            if (txt_server != NULL) {
+                lv_textarea_set_text(txt_server, DEFAULT_UPDATE_SERVER);
+            }
+            lv_obj_t* loader_scr = tt_obj_loader_create("Resetting to factory defaults...", NULL);
             lv_scr_load(loader_scr);
-            config_set_skip_login(0);
             controller_post_fact_reset();
         }
         lv_msgbox_close(obj);
@@ -305,16 +301,16 @@ static void msg_box_factory_cb(lv_event_t* e) {
 
 static void btn_reboot_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        tt_obj_msg_box_create("Reboot system",
-                "Are you sure you want to reboot the system?",
-                "Rebooting system...", msg_box_reboot_cb);
+        char msg[200];
+        sprintf(msg, "Are you sure you want to reboot the system?");
+        tt_obj_msg_box_create("System reboot", msg, "Rebooting Device...", msg_box_reboot_cb);
     }
 }
 
 static void btn_factory_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        tt_obj_msg_box_create("Factory reset",
-                "Are you sure you want to factory reset the system?",
-                "Performing factory reset...", msg_box_factory_cb);
+        char msg[200];
+        sprintf(msg, "Are you sure you want to perform a factory reset?\nAll settings will be lost!");
+        tt_obj_msg_box_create("Factory reset", msg, "Resetting Device...", msg_box_factory_cb);
     }
 }
