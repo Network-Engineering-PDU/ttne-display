@@ -36,10 +36,10 @@ static void menu_cb(lv_event_t* e)
 /* Function definitions *******************************************************/
 /* Public functions ***********************************************************/
 
-lv_obj_t* scr_support_create(lv_obj_t* menu)
+lv_obj_t* scr_support_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	lv_obj_t* support_cont = tt_obj_menu_page_create(menu, NULL,
-			menu_cb, "Settings / Support");
+	lv_obj_t* support_cont = tt_obj_menu_page_create(menu, btn,
+			menu_cb, "Support");
 
 	tt_obj_label_create(support_cont, "Contact with us:");
 	tt_obj_label_create(support_cont, "jl.talavera@net-eng.com");

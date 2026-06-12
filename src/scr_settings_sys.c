@@ -21,6 +21,7 @@
 #include "screen.h"
 #include "ttne_display.h"
 #include "runbg.h"
+#include "scr_support.h"
 
 static lv_obj_t* l_menu;
 

@@ -13,7 +13,7 @@ extern "C" {
  * @param[in] menu      Pointer to menu.
  */
 // TODO: return support page
-lv_obj_t* scr_support_create(lv_obj_t* menu);
+lv_obj_t* scr_support_create(lv_obj_t* menu, lv_obj_t* btn);
 
 #ifdef __cplusplus
 } /* extern "C" */
