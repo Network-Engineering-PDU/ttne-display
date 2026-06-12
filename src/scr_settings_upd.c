@@ -105,15 +105,10 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_border_color(btn_auto, lv_color_white(), 0);
     lv_obj_set_style_border_width(btn_auto, 2, 0);
 
-    /* 5. Bottom Buttons row (Three Action Buttons) */
-    lv_obj_t* row = tt_obj_cont_create(main);
-    lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    tt_obj_btn_mtx_create(row, btn_update_cb, "  Update\nFrom USB", ASSET("usb.png"));
-    tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
-    tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
+    /* 5. Action Buttons */
+    tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb.png"));
+    tt_obj_btn_mtx_create(main, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
+    tt_obj_btn_mtx_create(main, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
     
     /* Start polling for pending updates from remote server */
     // Delete any existing timer to prevent duplicates
