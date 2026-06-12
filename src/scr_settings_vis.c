@@ -229,6 +229,8 @@ static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text)
     lv_obj_set_style_border_opa(row, 0, 0);
     lv_obj_set_style_pad_all(row, 5, 0);
     lv_obj_set_style_pad_column(row, 4, 0);
+    lv_obj_set_scrollbar_mode(row, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -236,6 +238,7 @@ static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text)
     lv_obj_t* lbl = tt_obj_label_create(row, label_text);
     lv_obj_set_width(lbl, LV_PCT(50));
     lv_label_set_long_mode(lbl, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_scrollbar_mode(lbl, LV_SCROLLBAR_MODE_OFF);
 
     return row;
 }

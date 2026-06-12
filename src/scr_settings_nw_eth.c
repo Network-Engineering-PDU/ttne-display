@@ -94,6 +94,7 @@ static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if);
 static void free_nw_if(models_nw_if_t* nw_if);
 static uint16_t determine_network_mode(const models_nw_if_t* nw_if);
 static const char* stralloc_local(const char* str);
+static const char* sanitize_dns(const char* dns);
 
 /* Callbacks ******************************************************************/
 
@@ -122,6 +123,25 @@ static uint16_t determine_network_mode(const models_nw_if_t* nw_if)
 	} else {
 		return NW_SINGLE_LAN; /* Default to Single LAN */
 	}
+}
+
+static const char* sanitize_dns(const char* dns)
+{
+	static char sanitized[256];
+	size_t j = 0;
+
+	if (dns == NULL) {
+		dns = "";
+	}
+
+	for (size_t i = 0; dns[i] != '\0' && j < sizeof(sanitized) - 1; i++) {
+		if (dns[i] != ',') {
+			sanitized[j++] = dns[i];
+		}
+	}
+	sanitized[j] = '\0';
+
+	return sanitized;
 }
 
 static void menu_cb(lv_event_t* e)
@@ -197,7 +217,7 @@ static void menu_cb(lv_event_t* e)
 			/* Always load common fields */
 			lv_textarea_set_text(txt_mask, nw_if->params.mask);
 			lv_textarea_set_text(txt_gw, nw_if->params.gw);
-			lv_textarea_set_text(txt_dns, nw_if->params.dns);
+			lv_textarea_set_text(txt_dns, sanitize_dns(nw_if->params.dns));
 			lv_textarea_set_text(txt_wifi_ssid, nw_if->params.ssid);
 			lv_textarea_set_text(txt_wifi_pass, nw_if->params.pass);
 			
@@ -434,7 +454,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 		nw_ifaces.params.ip = lv_textarea_get_text(txt_ip);
 		nw_ifaces.params.mask = lv_textarea_get_text(txt_mask);
 		nw_ifaces.params.gw = lv_textarea_get_text(txt_gw);
-		nw_ifaces.params.dns = lv_textarea_get_text(txt_dns);
+		nw_ifaces.params.dns = sanitize_dns(lv_textarea_get_text(txt_dns));
 		nw_ifaces.params.ssid = lv_textarea_get_text(txt_wifi_ssid);
 		nw_ifaces.params.pass = lv_textarea_get_text(txt_wifi_pass);
 		if (nw_ifaces.params.pass == NULL) {
@@ -538,7 +558,10 @@ static void txt_num_cb(lv_event_t* e)
 		lv_scr_load(kb_scr);
 	}
 	if (code == LV_EVENT_READY) {
-		// Ready event from keyboard
+		if (obj == txt_dns) {
+			lv_textarea_set_text(txt_dns,
+					sanitize_dns(lv_textarea_get_text(txt_dns)));
+		}
 	}
 }
 
@@ -646,23 +669,44 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network Setup");
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
-	tt_obj_label_create(nw_cont2, "Connection type");
-	
-	/* Create horizontal container for dropdown and DHCP button */
-	lv_obj_t* dd_dhcp_cont = lv_obj_create(nw_cont2);
-	lv_obj_set_size(dd_dhcp_cont, LV_PCT(100), 40);
-	lv_obj_set_flex_flow(dd_dhcp_cont, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(dd_dhcp_cont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_t* conn_row = lv_obj_create(nw_cont2);
+	lv_obj_set_size(conn_row, LV_PCT(100), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(conn_row, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(conn_row, LV_FLEX_ALIGN_START,
+			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_scrollbar_mode(conn_row, LV_SCROLLBAR_MODE_OFF);
+	lv_obj_clear_flag(conn_row, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_bg_opa(conn_row, LV_OPA_0, 0);
+	lv_obj_set_style_border_width(conn_row, 0, 0);
+	lv_obj_set_style_pad_all(conn_row, 0, 0);
+	lv_obj_set_style_pad_column(conn_row, 4, 0);
+
+	lv_obj_t* lbl_conn = tt_obj_label_create(conn_row, "Connection type");
+	lv_obj_set_width(lbl_conn, LV_PCT(50));
+	lv_label_set_long_mode(lbl_conn, LV_LABEL_LONG_SCROLL_CIRCULAR);
+	lv_obj_set_scrollbar_mode(lbl_conn, LV_SCROLLBAR_MODE_OFF);
+
+	lv_obj_t* controls_cont = lv_obj_create(conn_row);
+	lv_obj_set_size(controls_cont, LV_PCT(50), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(controls_cont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(controls_cont, LV_FLEX_ALIGN_START,
+			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_scrollbar_mode(controls_cont, LV_SCROLLBAR_MODE_OFF);
+	lv_obj_clear_flag(controls_cont, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_bg_opa(controls_cont, LV_OPA_0, 0);
+	lv_obj_set_style_border_width(controls_cont, 0, 0);
+	lv_obj_set_style_pad_all(controls_cont, 0, 0);
+	lv_obj_set_style_pad_column(controls_cont, 4, 0);
 	
 	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
-	dd = tt_obj_dropdown_create(dd_dhcp_cont, options, update_cb);
-	lv_obj_set_flex_grow(dd, 1);  /* Dropdown takes half space */
+	dd = tt_obj_dropdown_create(controls_cont, options, update_cb);
+	lv_obj_set_width(dd, LV_PCT(50));
 	lv_obj_set_height(dd, 36);
 	
-	btn_dhcp = tt_obj_btn_toggle_create(dd_dhcp_cont, update_cb, "DHCP");
+	btn_dhcp = tt_obj_btn_toggle_create(controls_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
 	lv_obj_set_height(btn_dhcp, 36);
-	lv_obj_set_flex_grow(btn_dhcp, 1);  /* Button takes half space */
+	lv_obj_set_width(btn_dhcp, LV_PCT(50));
 
 	/* Single LAN mode container */
 	cont_single_lan = tt_obj_cont_create(nw_cont2);
@@ -682,7 +726,8 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	lbl_dns = tt_obj_label_create(cont_single_lan, "DNS");
 	txt_dns = tt_obj_txt_create(cont_single_lan, "DNS", txt_num_cb);
-	lv_textarea_set_text(txt_dns, nw_if->params.dns);
+	lv_textarea_set_accepted_chars(txt_dns, "0123456789.");
+	lv_textarea_set_text(txt_dns, sanitize_dns(nw_if->params.dns));
 
 	/* WiFi only mode container */
 	cont_wifi_only = tt_obj_cont_create(nw_cont2);
