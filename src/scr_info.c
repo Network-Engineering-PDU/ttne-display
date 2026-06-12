@@ -18,7 +18,6 @@ static lv_obj_t* lbl_ip;
 static lv_obj_t* lbl_outlets;
 static lv_obj_t* lbl_rated_curr;
 static lv_obj_t* lbl_controller;
-static lv_obj_t* lbl_type;
 static lv_obj_t* lbl_version;
 static lv_obj_t* lbl_om_version;
 static lv_obj_t* lbl_pmb_version;
@@ -40,7 +39,7 @@ static void refresh_info_display(void)
 
 	printf("[scr_info] Refreshing display with rated_current=%d\n", pdu_info->rated_current);
 
-	sprintf(str, "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, info->product_name);
+	sprintf(str, "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, "PowerIT Easy");
 	lv_label_set_text(lbl_name, str);
 	sprintf(str, "  %s: #%06X %s", "PN", TT_COLOR_GREEN_NE, info->product_pn);
 	lv_label_set_text(lbl_pn, str);
@@ -57,8 +56,6 @@ static void refresh_info_display(void)
 	lv_label_set_text(lbl_rated_curr, str);
 	sprintf(str, "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
 	lv_label_set_text(lbl_controller, str);
-	sprintf(str, "  %s: #%06X %s", "Type", TT_COLOR_GREEN_NE, pdu_info->type);
-	lv_label_set_text(lbl_type, str);
 
 	sprintf(str, "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
 	lv_label_set_text(lbl_version, str);
@@ -107,7 +104,6 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_outlets = tt_obj_label_color_create(info_product_cont, "");
 	lbl_rated_curr = tt_obj_label_color_create(info_product_cont, "");
 	lbl_controller = tt_obj_label_color_create(info_product_cont, "");
-	lbl_type = tt_obj_label_color_create(info_product_cont, "");
 	lbl_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_om_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pmb_version = tt_obj_label_color_create(info_product_cont, "");

@@ -48,6 +48,7 @@ static uint8_t n_phases = 0;
 /* Function prototypes ********************************************************/
 
 static void menu_cb(lv_event_t* e);
+static lv_obj_t* power_branch_column_create(lv_obj_t* parent);
 static void power_timer_cb();
 static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
 		float data2, float data3);
@@ -83,6 +84,20 @@ static void menu_cb(lv_event_t* e)
 			lv_timer_del(timer);
 		}
 	}
+}
+
+static lv_obj_t* power_branch_column_create(lv_obj_t* parent)
+{
+	lv_obj_t* col = lv_obj_create(parent);
+	lv_obj_set_size(col, LV_PCT(50), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_scrollbar_mode(col, LV_SCROLLBAR_MODE_OFF);
+	lv_obj_set_style_bg_opa(col, LV_OPA_0, 0);
+	lv_obj_set_style_border_width(col, 0, 0);
+	lv_obj_set_style_pad_all(col, 0, 0);
+	lv_obj_set_style_pad_row(col, 2, 0);
+
+	return col;
 }
 
 static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
@@ -140,7 +155,7 @@ static void power_timer_cb()
 			in_data[1+(n_phases*i)].apparent_power, in_data[2+(n_phases*i)].apparent_power);
 		set_line_label(lbl_line_pf[i], "PF", in_data[0+(n_phases*i)].power_factor,
 			in_data[1+(n_phases*i)].power_factor, in_data[2+(n_phases*i)].power_factor);
-		set_line_label(lbl_line_ph[i], "Ph (deg)", in_data[0+(n_phases*i)].phase,
+		set_line_label(lbl_line_ph[i], "PH (deg)", in_data[0+(n_phases*i)].phase,
 			in_data[1+(n_phases*i)].phase, in_data[2+(n_phases*i)].phase);
 		set_line_label(lbl_line_f[i], "f (Hz)", in_data[0+(n_phases*i)].frequency,
 			in_data[1+(n_phases*i)].frequency, in_data[2+(n_phases*i)].frequency);
@@ -238,14 +253,27 @@ void scr_power_create(lv_obj_t* menu, lv_obj_t* btn)
 	get_in_sw();
 
 	for (int i = 0; i < MAX_BRANCHES; i++) {
-		lbl_line_v[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_c[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_p[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_q[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_s[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_pf[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_ph[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_f[i] = tt_obj_label_color_create(power_line_cont[i], "");
-		lbl_line_e[i] = tt_obj_label_color_create(power_line_cont[i], "");
+		lv_obj_t* branch_cols = lv_obj_create(power_line_cont[i]);
+		lv_obj_set_size(branch_cols, LV_PCT(100), LV_SIZE_CONTENT);
+		lv_obj_set_flex_flow(branch_cols, LV_FLEX_FLOW_ROW);
+		lv_obj_set_scrollbar_mode(branch_cols, LV_SCROLLBAR_MODE_OFF);
+		lv_obj_set_style_bg_opa(branch_cols, LV_OPA_0, 0);
+		lv_obj_set_style_border_width(branch_cols, 0, 0);
+		lv_obj_set_style_pad_all(branch_cols, 0, 0);
+		lv_obj_set_style_pad_column(branch_cols, 4, 0);
+
+		lv_obj_t* left_col = power_branch_column_create(branch_cols);
+		lv_obj_t* right_col = power_branch_column_create(branch_cols);
+
+		lbl_line_v[i] = tt_obj_label_color_create(left_col, "");
+		lbl_line_c[i] = tt_obj_label_color_create(left_col, "");
+		lbl_line_s[i] = tt_obj_label_color_create(left_col, "");
+		lbl_line_ph[i] = tt_obj_label_color_create(left_col, "");
+		lbl_line_e[i] = tt_obj_label_color_create(left_col, "");
+
+		lbl_line_p[i] = tt_obj_label_color_create(right_col, "");
+		lbl_line_q[i] = tt_obj_label_color_create(right_col, "");
+		lbl_line_pf[i] = tt_obj_label_color_create(right_col, "");
+		lbl_line_f[i] = tt_obj_label_color_create(right_col, "");
 	}
 }
