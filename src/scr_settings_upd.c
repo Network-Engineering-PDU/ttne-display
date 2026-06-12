@@ -76,10 +76,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_pad_column(main, 6, 0);
 
     /* 2. Remote update server Label */
-    lv_obj_t* lbl_server = tt_obj_label_create(main, "Remote server update file location I.P / DNS");
-    lv_label_set_long_mode(lbl_server, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_width(lbl_server, LV_PCT(100));
-    lv_obj_set_scrollbar_mode(lbl_server, LV_SCROLLBAR_MODE_OFF);
+    tt_obj_label_create(main, "Remote server update file location I.P / DNS");
 
     /* 3. Large Text Area (Text VRB) */
     txt_server = tt_obj_txt_create(main, "IP / DNS", txt_server_cb);
@@ -99,9 +96,6 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* lbl_auto = lv_label_create(auto_row);
     lv_label_set_text(lbl_auto, "Automatic updates");
-    lv_label_set_long_mode(lbl_auto, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_width(lbl_auto, LV_PCT(55));
-    lv_obj_set_scrollbar_mode(lbl_auto, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_flex_grow(lbl_auto, 1);
 
     // Create Dropdown for ON/OFF
@@ -126,13 +120,10 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* lbl_period = lv_label_create(period_row);
     lv_label_set_text(lbl_period, "OTA Periodic Checks");
-    lv_label_set_long_mode(lbl_period, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_width(lbl_period, LV_PCT(45));
-    lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_flex_grow(lbl_period, 1);
 
     dd_period = tt_obj_dropdown_create(period_row, "Hourly\nDaily\nWeekly\nMonthly", dd_period_cb);
-    lv_obj_set_size(dd_period, 100, 47);
+    lv_obj_set_size(dd_period, 80, 40);
 
     /* 5. Bottom buttons */
     tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb2.png"));
