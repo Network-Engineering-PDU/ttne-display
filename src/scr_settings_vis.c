@@ -228,12 +228,14 @@ static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text)
     lv_obj_set_style_bg_opa(row, 0, 0);
     lv_obj_set_style_border_opa(row, 0, 0);
     lv_obj_set_style_pad_all(row, 5, 0);
+    lv_obj_set_style_pad_column(row, 4, 0);
 
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t* lbl = tt_obj_label_create(row, label_text);
-    lv_obj_set_flex_grow(lbl, 1); // Push the input to the right
+    lv_obj_set_width(lbl, LV_PCT(50));
+    lv_label_set_long_mode(lbl, LV_LABEL_LONG_SCROLL_CIRCULAR);
 
     return row;
 }
@@ -254,13 +256,13 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     // 1. Screen Rotation Row
     lv_obj_t* row_rot = create_setting_row(cont, "Screen rotation");
     dd_rotation = tt_obj_dropdown_create(row_rot, "Vertical\nHorizontal", rotate_cb);
-    lv_obj_set_width(dd_rotation, 120); //180
+    lv_obj_set_width(dd_rotation, LV_PCT(50));
     lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(config_get_rotation()));
 
     // 2. Screen Saver Row
     lv_obj_t* row_saver = create_setting_row(cont, "Screen saver (min)");
     txt_screen_saver = tt_obj_txt_create(row_saver, "0", txt_inactivity_cb);
-    lv_obj_set_width(txt_screen_saver, 100); //180
+    lv_obj_set_width(txt_screen_saver, LV_PCT(50));
 
     // 3. Section Header
     lv_obj_t* pdu_header = tt_obj_label_create(cont, "PDU location information");
@@ -277,7 +279,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     for (int i = 0; i < 7; i++) {
         lv_obj_t* row = create_setting_row(cont, pdu_labels[i]);
         txt_fields[i] = tt_obj_txt_create(row, "Text", NULL);
-        lv_obj_set_width(txt_fields[i], 150); //180
+        lv_obj_set_width(txt_fields[i], LV_PCT(50));
         
         // Attach field ID to the event
         lv_obj_add_event_cb(txt_fields[i], txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)i);
