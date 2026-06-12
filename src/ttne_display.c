@@ -100,7 +100,7 @@ void ttne_display(void)
 	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, "OUTLETS",
 			ASSET("outlets.png"));
 	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, "SENSORS",
-			ASSET("sensors.png"));
+			ASSET("sensors1.png"));
 	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS",
 			ASSET("settings.png"));
 

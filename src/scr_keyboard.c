@@ -85,8 +85,8 @@ lv_obj_t* scr_keyboard_create(lv_obj_t* prev_scr, lv_obj_t* prev_txt,
 		lv_textarea_set_max_length(txt_kb, 6);
 	}
 	if (screen_is_landscape()) {
-		lv_obj_set_style_height(kb, type == KB_PASS ? 220 : 180, 0);
-		lv_obj_set_size(txt_kb, lv_pct(95), 40);
+		lv_obj_set_style_height(kb, type == KB_PASS ? 170 : 180, 0);
+		lv_obj_set_size(txt_kb, lv_pct(95), type == KB_PASS ? 58 : 40);
 	} else {
 		lv_obj_set_size(txt_kb, lv_pct(95), 100);
 		lv_obj_set_style_height(kb, type == KB_PASS ? 240 : 200, 0);
