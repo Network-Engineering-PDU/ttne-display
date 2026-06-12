@@ -826,7 +826,7 @@ void controller_get_nw_if_async(controller_callback_t callback, void* userdata)
 	ctx->userdata = userdata;
 	ctx->buffer = NULL;
 
-	char* url = BASE_URL "settings/network-info/";
+	char* url = BASE_URL "network/interfaces/";
 	if (http_async_get(url, async_nw_if_cb, ctx) < 0) {
 		if (callback) callback(1, userdata);
 		free(ctx);

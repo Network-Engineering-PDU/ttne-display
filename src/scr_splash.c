@@ -64,6 +64,7 @@ static void splash_update_display(void)
 	char str[100];
 	const models_info_t* info = models_get_info();
 	const models_nw_if_t* nw_if = models_get_nw_if();
+	const char* ip = nw_if->params.ip;
 	
 	// Check if initialization is complete
 	if (!flag_init && strcmp(info->product_name, "N/A") != 0) {
@@ -81,10 +82,24 @@ static void splash_update_display(void)
 	} else if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
 		iface = "(WIFI)";
 	}
+
+	if (ip == NULL || ip[0] == '\0') {
+		if (nw_if->lan1_ip != NULL && nw_if->lan1_ip[0] != '\0') {
+			ip = nw_if->lan1_ip;
+			iface = "(LAN1)";
+		} else if (nw_if->wifi_ip != NULL && nw_if->wifi_ip[0] != '\0') {
+			ip = nw_if->wifi_ip;
+			iface = "(WIFI)";
+		} else if (info->ip != NULL && strcmp(info->ip, "N/A") != 0) {
+			ip = info->ip;
+		} else {
+			ip = "";
+		}
+	}
 	
 	sprintf(str, "%s", "Model: PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
-	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
+	sprintf(str, "%s: %s %s", "IP", ip, iface);
 	lv_label_set_text(lbl_ip, str);
 }
 

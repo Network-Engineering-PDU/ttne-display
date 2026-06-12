@@ -670,57 +670,75 @@ int json_helper_update_nw_if(const char* json_str)
 	nw_if.nw_mode = mode;  /* Keep -1 if not found in JSON */
 	
 	nw_if.eth_interface = "";
+	nw_if.params.ip = "";
+	nw_if.params.mask = "";
+	nw_if.params.gw = "";
+	nw_if.params.dns = "";
+	nw_if.params.ssid = "";
+	nw_if.params.pass = "";
+	nw_if.lan1_ip = "";
+	nw_if.lan2_ip = "";
+	nw_if.wifi_ip = "";
 
 	cJSON* params = cJSON_GetObjectItem(json, "params");
 
 	str = json_get_string(json, "eth_interface");
-	if (str == NULL) {
+	if (str == NULL && params != NULL) {
 		str = json_get_string(params, "eth_interface");
 	}
 	if (str != NULL) {
 		nw_if.eth_interface = str;
 	}
 
-	str = json_get_string(params, "ip");
-	if (str == NULL) {
-		return 1;
+	if (params != NULL) {
+		str = json_get_string(params, "ip");
+		if (str != NULL) {
+			nw_if.params.ip = str;
+		}
+		str = json_get_string(params, "subnet_mask");
+		if (str != NULL) {
+			nw_if.params.mask = str;
+		}
+		str = json_get_string(params, "gateway_ip");
+		if (str != NULL) {
+			nw_if.params.gw = str;
+		}
+		str = json_get_string(params, "dns");
+		if (str != NULL) {
+			nw_if.params.dns = str;
+		}
+		str = json_get_string(params, "ssid");
+		if (str != NULL) {
+			nw_if.params.ssid = str;
+		}
+		str = json_get_string(params, "password");
+		if (str != NULL) {
+			nw_if.params.pass = str;
+		}
 	}
-	nw_if.params.ip = str;
-	str = json_get_string(params, "subnet_mask");
-	if (str == NULL) {
-		return 1;
+
+	if (nw_if.params.ip[0] == '\0') {
+		str = json_get_string(json, "ip");
+		if (str != NULL) {
+			nw_if.params.ip = str;
+		}
 	}
-	nw_if.params.mask = str;
-	str = json_get_string(params, "gateway_ip");
-	if (str == NULL) {
-		return 1;
-	}
-	nw_if.params.gw = str;
-	str = json_get_string(params, "dns");
-	if (str == NULL) {
-		return 1;
-	}
-	nw_if.params.dns = str;
-	str = json_get_string(params, "ssid");
-	if (str == NULL) {
-		return 1;
-	}
-	nw_if.params.ssid = str;
-	str = json_get_string(params, "password");
-	if (str == NULL) {
-		return 1;
-	}
-	nw_if.params.pass = str;
 	
 	/* Parse multi-interface IPs for dual LAN and LAN+WiFi modes */
 	str = json_get_string(json, "lan1_ip");
-	nw_if.lan1_ip = (str != NULL) ? str : "";
+	if (str != NULL) {
+		nw_if.lan1_ip = str;
+	}
 	
 	str = json_get_string(json, "lan2_ip");
-	nw_if.lan2_ip = (str != NULL) ? str : "";
+	if (str != NULL) {
+		nw_if.lan2_ip = str;
+	}
 	
 	str = json_get_string(json, "wifi_ip");
-	nw_if.wifi_ip = (str != NULL) ? str : "";
+	if (str != NULL) {
+		nw_if.wifi_ip = str;
+	}
 	
 	models_set_nw_if(&nw_if);
 
