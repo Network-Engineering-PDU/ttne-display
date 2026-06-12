@@ -54,8 +54,10 @@ void ttne_display(void)
 	tt_styles_init();
 	controller_init();
 	screen_init();
-	controller_get_sys_info();
-	controller_get_pdu_info();
+	
+	/* Use async calls for initialization to avoid blocking UI */
+	controller_get_sys_info_async(NULL, NULL);
+	controller_get_pdu_info_async(NULL, NULL);
 
 	uint8_t rotation = config_get_rotation();
 	screen_set_rotation(rotation);

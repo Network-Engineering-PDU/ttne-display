@@ -7,10 +7,19 @@
 extern "C" {
 #endif
 
+/* Callback typedef for async operations */
+typedef void (*controller_callback_t)(int err, void* userdata);
+
 void controller_init();
 bool controller_check_conn();
 void controller_get_sys_info();
 void controller_get_pdu_info();
+
+/* Async versions of critical functions */
+void controller_get_sys_info_async(controller_callback_t callback, void* userdata);
+void controller_get_pdu_info_async(controller_callback_t callback, void* userdata);
+void controller_get_nw_if_async(controller_callback_t callback, void* userdata);
+
 void controller_put_pdu_info(const models_pdu_info_t* pdu_info);
 void controller_get_in_sw();
 void controller_get_in_data(int line_id);

@@ -9,6 +9,7 @@
 
 #include "http_helper.h"
 #include "json_helper.h"
+#include "http_async.h"
 
 #define BASE_URL "http://localhost:8001/"
 #define NE_BASE_URL "http://localhost:80/"
@@ -708,4 +709,105 @@ void controller_set_auto_update(bool enabled)
 	const models_update_status_t* update_status = models_get_update_status();
 	controller_put_update_settings(enabled, update_status->update_server);
 	LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
+}
+
+/* ============================================================================
+ * ASYNC HTTP IMPLEMENTATIONS - These run in background threads
+ * ============================================================================ */
+
+typedef struct {
+	controller_callback_t callback;
+	void* userdata;
+	char* buffer;
+} async_ctx_t;
+
+static void async_sys_info_cb(int err, void* buffer, size_t len, void* userdata)
+{
+	async_ctx_t* ctx = (async_ctx_t*)userdata;
+	
+	if (err == 0 && buffer != NULL) {
+		int parse_err = json_helper_update_sys_info(buffer);
+		if (parse_err != 0) {
+			LV_LOG_ERROR("Error parsing system info");
+			err = 1;
+		}
+	} else {
+		LV_LOG_ERROR("Error fetching system info");
+	}
+
+	if (buffer) free(buffer);
+	
+	if (ctx->callback) {
+		ctx->callback(err, ctx->userdata);
+	}
+	free(ctx);
+}
+
+void controller_get_sys_info_async(controller_callback_t callback, void* userdata)
+{
+	async_ctx_t* ctx = malloc(sizeof(async_ctx_t));
+	ctx->callback = callback;
+	ctx->userdata = userdata;
+	ctx->buffer = NULL;
+
+	char* url = BASE_URL "settings/system-info/";
+	http_async_get(url, async_sys_info_cb, ctx);
+}
+
+static void async_pdu_info_cb(int err, void* buffer, size_t len, void* userdata)
+{
+	async_ctx_t* ctx = (async_ctx_t*)userdata;
+	
+	if (err == 0 && buffer != NULL) {
+		json_helper_update_pdu_info(buffer);
+	} else {
+		LV_LOG_ERROR("Error fetching PDU info");
+	}
+
+	if (buffer) free(buffer);
+	
+	if (ctx->callback) {
+		ctx->callback(err, ctx->userdata);
+	}
+	free(ctx);
+}
+
+void controller_get_pdu_info_async(controller_callback_t callback, void* userdata)
+{
+	async_ctx_t* ctx = malloc(sizeof(async_ctx_t));
+	ctx->callback = callback;
+	ctx->userdata = userdata;
+	ctx->buffer = NULL;
+
+	char* url = BASE_URL "settings/pdu-info/";
+	http_async_get(url, async_pdu_info_cb, ctx);
+}
+
+static void async_nw_if_cb(int err, void* buffer, size_t len, void* userdata)
+{
+	async_ctx_t* ctx = (async_ctx_t*)userdata;
+	
+	if (err == 0 && buffer != NULL) {
+		json_helper_update_nw_if(buffer);
+	} else {
+		LV_LOG_ERROR("Error fetching network interface");
+	}
+
+	if (buffer) free(buffer);
+	
+	if (ctx->callback) {
+		ctx->callback(err, ctx->userdata);
+	}
+	free(ctx);
+}
+
+void controller_get_nw_if_async(controller_callback_t callback, void* userdata)
+{
+	async_ctx_t* ctx = malloc(sizeof(async_ctx_t));
+	ctx->callback = callback;
+	ctx->userdata = userdata;
+	ctx->buffer = NULL;
+
+	char* url = BASE_URL "settings/network-info/";
+	http_async_get(url, async_nw_if_cb, ctx);
 }

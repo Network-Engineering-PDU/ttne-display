@@ -51,24 +51,30 @@ static void splash_cb(lv_event_t* e)
 static void splash_timer_cb(lv_timer_t* timer)
 {
 	(void) timer;
-	controller_get_sys_info();
-	controller_get_nw_if();
+	
+	/* Make async requests instead of blocking */
+	controller_get_sys_info_async(NULL, NULL);
+	controller_get_nw_if_async(NULL, NULL);
+	
+	/* Update UI with current data (will be refreshed when async calls complete) */
 	char str[100];
 	const models_info_t* info = models_get_info();
 	const models_nw_if_t* nw_if = models_get_nw_if();
-	// TODO: remove tap cb al inicializar la pantalla
-	// TODO: check a started_flag
-	if (!flag_init && strcmp(info->product_name, "N/A") != 0) { // API iniciada
+	
+	// Check if initialization is complete
+	if (!flag_init && strcmp(info->product_name, "N/A") != 0) {
 		flag_init = true;
 		lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
 		lv_obj_del(init_spinner);
 	}
+	
 	const char* iface = "";
 	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
 		iface = "(ETH)";
 	} else if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
 		iface = "(WIFI)";
 	}
+	
 	sprintf(str, "%s", "Model: PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
 	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);

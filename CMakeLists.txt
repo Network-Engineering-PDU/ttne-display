@@ -48,6 +48,7 @@ endif(SIMULATOR_ENABLED)
 
 find_package(CURL REQUIRED)
 find_package(cJSON REQUIRED)
+find_package(Threads REQUIRED)
 
 add_subdirectory(lvgl)
 add_subdirectory(lv_drivers)
@@ -63,7 +64,7 @@ include_directories(${CJSON_INCLUDE_DIR})
 
 target_include_directories(lvgl SYSTEM PUBLIC include)
 
-target_link_libraries(cmdisplay PRIVATE lvgl lvgl::drivers ${CURL_LIBRARIES} ${CJSON_LIBRARIES} m)
+target_link_libraries(cmdisplay PRIVATE lvgl lvgl::drivers ${CURL_LIBRARIES} ${CJSON_LIBRARIES} Threads::Threads m)
 if(SIMULATOR_ENABLED)
     target_link_libraries(cmdisplay PRIVATE ${SDL2_LIBRARIES} ${FREETYPE_LIBRARIES})
 endif(SIMULATOR_ENABLED)

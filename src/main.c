@@ -13,6 +13,7 @@
 
 #include "ttne_display.h"
 #include "config.h"
+#include "http_async.h"
 
 #ifndef SIMULATOR_ENABLED
 #define DISP_BUF_SIZE (128 * 1024)
@@ -154,18 +155,27 @@ int main(int argc, char **argv)
 	/* Initialize the HAL (display, input devices, tick) for LVGL */
 	hal_init();
 
+	/* Initialize async HTTP module */
+	http_async_init();
+
 	ttne_display();
 
 	while (1) {
 			/* Periodically call the lv_task handler.
 			 * It could be done in a timer interrupt or an OS task too.*/
 			lv_timer_handler();
+			
+			/* Process async HTTP callbacks */
+			http_async_process_callbacks();
+			
 			int inactivity_time = config_get_inactivity_time() * 60 * 1000; // In us
 			if ((int)lv_disp_get_inactive_time(NULL) > inactivity_time) {
 				ttne_display_idle_cb();
 			}
 			usleep(5 * 1000);
 	}
+
+	http_async_cleanup();
 
 	return 0;
 }
