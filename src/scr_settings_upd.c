@@ -65,9 +65,11 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     /* 1. Create page and main container */
     lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, "System Update");
     lv_obj_t* main = tt_obj_cont_create(cont);
-    lv_obj_set_flex_flow(main, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_flow(main, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(main, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_all(main, 15, 0);
     lv_obj_set_style_pad_row(main, 12, 0);
+    lv_obj_set_style_pad_column(main, 6, 0);
 
     /* 2. Remote update server Label */
     tt_obj_label_create(main, "Remote server update file location I.P / DNS");
@@ -104,15 +106,10 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_border_color(btn_auto, lv_color_white(), 0);
     lv_obj_set_style_border_width(btn_auto, 2, 0);
 
-    /* 5. Bottom Buttons row (Three Action Buttons) */
-    lv_obj_t* row = tt_obj_cont_create(main);
-    lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-    lv_obj_t* b_upd = tt_obj_btn_mtx_create(row, btn_update_cb, "  Update\nFrom USB", ASSET("usb.png"));
-    lv_obj_t* b_reb = tt_obj_btn_mtx_create(row, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
-    lv_obj_t* b_fac = tt_obj_btn_mtx_create(row, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
+    /* 5. Bottom buttons */
+    tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb.png"));
+    tt_obj_btn_mtx_create(main, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
+    tt_obj_btn_mtx_create(main, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
     
     /* Start polling for pending updates from remote server */
     // Delete any existing timer to prevent duplicates
