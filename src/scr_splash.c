@@ -99,7 +99,7 @@ static void splash_update_display(void)
 		}
 	}
 	
-	sprintf(str, "%s", "Model: PowerIT Easy");
+	sprintf(str, "%s", "PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
 	sprintf(str, "%s: %s %s", "IP", ip, iface);
 	lv_label_set_text(lbl_ip, str);

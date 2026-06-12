@@ -69,6 +69,8 @@ lv_obj_t* scr_keyboard_create(lv_obj_t* prev_scr, lv_obj_t* prev_txt,
 
 	if (type == KB_NUM) {
 		lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_USER_1);
+	} else if (type == KB_PASS) {
+		lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_USER_2);
 	}
 	lv_obj_t* txt_kb = lv_textarea_create(obj);
 	lv_obj_align(txt_kb, LV_ALIGN_TOP_MID, 0, 10);
@@ -78,12 +80,16 @@ lv_obj_t* scr_keyboard_create(lv_obj_t* prev_scr, lv_obj_t* prev_txt,
 	lv_textarea_set_password_mode(txt_kb,
 			lv_textarea_get_password_mode(prev_txt));
 	lv_textarea_set_one_line(txt_kb, lv_textarea_get_one_line(prev_txt));
+	if (type == KB_PASS) {
+		lv_textarea_set_accepted_chars(txt_kb, "0123456789");
+		lv_textarea_set_max_length(txt_kb, 6);
+	}
 	if (screen_is_landscape()) {
-		lv_obj_set_style_height(kb, 180, 0);
+		lv_obj_set_style_height(kb, type == KB_PASS ? 220 : 180, 0);
 		lv_obj_set_size(txt_kb, lv_pct(95), 40);
 	} else {
 		lv_obj_set_size(txt_kb, lv_pct(95), 100);
-		lv_obj_set_style_height(kb, 200, 0);
+		lv_obj_set_style_height(kb, type == KB_PASS ? 240 : 200, 0);
 	}
 	lv_obj_add_event_cb(txt_kb, txt_event_cb, LV_EVENT_ALL, NULL);
 	lv_obj_move_foreground(kb);

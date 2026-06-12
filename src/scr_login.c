@@ -13,8 +13,8 @@
 #include "config.h"
 #include "screen.h"
 
-#define LOGIN_PASSWORD "tlj46"
-#define LOGIN_SUCCESS_MSG_MS 3000
+#define LOGIN_PASSWORD "469130"
+#define LOGIN_MSG_MS 2000
 
 static lv_obj_t* login_scr;
 static lv_obj_t* menu_scr;
@@ -26,6 +26,8 @@ static bool login_ok_this_boot = false;
 static void txt_password_cb(lv_event_t* e);
 static void cbx_skip_password_cb(lv_event_t* e);
 static void btn_login_cb(lv_event_t* e);
+static lv_obj_t* login_msg_create(char* title, char* msg, int severity);
+static void login_msg_close_timer_cb(lv_timer_t* timer);
 static void login_success_msg_timer_cb(lv_timer_t* timer);
 
 static void txt_password_cb(lv_event_t* e)
@@ -34,7 +36,7 @@ static void txt_password_cb(lv_event_t* e)
 	lv_obj_t* obj = lv_event_get_target(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_ABC);
+		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_PASS);
 		lv_scr_load(kb_scr);
 	}
 }
@@ -44,6 +46,25 @@ static void cbx_skip_password_cb(lv_event_t* e)
 	if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
 		lv_obj_t* obj = lv_event_get_target(e);
 		skip_password = (lv_obj_get_state(obj) & LV_STATE_CHECKED) != 0;
+	}
+}
+
+static lv_obj_t* login_msg_create(char* title, char* msg, int severity)
+{
+	lv_obj_t* msgbox = tt_obj_info_box_create(title, msg, severity);
+	lv_timer_t* timer = lv_timer_create(login_msg_close_timer_cb,
+			LOGIN_MSG_MS, msgbox);
+	lv_timer_set_repeat_count(timer, 1);
+
+	return msgbox;
+}
+
+static void login_msg_close_timer_cb(lv_timer_t* timer)
+{
+	lv_obj_t* msgbox = lv_timer_get_user_data(timer);
+
+	if (msgbox != NULL && lv_obj_is_valid(msgbox)) {
+		lv_msgbox_close(msgbox);
 	}
 }
 
@@ -68,13 +89,13 @@ static void btn_login_cb(lv_event_t* e)
 
 	const char* password = lv_textarea_get_text(txt_password);
 	if (password == NULL || strlen(password) == 0) {
-		tt_obj_info_box_create("Login error", "Password cannot be empty", 1);
+		login_msg_create("Login error", "Password cannot be empty", 1);
 		return;
 	}
 
 	if (strcmp(password, LOGIN_PASSWORD) != 0) {
 		lv_textarea_set_text(txt_password, "");
-		tt_obj_info_box_create("Login error", "Invalid password", 1);
+		login_msg_create("Login error", "Invalid password", 1);
 		return;
 	}
 
@@ -88,7 +109,7 @@ static void btn_login_cb(lv_event_t* e)
 		msgbox = tt_obj_info_box_create("Login", "Login success.", 0);
 	}
 	lv_timer_t* timer = lv_timer_create(login_success_msg_timer_cb,
-			LOGIN_SUCCESS_MSG_MS, msgbox);
+			LOGIN_MSG_MS, msgbox);
 	lv_timer_set_repeat_count(timer, 1);
 }
 
@@ -123,7 +144,9 @@ lv_obj_t* scr_login_create(lv_obj_t* main_menu_scr)
 	tt_obj_label_color_create(cont, "Enter Password");
 
 	txt_password = tt_obj_txt_create(cont, "Password", txt_password_cb);
-	lv_textarea_set_password_mode(txt_password, true);
+	lv_textarea_set_password_mode(txt_password, false);
+	lv_textarea_set_accepted_chars(txt_password, "0123456789");
+	lv_textarea_set_max_length(txt_password, 6);
 	lv_textarea_set_text(txt_password, "");
 
 	cbx_skip_password = tt_obj_checkbox_create(cont,

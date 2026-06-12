@@ -163,7 +163,7 @@ lv_obj_t* tt_obj_btn_set_text(lv_obj_t* btn, const char* txt)
 lv_obj_t* tt_obj_label_create(lv_obj_t* parent, const char* txt)
 {
 	lv_obj_t* label = lv_label_create(parent);
-	lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
+	lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
 	lv_obj_set_width(label, LV_PCT(100));
 	lv_label_set_text(label, txt);
 	lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
