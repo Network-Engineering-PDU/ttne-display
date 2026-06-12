@@ -746,12 +746,19 @@ static void async_sys_info_cb(int err, void* buffer, size_t len, void* userdata)
 void controller_get_sys_info_async(controller_callback_t callback, void* userdata)
 {
 	async_ctx_t* ctx = malloc(sizeof(async_ctx_t));
+	if (ctx == NULL) {
+		if (callback) callback(1, userdata);
+		return;
+	}
 	ctx->callback = callback;
 	ctx->userdata = userdata;
 	ctx->buffer = NULL;
 
 	char* url = BASE_URL "settings/system-info/";
-	http_async_get(url, async_sys_info_cb, ctx);
+	if (http_async_get(url, async_sys_info_cb, ctx) < 0) {
+		if (callback) callback(1, userdata);
+		free(ctx);
+	}
 }
 
 static void async_pdu_info_cb(int err, void* buffer, size_t len, void* userdata)
@@ -775,12 +782,19 @@ static void async_pdu_info_cb(int err, void* buffer, size_t len, void* userdata)
 void controller_get_pdu_info_async(controller_callback_t callback, void* userdata)
 {
 	async_ctx_t* ctx = malloc(sizeof(async_ctx_t));
+	if (ctx == NULL) {
+		if (callback) callback(1, userdata);
+		return;
+	}
 	ctx->callback = callback;
 	ctx->userdata = userdata;
 	ctx->buffer = NULL;
 
 	char* url = BASE_URL "settings/pdu-info/";
-	http_async_get(url, async_pdu_info_cb, ctx);
+	if (http_async_get(url, async_pdu_info_cb, ctx) < 0) {
+		if (callback) callback(1, userdata);
+		free(ctx);
+	}
 }
 
 static void async_nw_if_cb(int err, void* buffer, size_t len, void* userdata)
@@ -804,10 +818,17 @@ static void async_nw_if_cb(int err, void* buffer, size_t len, void* userdata)
 void controller_get_nw_if_async(controller_callback_t callback, void* userdata)
 {
 	async_ctx_t* ctx = malloc(sizeof(async_ctx_t));
+	if (ctx == NULL) {
+		if (callback) callback(1, userdata);
+		return;
+	}
 	ctx->callback = callback;
 	ctx->userdata = userdata;
 	ctx->buffer = NULL;
 
 	char* url = BASE_URL "settings/network-info/";
-	http_async_get(url, async_nw_if_cb, ctx);
+	if (http_async_get(url, async_nw_if_cb, ctx) < 0) {
+		if (callback) callback(1, userdata);
+		free(ctx);
+	}
 }

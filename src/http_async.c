@@ -10,6 +10,13 @@
 #define MAX_ASYNC_REQUESTS 64
 #define THREAD_POOL_SIZE 2
 
+typedef enum {
+	ASYNC_REQ_EMPTY = 0,
+	ASYNC_REQ_PENDING,
+	ASYNC_REQ_RUNNING,
+	ASYNC_REQ_DONE
+} async_req_status_t;
+
 /* Callback result structure */
 typedef struct {
 	int req_id;
@@ -29,7 +36,7 @@ typedef struct {
 	size_t buflen;
 	http_async_callback_t callback;
 	void* userdata;
-	bool completed;
+	async_req_status_t status;
 	int err;
 } async_req_state_t;
 
@@ -53,7 +60,7 @@ static size_t write_cb(char* ptr, size_t size, size_t nmemb, void* userdata)
 		req->buffer = realloc(req->buffer, req->buflen + 4096);
 		req->buflen += 4096;
 	}
-	memcpy(&req->buffer[req->len], ptr, realsize);
+	memcpy(&((char*)req->buffer)[req->len], ptr, realsize);
 	req->len += realsize;
 	((char*)req->buffer)[req->len] = 0;
 
@@ -72,8 +79,9 @@ static void* worker_thread(void* arg)
 		
 		/* Look for a pending request */
 		for (int i = 0; i < MAX_ASYNC_REQUESTS; i++) {
-			if (requests[i].req_id > 0 && !requests[i].completed) {
+			if (requests[i].status == ASYNC_REQ_PENDING) {
 				req = &requests[i];
+				req->status = ASYNC_REQ_RUNNING;
 				break;
 			}
 		}
@@ -115,7 +123,7 @@ static void* worker_thread(void* arg)
 
 			LV_LOG_USER("Async curl result: %u, retcode: %d [%s]", res, retcode, req->url);
 
-			req->err = (res != CURLE_OK) ? 1 : 0;
+			req->err = (res != CURLE_OK || retcode < 200 || retcode >= 300) ? 1 : 0;
 			curl_slist_free_all(headers);
 			curl_easy_cleanup(curl);
 		} else {
@@ -124,7 +132,7 @@ static void* worker_thread(void* arg)
 
 		/* Mark as completed and add to results */
 		pthread_mutex_lock(&mutex);
-		req->completed = true;
+		req->status = ASYNC_REQ_DONE;
 
 		if (result_count < MAX_ASYNC_REQUESTS) {
 			callback_result_t* result = &results[result_count++];
@@ -134,6 +142,14 @@ static void* worker_thread(void* arg)
 			result->len = req->len;
 			result->callback = req->callback;
 			result->userdata = req->userdata;
+			req->buffer = NULL;
+		} else {
+			free(req->buffer);
+			req->buffer = NULL;
+			free(req->url);
+			req->url = NULL;
+			req->req_id = 0;
+			req->status = ASYNC_REQ_EMPTY;
 		}
 
 		pthread_mutex_unlock(&mutex);
@@ -161,7 +177,7 @@ int http_async_get(const char* url, http_async_callback_t callback, void* userda
 	/* Find an available request slot */
 	int req_idx = -1;
 	for (int i = 0; i < MAX_ASYNC_REQUESTS; i++) {
-		if (requests[i].req_id == 0) {
+		if (requests[i].status == ASYNC_REQ_EMPTY) {
 			req_idx = i;
 			break;
 		}
@@ -179,13 +195,24 @@ int http_async_get(const char* url, http_async_callback_t callback, void* userda
 	async_req_state_t* req = &requests[req_idx];
 	req->req_id = req_id;
 	req->url = malloc(strlen(url) + 1);
+	if (req->url == NULL) {
+		memset(req, 0, sizeof(*req));
+		pthread_mutex_unlock(&mutex);
+		return -1;
+	}
 	strcpy(req->url, url);
 	req->buffer = malloc(4096);
+	if (req->buffer == NULL) {
+		free(req->url);
+		memset(req, 0, sizeof(*req));
+		pthread_mutex_unlock(&mutex);
+		return -1;
+	}
 	req->buflen = 4096;
 	req->len = 0;
 	req->callback = callback;
 	req->userdata = userdata;
-	req->completed = false;
+	req->status = ASYNC_REQ_PENDING;
 	req->err = 0;
 
 	pthread_cond_signal(&cond);
@@ -196,29 +223,40 @@ int http_async_get(const char* url, http_async_callback_t callback, void* userda
 
 void http_async_process_callbacks(void)
 {
+	callback_result_t pending[MAX_ASYNC_REQUESTS];
+	int pending_count;
+
 	pthread_mutex_lock(&mutex);
 
-	for (int i = 0; i < result_count; i++) {
-		callback_result_t* result = &results[i];
-		if (result->callback) {
-			result->callback(result->err, result->buffer, result->len, result->userdata);
-		}
+	pending_count = result_count;
+	memcpy(pending, results, sizeof(callback_result_t) * pending_count);
+	memset(results, 0, sizeof(results));
+	result_count = 0;
 
-		/* Find and clear the request */
+	for (int i = 0; i < pending_count; i++) {
+		callback_result_t* result = &pending[i];
+
+		/* Find and clear the request before running user code. */
 		for (int j = 0; j < MAX_ASYNC_REQUESTS; j++) {
 			if (requests[j].req_id == result->req_id) {
-				if (requests[j].url) free(requests[j].url);
-				requests[j].req_id = 0;
+				free(requests[j].url);
+				memset(&requests[j], 0, sizeof(requests[j]));
 				break;
 			}
 		}
-
-		memset(result, 0, sizeof(*result));
 	}
 
-	result_count = 0;
-
 	pthread_mutex_unlock(&mutex);
+
+	for (int i = 0; i < pending_count; i++) {
+		callback_result_t* result = &pending[i];
+		if (result->callback) {
+			result->callback(result->err, result->buffer, result->len,
+					result->userdata);
+		} else {
+			free(result->buffer);
+		}
+	}
 }
 
 void http_async_cleanup(void)

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "lvgl/lvgl.h"
 #include "scr_splash.h"
@@ -28,6 +29,8 @@ static bool flag_init = false;
 /* Function prototypes ********************************************************/
 
 static void splash_cb(lv_event_t* e);
+static void splash_fetch_cb(int err, void* userdata);
+static void splash_update_display(void);
 static void splash_timer_cb(lv_timer_t* timer);
 
 /* Callbacks ******************************************************************/
@@ -48,15 +51,16 @@ static void splash_cb(lv_event_t* e)
 	}
 }
 
-static void splash_timer_cb(lv_timer_t* timer)
+static void splash_fetch_cb(int err, void* userdata)
 {
-	(void) timer;
-	
-	/* Make async requests instead of blocking */
-	controller_get_sys_info_async(NULL, NULL);
-	controller_get_nw_if_async(NULL, NULL);
-	
-	/* Update UI with current data (will be refreshed when async calls complete) */
+	(void) err;
+	(void) userdata;
+
+	splash_update_display();
+}
+
+static void splash_update_display(void)
+{
 	char str[100];
 	const models_info_t* info = models_get_info();
 	const models_nw_if_t* nw_if = models_get_nw_if();
@@ -65,7 +69,10 @@ static void splash_timer_cb(lv_timer_t* timer)
 	if (!flag_init && strcmp(info->product_name, "N/A") != 0) {
 		flag_init = true;
 		lv_obj_add_flag(lv_layer_top(), LV_OBJ_FLAG_CLICKABLE);
-		lv_obj_del(init_spinner);
+		if (init_spinner != NULL) {
+			lv_obj_del(init_spinner);
+			init_spinner = NULL;
+		}
 	}
 	
 	const char* iface = "";
@@ -79,6 +86,17 @@ static void splash_timer_cb(lv_timer_t* timer)
 	lv_label_set_text(lbl_system, str);
 	sprintf(str, "%s: %s %s", "IP", nw_if->params.ip, iface);
 	lv_label_set_text(lbl_ip, str);
+}
+
+static void splash_timer_cb(lv_timer_t* timer)
+{
+	(void) timer;
+	
+	/* Make async requests instead of blocking */
+	controller_get_sys_info_async(splash_fetch_cb, NULL);
+	controller_get_nw_if_async(splash_fetch_cb, NULL);
+	
+	splash_update_display();
 }
 
 /* Function definitions *******************************************************/
