@@ -34,10 +34,9 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	lv_obj_t* btn_update = tt_obj_btn_mtx_create(settings_cont, NULL,
 			"Sys Update", ASSET("sys_update.png"));
 
-	create_placeholder_page(l_menu, btn_vis, "Settings / Visual",
-			"Visual settings");
-	scr_settings_nw_create(l_menu, btn_nw);
-	create_placeholder_page(l_menu, btn_sys, "Settings / Sys Setup",
-			"System setup");
-	scr_settings_update_create(l_menu, btn_update);
+    /* Navigation links remain the same */
+    scr_settings_vis_create(l_menu, btn_vis);
+    scr_settings_nw_menu_create(l_menu, btn_nw);
+    scr_settings_sys_create(l_menu, btn_sys);
+    scr_settings_update_create(l_menu, btn_update);
 }
