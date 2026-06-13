@@ -122,7 +122,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_label_set_text(lbl_period, "OTA Periodic Checks");
     lv_obj_set_flex_grow(lbl_period, 1);
 
-    dd_period = tt_obj_dropdown_create(period_row, "Hourly\nDaily\nWeekly\nMonthly", dd_period_cb);
+    dd_period = tt_obj_dropdown_create(period_row, "Daily\nWeekly\nMonthly", dd_period_cb);
     lv_obj_set_size(dd_period, 80, 40);
 
     /* 5. Bottom buttons */
@@ -305,6 +305,7 @@ static void msg_box_update_confirmation_cb(lv_event_t* e) {
         } else {
             // NO - reject update
             controller_post_update_confirm(false);
+            controller_get_update_status();
             update_confirmation_shown = false;
         }
         lv_msgbox_close(obj);
