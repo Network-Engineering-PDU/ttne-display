@@ -335,8 +335,11 @@ void scr_sensors_create(lv_obj_t* l_menu, lv_obj_t* btn)
 		lv_obj_t* lbl_name = lv_obj_get_child(btn_sensor[i], 0);
 		lv_obj_align(lbl_name, LV_ALIGN_TOP_MID, 0, 0);
 		lbl_mac[i] = lv_label_create(btn_sensor[i]);
+		lv_label_set_long_mode(lbl_mac[i], LV_LABEL_LONG_SCROLL_CIRCULAR);
+		lv_obj_set_style_text_align(lbl_mac[i], LV_TEXT_ALIGN_CENTER, 0);
+		lv_obj_set_width(lbl_mac[i], LV_PCT(90));
 		lv_obj_align(lbl_mac[i], LV_ALIGN_BOTTOM_MID, 0, 0);
-		lv_obj_set_scroll_dir(btn_sensor[i], LV_DIR_NONE);
+		lv_obj_set_scrollbar_mode(btn_sensor[i], LV_SCROLLBAR_MODE_OFF);
 	}
 
 	update_sensors();
