@@ -146,4 +146,31 @@ int backend_power_refresh(backend_callback_t callback, void* userdata)
 	return 0;
 }
 
+int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
+		void* userdata)
+{
+	app_state_sensor_data_t sensor_data;
+
+	memset(&sensor_data, 0, sizeof(sensor_data));
+	snprintf(sensor_data.mac, sizeof(sensor_data.mac),
+			"AA:BB:CC:DD:EE:%02X", sensor_index >= 0 ? sensor_index : 0);
+	snprintf(sensor_data.name, sizeof(sensor_data.name), "Sensor %d",
+			sensor_index + 1);
+	snprintf(sensor_data.kind, sizeof(sensor_data.kind), "%s", "THP");
+	sensor_data.temp = 24.5f + (float)sensor_index;
+	sensor_data.humd = 45.0f + (float)(sensor_index % 10);
+	sensor_data.pres = 1012.0f + (float)(sensor_index % 5);
+	sensor_data.rssi = -48 - sensor_index;
+	sensor_data.bat_mv = 2980 - (sensor_index * 12);
+	sensor_data.bat_pct = 86 - sensor_index;
+	sensor_data.sensor_index = sensor_index;
+	sensor_data.valid = true;
+
+	app_state_set_sensor_data(&sensor_data);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
 #endif /* SIMULATOR_ENABLED */

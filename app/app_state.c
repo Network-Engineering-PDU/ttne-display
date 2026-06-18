@@ -85,6 +85,22 @@ void app_state_set_power(const app_state_power_t* power)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_sensor_data(const app_state_sensor_data_t* sensor_data)
+{
+	if (sensor_data == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.sensor_data = *sensor_data;
+	state.sensor_data.mac[sizeof(state.sensor_data.mac) - 1] = '\0';
+	state.sensor_data.name[sizeof(state.sensor_data.name) - 1] = '\0';
+	state.sensor_data.kind[sizeof(state.sensor_data.kind) - 1] = '\0';
+	state.sensor_data.valid = true;
+	state.sensor_data_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

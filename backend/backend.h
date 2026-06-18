@@ -22,6 +22,8 @@ int backend_outlet_data_refresh(int outlet_id, backend_callback_t callback,
 		void* userdata);
 int backend_license_refresh(backend_callback_t callback, void* userdata);
 int backend_power_refresh(backend_callback_t callback, void* userdata);
+int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
+		void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

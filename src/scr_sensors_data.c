@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <math.h>
+#include <string.h>
 
 #include "lvgl/lvgl.h"
 
@@ -7,18 +7,18 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
 #define TIMER_REFRESH_RATE 1000 // ms
 
 /* Global variables ***********************************************************/
 
 static bool running = false;
+static bool refresh_pending;
 
 static int sensor_id;
-static char title[50];
-static char sensor_mac[64];
+static char title[96];
 static lv_obj_t* sensor_data_page;
 
 static lv_obj_t* lbl_mac;
@@ -36,8 +36,9 @@ static lv_timer_t* timer;
 
 static void menu_cb(lv_event_t* e);
 static void sensor_data_timer_cb(lv_timer_t* timer);
-static void sensor_data_apply(const models_sensor_live_t* live,
-		const models_sensor_t* stored);
+static void sensor_data_refresh_cb(int err, void* userdata);
+static void sensor_data_apply(const app_state_sensor_data_t* sensor_data);
+static void sensor_data_apply_snapshot(void);
 static void sensor_data_stop_timer(void);
 
 const char* f_int(char* buffer, int num, int max, int min);
@@ -51,6 +52,7 @@ static void sensor_data_stop_timer(void)
 		lv_timer_del(timer);
 		timer = NULL;
 	}
+	refresh_pending = false;
 	running = false;
 }
 
@@ -68,54 +70,20 @@ static void menu_cb(lv_event_t* e)
 					TIMER_REFRESH_RATE, NULL);
 			sensor_data_timer_cb(timer);
 			running = true;
-			LV_LOG_USER("Sensor data open");
 		}
 	} else if (code == LV_EVENT_CLICKED) {
 		if (running) {
 			sensor_data_stop_timer();
-			LV_LOG_USER("Sensor data close");
 		}
 	}
 }
 
-static void sensor_data_apply(const models_sensor_live_t* live,
-		const models_sensor_t* stored)
+static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 {
-	char txt[50];
+	char txt[160];
 	char buff[50];
-	float temp = live->temp;
-	float humd = live->humd;
-	float pres = live->pres;
-	int rssi = live->rssi;
-	int bat_mv = live->bat_mv;
-	int bat_pct = live->bat_pct;
-	const char* name = live->name;
-	const char* kind = live->kind;
-
-	if (stored != NULL) {
-		if (name == NULL || name[0] == '\0') {
-			name = stored->name;
-		}
-		if (!isnan(stored->last_data.temp) && isnan(temp)) {
-			temp = stored->last_data.temp;
-		}
-		if (!isnan(stored->last_data.humd) && isnan(humd)) {
-			humd = stored->last_data.humd;
-		}
-		if (!isnan(stored->last_data.pres) && isnan(pres)) {
-			pres = stored->last_data.pres;
-		}
-		if (rssi <= -200 && stored->last_data.rssi > -200) {
-			rssi = stored->last_data.rssi;
-		}
-		if (bat_mv <= 0 && stored->last_data.bat > 0) {
-			if (stored->last_data.bat < 20.0f) {
-				bat_mv = (int)(stored->last_data.bat * 1000.0f);
-			} else {
-				bat_mv = (int)stored->last_data.bat;
-			}
-		}
-	}
+	const char* name = sensor_data->name;
+	const char* kind = sensor_data->kind;
 
 	if (kind != NULL && kind[0] != '\0') {
 		snprintf(txt, sizeof(txt), "%s (%s)", name, kind);
@@ -124,68 +92,69 @@ static void sensor_data_apply(const models_sensor_live_t* live,
 		lv_label_set_text(lbl_name, name);
 	}
 
-	lv_label_set_text(lbl_mac, live->mac);
+	lv_label_set_text(lbl_mac, sensor_data->mac);
 
-	sprintf(txt, "#%06X %s# C", TT_COLOR_GREEN_NE,
-			f_float(buff, temp, "%.2f"));
+	snprintf(txt, sizeof(txt), "#%06X %s# C", TT_COLOR_GREEN_NE,
+			f_float(buff, sensor_data->temp, "%.2f"));
 	tt_obj_card_set_text(card_temp, txt);
-	sprintf(txt, "#%06X %s# %%RH", TT_COLOR_GREEN_NE,
-			f_float(buff, humd, "%.1f"));
+	snprintf(txt, sizeof(txt), "#%06X %s# %%RH", TT_COLOR_GREEN_NE,
+			f_float(buff, sensor_data->humd, "%.1f"));
 	tt_obj_card_set_text(card_humd, txt);
-	sprintf(txt, "#%06X %s# hPa", TT_COLOR_GREEN_NE,
-			f_float(buff, pres, "%.1f"));
+	snprintf(txt, sizeof(txt), "#%06X %s# hPa", TT_COLOR_GREEN_NE,
+			f_float(buff, sensor_data->pres, "%.1f"));
 	tt_obj_card_set_text(card_pres, txt);
-	sprintf(txt, "#%06X %s# dBm", TT_COLOR_GREEN_NE,
-			f_int(buff, rssi, 0, -200));
+	snprintf(txt, sizeof(txt), "#%06X %s# dBm", TT_COLOR_GREEN_NE,
+			f_int(buff, sensor_data->rssi, 0, -200));
 	tt_obj_card_set_text(card_rssi, txt);
 
-	if (bat_pct > 0 && bat_pct <= 100) {
-		sprintf(txt, "#%06X %d# %%", TT_COLOR_GREEN_NE, bat_pct);
+	if (sensor_data->bat_pct > 0 && sensor_data->bat_pct <= 100) {
+		snprintf(txt, sizeof(txt), "#%06X %d# %%",
+				TT_COLOR_GREEN_NE, sensor_data->bat_pct);
 	} else {
-		sprintf(txt, "#%06X %s# mV", TT_COLOR_GREEN_NE,
-				f_int(buff, bat_mv, 5000, 0));
+		snprintf(txt, sizeof(txt), "#%06X %s# mV", TT_COLOR_GREEN_NE,
+				f_int(buff, sensor_data->bat_mv, 5000, 0));
 	}
 	tt_obj_card_set_text(card_bat, txt);
+
+	if (name != NULL && name[0] != '\0') {
+		snprintf(title, sizeof(title), "Sensors / %s", name);
+		if (sensor_data_page != NULL) {
+			lv_menu_set_page_title(sensor_data_page, title);
+		}
+	}
 }
 
 static void sensor_data_timer_cb(lv_timer_t* timer)
 {
 	(void)timer;
-	int len;
-	const models_sensor_t* sensors = models_get_sensor(&len);
-	const models_sensor_t* stored = NULL;
-
-	if (sensor_id < 0 || sensor_id >= len) {
+	if (refresh_pending || sensor_id < 0) {
 		return;
 	}
 
-	stored = &sensors[sensor_id];
-	if (sensor_mac[0] == '\0' && stored->mac != NULL) {
-		snprintf(sensor_mac, sizeof(sensor_mac), "%s", stored->mac);
+	if (backend_sensor_data_refresh(sensor_id, sensor_data_refresh_cb, NULL) == 0) {
+		refresh_pending = true;
 	}
+}
 
-	if (controller_get_sensor_live(sensor_mac)) {
-		sensor_data_apply(models_get_sensor_live(), stored);
+static void sensor_data_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	refresh_pending = false;
+	if (err != 0) {
+		tt_obj_info_box_create("Sensors", "Could not refresh sensor data", 1);
 		return;
 	}
+	sensor_data_apply_snapshot();
+}
 
-	controller_get_sensors();
-	sensors = models_get_sensor(&len);
-	if (sensor_id < len) {
-		const models_sensor_live_t fallback = {
-			.mac = sensors[sensor_id].mac,
-			.kind = "",
-			.name = sensors[sensor_id].name,
-			.temp = sensors[sensor_id].last_data.temp,
-			.humd = sensors[sensor_id].last_data.humd,
-			.pres = sensors[sensor_id].last_data.pres,
-			.rssi = sensors[sensor_id].last_data.rssi,
-			.bat_mv = (sensors[sensor_id].last_data.bat < 20.0f)
-					? (int)(sensors[sensor_id].last_data.bat * 1000.0f)
-					: (int)sensors[sensor_id].last_data.bat,
-			.bat_pct = -1,
-		};
-		sensor_data_apply(&fallback, NULL);
+static void sensor_data_apply_snapshot(void)
+{
+	app_state_snapshot_t snapshot;
+
+	app_state_get_snapshot(&snapshot);
+	if (snapshot.sensor_data.valid &&
+			snapshot.sensor_data.sensor_index == sensor_id) {
+		sensor_data_apply(&snapshot.sensor_data);
 	}
 }
 
@@ -194,7 +163,7 @@ static void sensor_data_timer_cb(lv_timer_t* timer)
 const char* f_int(char* buffer, int num, int max, int min)
 {
 	if (num > min && num < max) {
-		sprintf(buffer, "%d", num);
+		snprintf(buffer, 50, "%d", num);
 	} else {
 		strcpy(buffer, "N/A");
 	}
@@ -204,7 +173,7 @@ const char* f_int(char* buffer, int num, int max, int min)
 const char* f_float(char* buffer, float num, const char* format)
 {
 	if (num == num) {
-		sprintf(buffer, format, num);
+		snprintf(buffer, 50, format, num);
 	} else {
 		strcpy(buffer, "N/A");
 	}
@@ -215,7 +184,7 @@ const char* f_float(char* buffer, float num, const char* format)
 
 lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 {
-	sprintf(title, "Sensors");
+	snprintf(title, sizeof(title), "Sensors");
 	lv_obj_t* sensor_data_cont = tt_obj_menu_page_create(menu, NULL, menu_cb,
 			title);
 	sensor_data_page = lv_obj_get_parent(sensor_data_cont);
@@ -238,20 +207,9 @@ lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 
 void scr_sensors_data_set_sensor(int l_sensor)
 {
-	int len;
-	const models_sensor_t* sensors = models_get_sensor(&len);
-
 	sensor_id = l_sensor - 1;
-	sensor_mac[0] = '\0';
 
-	if (sensor_id >= 0 && sensor_id < len &&
-			sensors[sensor_id].name != NULL &&
-			sensors[sensor_id].name[0] != '\0') {
-		snprintf(title, sizeof(title), "Sensors / %s",
-				sensors[sensor_id].name);
-	} else {
-		snprintf(title, sizeof(title), "Sensors / Sensor %d", l_sensor);
-	}
+	snprintf(title, sizeof(title), "Sensors / Sensor %d", l_sensor);
 	if (sensor_data_page != NULL) {
 		lv_menu_set_page_title(sensor_data_page, title);
 	}

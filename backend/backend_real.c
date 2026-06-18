@@ -21,6 +21,7 @@ typedef enum {
 	BACKEND_CMD_OUTLET_DATA_REFRESH,
 	BACKEND_CMD_LICENSE_REFRESH,
 	BACKEND_CMD_POWER_REFRESH,
+	BACKEND_CMD_SENSOR_DATA_REFRESH,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -127,6 +128,108 @@ static void run_power_refresh(void)
 	}
 
 	app_state_set_power(&power);
+}
+
+static void publish_sensor_data_from_live(int sensor_index,
+		const models_sensor_live_t* live, const models_sensor_t* stored)
+{
+	app_state_sensor_data_t sensor_data;
+	const char* name;
+	const char* kind;
+	int bat_mv;
+
+	if (live == NULL) {
+		return;
+	}
+
+	memset(&sensor_data, 0, sizeof(sensor_data));
+	sensor_data.temp = live->temp;
+	sensor_data.humd = live->humd;
+	sensor_data.pres = live->pres;
+	sensor_data.rssi = live->rssi;
+	sensor_data.bat_mv = live->bat_mv;
+	sensor_data.bat_pct = live->bat_pct;
+	sensor_data.sensor_index = sensor_index;
+
+	name = live->name;
+	kind = live->kind;
+	bat_mv = sensor_data.bat_mv;
+	if (stored != NULL) {
+		if (name == NULL || name[0] == '\0') {
+			name = stored->name;
+		}
+		if (sensor_data.temp != sensor_data.temp) {
+			sensor_data.temp = stored->last_data.temp;
+		}
+		if (sensor_data.humd != sensor_data.humd) {
+			sensor_data.humd = stored->last_data.humd;
+		}
+		if (sensor_data.pres != sensor_data.pres) {
+			sensor_data.pres = stored->last_data.pres;
+		}
+		if (sensor_data.rssi <= -200 && stored->last_data.rssi > -200) {
+			sensor_data.rssi = stored->last_data.rssi;
+		}
+		if (bat_mv <= 0 && stored->last_data.bat > 0) {
+			bat_mv = (stored->last_data.bat < 20.0f)
+					? (int)(stored->last_data.bat * 1000.0f)
+					: stored->last_data.bat;
+		}
+	}
+
+	sensor_data.bat_mv = bat_mv;
+	snprintf(sensor_data.mac, sizeof(sensor_data.mac), "%s",
+			live->mac != NULL ? live->mac : "");
+	snprintf(sensor_data.name, sizeof(sensor_data.name), "%s",
+			name != NULL ? name : "");
+	snprintf(sensor_data.kind, sizeof(sensor_data.kind), "%s",
+			kind != NULL ? kind : "");
+	app_state_set_sensor_data(&sensor_data);
+}
+
+static int run_sensor_data_refresh(int sensor_index)
+{
+	int len;
+	const models_sensor_t* sensors = models_get_sensor(&len);
+	const models_sensor_t* stored;
+
+	if (sensor_index < 0 || sensor_index >= len) {
+		controller_get_sensors();
+		sensors = models_get_sensor(&len);
+	}
+	if (sensors == NULL || sensor_index < 0 || sensor_index >= len) {
+		return 1;
+	}
+
+	stored = &sensors[sensor_index];
+	if (stored->mac != NULL && controller_get_sensor_live(stored->mac)) {
+		publish_sensor_data_from_live(sensor_index, models_get_sensor_live(),
+				stored);
+		return 0;
+	}
+
+	controller_get_sensors();
+	sensors = models_get_sensor(&len);
+	if (sensors == NULL || sensor_index < 0 || sensor_index >= len) {
+		return 1;
+	}
+
+	stored = &sensors[sensor_index];
+	models_sensor_live_t fallback = {
+		.mac = stored->mac,
+		.kind = "",
+		.name = stored->name,
+		.temp = stored->last_data.temp,
+		.humd = stored->last_data.humd,
+		.pres = stored->last_data.pres,
+		.rssi = stored->last_data.rssi,
+		.bat_mv = (stored->last_data.bat < 20.0f)
+				? (int)(stored->last_data.bat * 1000.0f)
+				: stored->last_data.bat,
+		.bat_pct = -1,
+	};
+	publish_sensor_data_from_live(sensor_index, &fallback, NULL);
+	return 0;
 }
 
 static void backend_push_result(int err, backend_callback_t callback, void* userdata)
@@ -239,6 +342,9 @@ static void* backend_worker(void* arg)
 			break;
 		case BACKEND_CMD_POWER_REFRESH:
 			run_power_refresh();
+			break;
+		case BACKEND_CMD_SENSOR_DATA_REFRESH:
+			err = run_sensor_data_refresh(cmd.line_id);
 			break;
 		default:
 			err = 1;
@@ -362,6 +468,18 @@ int backend_power_refresh(backend_callback_t callback, void* userdata)
 {
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_POWER_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SENSOR_DATA_REFRESH,
+		.line_id = sensor_index,
 		.callback = callback,
 		.userdata = userdata,
 	};
