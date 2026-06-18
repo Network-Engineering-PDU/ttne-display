@@ -14,6 +14,8 @@ extern "C" {
 #define APP_STATE_MAX_BT_DEVICES 12
 #define APP_STATE_BT_TEXT_LEN 64
 #define APP_STATE_NW_TEXT_LEN 128
+#define APP_STATE_MAX_SENSORS 8
+#define APP_STATE_MAX_DISCOVERED_SENSORS 16
 
 typedef struct {
 	int line_id;
@@ -150,6 +152,21 @@ typedef struct {
 } app_state_modbus_t;
 
 typedef struct {
+	int id;
+	char mac[APP_STATE_SENSOR_TEXT_LEN];
+	char name[APP_STATE_SENSOR_TEXT_LEN];
+	bool valid;
+} app_state_sensor_t;
+
+typedef struct {
+	char mac[APP_STATE_SENSOR_TEXT_LEN];
+	char kind[APP_STATE_SENSOR_TEXT_LEN];
+	char name[APP_STATE_SENSOR_TEXT_LEN];
+	int rssi;
+	bool valid;
+} app_state_discovered_sensor_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
@@ -161,8 +178,13 @@ typedef struct {
 	app_state_nw_info_t nw_info;
 	app_state_nw_services_t nw_services;
 	app_state_modbus_t modbus;
+	app_state_sensor_t sensors[APP_STATE_MAX_SENSORS];
+	app_state_discovered_sensor_t discovered_sensors[
+		APP_STATE_MAX_DISCOVERED_SENSORS];
 	char license_type[16];
 	int outlet_count;
+	int sensor_count;
+	int discovered_sensor_count;
 	uint32_t outlet_revision;
 	uint32_t outlet_data_revision;
 	uint32_t power_revision;
@@ -174,6 +196,8 @@ typedef struct {
 	uint32_t nw_info_revision;
 	uint32_t nw_services_revision;
 	uint32_t modbus_revision;
+	uint32_t sensors_revision;
+	uint32_t discovered_sensors_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -192,6 +216,9 @@ void app_state_set_nw_if(const app_state_nw_if_t* nw_if);
 void app_state_set_nw_info(const app_state_nw_info_t* nw_info);
 void app_state_set_nw_services(const app_state_nw_services_t* nw_services);
 void app_state_set_modbus(const app_state_modbus_t* modbus);
+void app_state_set_sensors(const app_state_sensor_t* sensors, int count);
+void app_state_set_discovered_sensors(
+		const app_state_discovered_sensor_t* sensors, int count);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 

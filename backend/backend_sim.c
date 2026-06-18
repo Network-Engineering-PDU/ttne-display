@@ -23,6 +23,24 @@ static app_state_modbus_t sim_modbus = {
 	.addr = 1,
 	.valid = true,
 };
+static app_state_sensor_t sim_sensors[APP_STATE_MAX_SENSORS];
+static int sim_sensor_count;
+static app_state_discovered_sensor_t sim_discovered[2] = {
+	{
+		.mac = "AA:BB:CC:DD:EE:10",
+		.kind = "THP",
+		.name = "Rack Sensor",
+		.rssi = -44,
+		.valid = true,
+	},
+	{
+		.mac = "AA:BB:CC:DD:EE:11",
+		.kind = "TH",
+		.name = "Door Sensor",
+		.rssi = -51,
+		.valid = true,
+	},
+};
 static app_state_bt_status_t sim_bt_status;
 static app_state_nw_if_t sim_nw_if = {
 	.type = 2,
@@ -89,6 +107,16 @@ static void ensure_sim_outlets(void)
 	app_state_set_nw_if(&sim_nw_if);
 	app_state_set_nw_services(&sim_nw_services);
 	app_state_set_modbus(&sim_modbus);
+	if (sim_sensor_count == 0) {
+		sim_sensor_count = 1;
+		sim_sensors[0].id = 1;
+		snprintf(sim_sensors[0].mac, sizeof(sim_sensors[0].mac), "%s",
+				"AA:BB:CC:DD:EE:01");
+		snprintf(sim_sensors[0].name, sizeof(sim_sensors[0].name), "%s",
+				"Rack Ambient");
+		sim_sensors[0].valid = true;
+	}
+	app_state_set_sensors(sim_sensors, sim_sensor_count);
 	sim_initialized = true;
 }
 
@@ -521,6 +549,76 @@ int backend_modbus_set_addr(int addr, backend_callback_t callback,
 {
 	sim_modbus.addr = addr;
 	app_state_set_modbus(&sim_modbus);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_sensors_refresh(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	app_state_set_sensors(sim_sensors, sim_sensor_count);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_ble_scan_start(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_ble_scan_stop(backend_callback_t callback, void* userdata)
+{
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_ble_discovered_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_set_discovered_sensors(sim_discovered, 2);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_ble_confirm_mac(const char* mac, backend_callback_t callback,
+		void* userdata)
+{
+	ensure_sim_outlets();
+	if (sim_sensor_count < APP_STATE_MAX_SENSORS) {
+		app_state_sensor_t* sensor = &sim_sensors[sim_sensor_count];
+		memset(sensor, 0, sizeof(*sensor));
+		sensor->id = sim_sensor_count + 1;
+		snprintf(sensor->mac, sizeof(sensor->mac), "%s",
+				mac != NULL ? mac : "");
+		snprintf(sensor->name, sizeof(sensor->name), "Sensor %d",
+				sim_sensor_count + 1);
+		sensor->valid = true;
+		sim_sensor_count++;
+	}
+	app_state_set_sensors(sim_sensors, sim_sensor_count);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_ble_confirm_all(backend_callback_t callback, void* userdata)
+{
+	for (int i = 0; i < 2 && sim_sensor_count < APP_STATE_MAX_SENSORS; i++) {
+		backend_ble_confirm_mac(sim_discovered[i].mac, NULL, NULL);
+	}
+	app_state_set_sensors(sim_sensors, sim_sensor_count);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

@@ -60,6 +60,13 @@ int backend_network_service_set(const char* service, bool enable,
 int backend_modbus_refresh(backend_callback_t callback, void* userdata);
 int backend_modbus_set_addr(int addr, backend_callback_t callback,
 		void* userdata);
+int backend_sensors_refresh(backend_callback_t callback, void* userdata);
+int backend_ble_scan_start(backend_callback_t callback, void* userdata);
+int backend_ble_scan_stop(backend_callback_t callback, void* userdata);
+int backend_ble_discovered_refresh(backend_callback_t callback, void* userdata);
+int backend_ble_confirm_mac(const char* mac, backend_callback_t callback,
+		void* userdata);
+int backend_ble_confirm_all(backend_callback_t callback, void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

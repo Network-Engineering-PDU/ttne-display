@@ -235,6 +235,60 @@ void app_state_set_modbus(const app_state_modbus_t* modbus)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_sensors(const app_state_sensor_t* sensors, int count)
+{
+	if (count < 0) {
+		count = 0;
+	}
+	if (count > APP_STATE_MAX_SENSORS) {
+		count = APP_STATE_MAX_SENSORS;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.sensor_count = count;
+	for (int i = 0; i < count; i++) {
+		state.sensors[i] = sensors[i];
+		state.sensors[i].mac[sizeof(state.sensors[i].mac) - 1] = '\0';
+		state.sensors[i].name[sizeof(state.sensors[i].name) - 1] = '\0';
+		state.sensors[i].valid = true;
+	}
+	for (int i = count; i < APP_STATE_MAX_SENSORS; i++) {
+		memset(&state.sensors[i], 0, sizeof(state.sensors[i]));
+	}
+	state.sensors_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_discovered_sensors(
+		const app_state_discovered_sensor_t* sensors, int count)
+{
+	if (count < 0) {
+		count = 0;
+	}
+	if (count > APP_STATE_MAX_DISCOVERED_SENSORS) {
+		count = APP_STATE_MAX_DISCOVERED_SENSORS;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.discovered_sensor_count = count;
+	for (int i = 0; i < count; i++) {
+		state.discovered_sensors[i] = sensors[i];
+		state.discovered_sensors[i].mac[
+			sizeof(state.discovered_sensors[i].mac) - 1] = '\0';
+		state.discovered_sensors[i].kind[
+			sizeof(state.discovered_sensors[i].kind) - 1] = '\0';
+		state.discovered_sensors[i].name[
+			sizeof(state.discovered_sensors[i].name) - 1] = '\0';
+		state.discovered_sensors[i].valid = true;
+	}
+	for (int i = count; i < APP_STATE_MAX_DISCOVERED_SENSORS; i++) {
+		memset(&state.discovered_sensors[i], 0,
+				sizeof(state.discovered_sensors[i]));
+	}
+	state.discovered_sensors_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

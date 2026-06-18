@@ -8,10 +8,9 @@
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_colors.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
-#define MAX_SENSORS 8
 #define TIMER_SCAN 2000 // ms
 #define MIN_SCAN_POLLS 3
 #define MAX_SCAN_RETRIES 30 // 30 * 2s = 60 seconds scan timeout
@@ -32,9 +31,9 @@ static lv_obj_t* selection_scr;
 
 static lv_timer_t* timer;
 
-static lv_obj_t* btn_sensor[MAX_SENSORS];
-static lv_obj_t* lbl_mac[MAX_SENSORS];
-static lv_obj_t* btn_found_sensor[MAX_SENSORS];
+static lv_obj_t* btn_sensor[APP_STATE_MAX_SENSORS];
+static lv_obj_t* lbl_mac[APP_STATE_MAX_SENSORS];
+static lv_obj_t* btn_found_sensor[APP_STATE_MAX_SENSORS];
 
 static lv_obj_t* sensors_data_page;
 static lv_obj_t* lbl_no_sensors;
@@ -42,6 +41,10 @@ static lv_obj_t* lbl_no_sensors;
 static int scan_retries;
 static int discovered_count;
 static lv_obj_t* current_main_scr;
+static bool sensors_refresh_pending;
+static bool scan_start_pending;
+static bool discovered_refresh_pending;
+static char selected_discovered_mac[APP_STATE_SENSOR_TEXT_LEN];
 
 /* Function prototypes ********************************************************/
 
@@ -52,10 +55,16 @@ static void btn_sensor_cb(lv_event_t* e);
 static void btn_found_sensor_cb(lv_event_t* e);
 static void btn_add_all_cb(lv_event_t* e);
 static void timer_scan_cb(lv_timer_t* timer);
+static void sensors_refresh_cb(int err, void* userdata);
+static void scan_start_cb(int err, void* userdata);
+static void discovered_refresh_cb(int err, void* userdata);
+static void confirm_sensor_cb(int err, void* userdata);
 
 static void update_sensors(void);
+static void apply_sensors_snapshot(void);
 static void finish_scan_and_show(void);
 static void show_found_sensors_selection(void);
+static bool open_sensor_by_mac_from_snapshot(const char* mac);
 
 /* Callbacks ******************************************************************/
 
@@ -81,7 +90,7 @@ static void cancel_loader_cb(lv_event_t* e)
 	if (code == LV_EVENT_CLICKED) {
 		LV_LOG_USER("CANCEL");
 		if (selection_scr != NULL) {
-			controller_post_ble_scan_stop();
+			backend_ble_scan_stop(NULL, NULL);
 			lv_scr_load(current_main_scr);
 			lv_obj_del(selection_scr);
 			selection_scr = NULL;
@@ -97,24 +106,20 @@ static void add_sensor_cb(lv_event_t* e)
 	lv_event_code_t code = lv_event_get_code(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		int len;
-		models_get_sensor(&len);
-		if (len == MAX_SENSORS) {
+		app_state_snapshot_t snapshot;
+		app_state_get_snapshot(&snapshot);
+		if (snapshot.sensor_count == APP_STATE_MAX_SENSORS) {
 			tt_obj_info_box_create("ERROR", "Max number of sensor reached", 1);
 			return;
 		}
 		discovered_count = 0;
 		scan_retries = 0;
-		if (!controller_post_ble_scan_start()) {
-			tt_obj_info_box_create("ERROR",
-					"Could not start BLE scan.\nCheck Bluetooth service.", 1);
+		if (scan_start_pending) {
 			return;
 		}
-		timer = lv_timer_create(timer_scan_cb, TIMER_SCAN,
-				lv_scr_act());
-		loader_scr = tt_obj_loader_create("Searching nearest sensors...",
-				cancel_loader_cb);
-		lv_scr_load(loader_scr);
+		if (backend_ble_scan_start(scan_start_cb, lv_scr_act()) == 0) {
+			scan_start_pending = true;
+		}
 	}
 }
 
@@ -124,7 +129,6 @@ static void btn_sensor_cb(lv_event_t* e)
 	int sensor_id = (long)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		controller_get_sensors();
 		scr_sensors_data_set_sensor(sensor_id);
 		lv_menu_set_page(menu, sensors_data_page);
 	}
@@ -132,8 +136,7 @@ static void btn_sensor_cb(lv_event_t* e)
 
 static void finish_selection_and_return(void)
 {
-	controller_post_ble_scan_stop();
-	controller_get_sensors();
+	backend_ble_scan_stop(NULL, NULL);
 	if (selection_scr != NULL) {
 		lv_scr_load(current_main_scr);
 		lv_obj_del(selection_scr);
@@ -144,19 +147,16 @@ static void finish_selection_and_return(void)
 	update_sensors();
 }
 
-static bool open_sensor_by_mac(const char* mac)
+static bool open_sensor_by_mac_from_snapshot(const char* mac)
 {
-	int len;
-	const models_sensor_t* sensors;
-
 	if (mac == NULL || mac[0] == '\0') {
 		return false;
 	}
 
-	controller_get_sensors();
-	sensors = models_get_sensor(&len);
-	for (int i = 0; i < len; i++) {
-		if (sensors[i].mac != NULL && strcmp(sensors[i].mac, mac) == 0) {
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	for (int i = 0; i < snapshot.sensor_count; i++) {
+		if (strcmp(snapshot.sensors[i].mac, mac) == 0) {
 			scr_sensors_data_set_sensor(i + 1);
 			lv_menu_set_page(menu, sensors_data_page);
 			return true;
@@ -171,18 +171,13 @@ static void btn_found_sensor_cb(lv_event_t* e)
 	int sensor_idx = (long)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		int len;
-		const models_discovered_sensor_t* devices =
-				models_get_discovered(&len);
-		if (sensor_idx >= 0 && sensor_idx < len) {
-			char mac[32];
-			snprintf(mac, sizeof(mac), "%s", devices[sensor_idx].mac);
-			controller_post_ble_confirm_mac(devices[sensor_idx].mac);
-			finish_selection_and_return();
-			if (!open_sensor_by_mac(mac)) {
-				tt_obj_info_box_create("Sensor added",
-						"Sensor registered.\nOpen it to view live data.", 1);
-			}
+		app_state_snapshot_t snapshot;
+		app_state_get_snapshot(&snapshot);
+		if (sensor_idx >= 0 && sensor_idx < snapshot.discovered_sensor_count) {
+			snprintf(selected_discovered_mac, sizeof(selected_discovered_mac), "%s",
+					snapshot.discovered_sensors[sensor_idx].mac);
+			backend_ble_confirm_mac(selected_discovered_mac, confirm_sensor_cb,
+					(void*)1);
 			return;
 		}
 		finish_selection_and_return();
@@ -194,10 +189,8 @@ static void btn_add_all_cb(lv_event_t* e)
 	lv_event_code_t code = lv_event_get_code(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		controller_post_ble_confirm_all();
-		finish_selection_and_return();
-		tt_obj_info_box_create("Sensors added",
-				"Sensors registered.\nOpen one to view live data.", 1);
+		selected_discovered_mac[0] = '\0';
+		backend_ble_confirm_all(confirm_sensor_cb, NULL);
 	}
 }
 
@@ -210,7 +203,7 @@ static void finish_scan_and_show(void)
 		lv_timer_del(timer);
 		timer = NULL;
 	}
-	controller_post_ble_scan_stop();
+	backend_ble_scan_stop(NULL, NULL);
 	if (loader_scr != NULL && lv_scr_act() == loader_scr) {
 		lv_scr_load(scr);
 		lv_obj_del(loader_scr);
@@ -227,11 +220,25 @@ static void finish_scan_and_show(void)
 static void timer_scan_cb(lv_timer_t* timer)
 {
 	(void)timer;
-	int len;
+	if (discovered_refresh_pending) {
+		return;
+	}
+	if (backend_ble_discovered_refresh(discovered_refresh_cb, NULL) == 0) {
+		discovered_refresh_pending = true;
+	}
+}
 
-	controller_get_ble_discovered();
-	models_get_discovered(&len);
-	discovered_count = len;
+static void discovered_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	discovered_refresh_pending = false;
+	if (err != 0) {
+		return;
+	}
+
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	discovered_count = snapshot.discovered_sensor_count;
 	scan_retries++;
 
 	UI_POLL_LOG("Searching BLE sensors. Retries: %d (found=%d)",
@@ -249,8 +256,9 @@ static void timer_scan_cb(lv_timer_t* timer)
 
 static void show_found_sensors_selection(void)
 {
-	int len;
-	const models_discovered_sensor_t* devices = models_get_discovered(&len);
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	int len = snapshot.discovered_sensor_count;
 
 	selection_scr = lv_obj_create(NULL);
 	lv_obj_set_size(selection_scr, LV_PCT(100), LV_PCT(100));
@@ -268,12 +276,14 @@ static void show_found_sensors_selection(void)
 		lv_obj_set_height(btn_all, 50);
 	}
 
-	for (int i = 0; i < len && i < MAX_SENSORS; i++) {
-		char btn_text[120];
-		const char* label = (devices[i].name != NULL &&
-				devices[i].name[0] != '\0') ? devices[i].name : devices[i].kind;
+	for (int i = 0; i < len && i < APP_STATE_MAX_SENSORS; i++) {
+		char btn_text[180];
+		const app_state_discovered_sensor_t* device =
+				&snapshot.discovered_sensors[i];
+		const char* label = device->name[0] != '\0' ?
+				device->name : device->kind;
 		snprintf(btn_text, sizeof(btn_text), "#%d %s %s (%d dBm)",
-				i + 1, label, devices[i].mac, devices[i].rssi);
+				i + 1, label, device->mac, device->rssi);
 
 		btn_found_sensor[i] = tt_obj_btn_perc_create(selection_scr, NULL,
 				btn_text, 100);
@@ -294,28 +304,84 @@ static void show_found_sensors_selection(void)
 
 static void update_sensors(void)
 {
-	controller_get_sensors();
-	int len;
-	const models_sensor_t* sensors = models_get_sensor(&len);
+	if (sensors_refresh_pending) {
+		return;
+	}
+	if (backend_sensors_refresh(sensors_refresh_cb, NULL) == 0) {
+		sensors_refresh_pending = true;
+	}
+}
+
+static void sensors_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	sensors_refresh_pending = false;
+	if (err != 0) {
+		return;
+	}
+	apply_sensors_snapshot();
+}
+
+static void apply_sensors_snapshot(void)
+{
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	int len = snapshot.sensor_count;
+
 	if (len == 0) {
 		lv_obj_clear_flag(lbl_no_sensors, LV_OBJ_FLAG_HIDDEN);
 	} else {
 		lv_obj_add_flag(lbl_no_sensors, LV_OBJ_FLAG_HIDDEN);
 	}
-	for (int i = 0; i < MAX_SENSORS; i++) {
+	for (int i = 0; i < APP_STATE_MAX_SENSORS; i++) {
 		if (i < len) {
-			char label[40];
+			char label[APP_STATE_SENSOR_TEXT_LEN];
+			const app_state_sensor_t* sensor = &snapshot.sensors[i];
 			lv_obj_clear_flag(btn_sensor[i], LV_OBJ_FLAG_HIDDEN);
-			if (sensors[i].name != NULL && sensors[i].name[0] != '\0') {
-				snprintf(label, sizeof(label), "%s", sensors[i].name);
+			if (sensor->name[0] != '\0') {
+				snprintf(label, sizeof(label), "%s", sensor->name);
 			} else {
 				snprintf(label, sizeof(label), "SENSOR %d", i + 1);
 			}
 			lv_label_set_text(lv_obj_get_child(btn_sensor[i], 0), label);
-			lv_label_set_text(lbl_mac[i], sensors[i].mac);
+			lv_label_set_text(lbl_mac[i], sensor->mac);
 		} else {
 			lv_obj_add_flag(btn_sensor[i], LV_OBJ_FLAG_HIDDEN);
 		}
+	}
+}
+
+static void scan_start_cb(int err, void* userdata)
+{
+	lv_obj_t* previous = userdata;
+	scan_start_pending = false;
+	if (err != 0) {
+		tt_obj_info_box_create("ERROR",
+				"Could not start BLE scan.\nCheck Bluetooth service.", 1);
+		return;
+	}
+	timer = lv_timer_create(timer_scan_cb, TIMER_SCAN, previous);
+	loader_scr = tt_obj_loader_create("Searching nearest sensors...",
+			cancel_loader_cb);
+	lv_scr_load(loader_scr);
+}
+
+static void confirm_sensor_cb(int err, void* userdata)
+{
+	bool open_after_add = userdata != NULL;
+	if (err != 0) {
+		tt_obj_info_box_create("ERROR", "Could not register sensor", 1);
+		finish_selection_and_return();
+		return;
+	}
+
+	finish_selection_and_return();
+	if (open_after_add && !open_sensor_by_mac_from_snapshot(selected_discovered_mac)) {
+		tt_obj_info_box_create("Sensor added",
+				"Sensor registered.\nOpen it to view live data.", 1);
+	} else if (!open_after_add) {
+		tt_obj_info_box_create("Sensors added",
+				"Sensors registered.\nOpen one to view live data.", 1);
 	}
 }
 
@@ -332,9 +398,9 @@ void scr_sensors_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	lv_obj_add_flag(lbl_no_sensors, LV_OBJ_FLAG_HIDDEN);
 	lv_obj_set_flex_flow(sensors_cont, LV_FLEX_FLOW_ROW_WRAP);
 
-	for (int i = 0; i < MAX_SENSORS; i++) {
+	for (int i = 0; i < APP_STATE_MAX_SENSORS; i++) {
 		char str[10];
-		sprintf(str, "SENSOR %d", i + 1);
+		snprintf(str, sizeof(str), "SENSOR %d", i + 1);
 		btn_sensor[i] = tt_obj_btn_perc_create(sensors_cont, NULL, str, 48);
 		lv_obj_add_event_cb(btn_sensor[i], btn_sensor_cb, LV_EVENT_ALL,
 				(void*)(long)(i + 1));

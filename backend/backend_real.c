@@ -51,6 +51,12 @@ typedef enum {
 	BACKEND_CMD_NETWORK_SERVICE_SET,
 	BACKEND_CMD_MODBUS_REFRESH,
 	BACKEND_CMD_MODBUS_SET_ADDR,
+	BACKEND_CMD_SENSORS_REFRESH,
+	BACKEND_CMD_BLE_SCAN_START,
+	BACKEND_CMD_BLE_SCAN_STOP,
+	BACKEND_CMD_BLE_DISCOVERED_REFRESH,
+	BACKEND_CMD_BLE_CONFIRM_MAC,
+	BACKEND_CMD_BLE_CONFIRM_ALL,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -285,6 +291,59 @@ static void publish_modbus_from_models(void)
 		.valid = true,
 	};
 	app_state_set_modbus(&modbus);
+}
+
+static void publish_sensors_from_models(void)
+{
+	int len;
+	const models_sensor_t* model_sensors = models_get_sensor(&len);
+	app_state_sensor_t sensors[APP_STATE_MAX_SENSORS];
+
+	memset(sensors, 0, sizeof(sensors));
+	if (model_sensors == NULL || len <= 0) {
+		app_state_set_sensors(NULL, 0);
+		return;
+	}
+	if (len > APP_STATE_MAX_SENSORS) {
+		len = APP_STATE_MAX_SENSORS;
+	}
+	for (int i = 0; i < len; i++) {
+		sensors[i].id = model_sensors[i].id;
+		snprintf(sensors[i].mac, sizeof(sensors[i].mac), "%s",
+				model_sensors[i].mac != NULL ? model_sensors[i].mac : "");
+		snprintf(sensors[i].name, sizeof(sensors[i].name), "%s",
+				model_sensors[i].name != NULL ? model_sensors[i].name : "");
+		sensors[i].valid = true;
+	}
+	app_state_set_sensors(sensors, len);
+}
+
+static void publish_discovered_from_models(void)
+{
+	int len;
+	const models_discovered_sensor_t* model_sensors =
+			models_get_discovered(&len);
+	app_state_discovered_sensor_t sensors[APP_STATE_MAX_DISCOVERED_SENSORS];
+
+	memset(sensors, 0, sizeof(sensors));
+	if (model_sensors == NULL || len <= 0) {
+		app_state_set_discovered_sensors(NULL, 0);
+		return;
+	}
+	if (len > APP_STATE_MAX_DISCOVERED_SENSORS) {
+		len = APP_STATE_MAX_DISCOVERED_SENSORS;
+	}
+	for (int i = 0; i < len; i++) {
+		snprintf(sensors[i].mac, sizeof(sensors[i].mac), "%s",
+				model_sensors[i].mac != NULL ? model_sensors[i].mac : "");
+		snprintf(sensors[i].kind, sizeof(sensors[i].kind), "%s",
+				model_sensors[i].kind != NULL ? model_sensors[i].kind : "");
+		snprintf(sensors[i].name, sizeof(sensors[i].name), "%s",
+				model_sensors[i].name != NULL ? model_sensors[i].name : "");
+		sensors[i].rssi = model_sensors[i].rssi;
+		sensors[i].valid = true;
+	}
+	app_state_set_discovered_sensors(sensors, len);
 }
 
 static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
@@ -781,6 +840,30 @@ static void* backend_worker(void* arg)
 			publish_modbus_from_models();
 			break;
 		}
+		case BACKEND_CMD_SENSORS_REFRESH:
+			controller_get_sensors();
+			publish_sensors_from_models();
+			break;
+		case BACKEND_CMD_BLE_SCAN_START:
+			err = controller_post_ble_scan_start() ? 0 : 1;
+			break;
+		case BACKEND_CMD_BLE_SCAN_STOP:
+			controller_post_ble_scan_stop();
+			break;
+		case BACKEND_CMD_BLE_DISCOVERED_REFRESH:
+			controller_get_ble_discovered();
+			publish_discovered_from_models();
+			break;
+		case BACKEND_CMD_BLE_CONFIRM_MAC:
+			controller_post_ble_confirm_mac(cmd.text);
+			controller_get_sensors();
+			publish_sensors_from_models();
+			break;
+		case BACKEND_CMD_BLE_CONFIRM_ALL:
+			controller_post_ble_confirm_all();
+			controller_get_sensors();
+			publish_sensors_from_models();
+			break;
 		default:
 			err = 1;
 			break;
@@ -1168,6 +1251,68 @@ int backend_modbus_set_addr(int addr, backend_callback_t callback,
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_MODBUS_SET_ADDR,
 		.value = addr,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_sensors_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SENSORS_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_ble_scan_start(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLE_SCAN_START,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_ble_scan_stop(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLE_SCAN_STOP,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_ble_discovered_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLE_DISCOVERED_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_ble_confirm_mac(const char* mac, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLE_CONFIRM_MAC,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", mac != NULL ? mac : "");
+	return backend_submit(&cmd);
+}
+
+int backend_ble_confirm_all(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLE_CONFIRM_ALL,
 		.callback = callback,
 		.userdata = userdata,
 	};
