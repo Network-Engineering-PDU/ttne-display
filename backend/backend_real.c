@@ -22,6 +22,7 @@ typedef enum {
 	BACKEND_CMD_LICENSE_REFRESH,
 	BACKEND_CMD_POWER_REFRESH,
 	BACKEND_CMD_SENSOR_DATA_REFRESH,
+	BACKEND_CMD_UPDATE_STATUS_REFRESH,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -99,6 +100,29 @@ static void publish_license_from_models(void)
 {
 	const models_license_t* license = models_get_license();
 	app_state_set_license_type(license != NULL ? license->type_id : "N/A");
+}
+
+static void publish_update_status_from_models(void)
+{
+	const models_update_status_t* model_status = models_get_update_status();
+	app_state_update_status_t update_status;
+
+	memset(&update_status, 0, sizeof(update_status));
+	if (model_status != NULL) {
+		update_status.is_pending = model_status->is_pending;
+		update_status.auto_update = model_status->auto_update;
+		update_status.check_interval_hours = model_status->check_interval_hours;
+		snprintf(update_status.update_server,
+				sizeof(update_status.update_server), "%s",
+				model_status->update_server != NULL
+						? model_status->update_server : "N/A");
+	} else {
+		update_status.check_interval_hours = 24;
+		snprintf(update_status.update_server,
+				sizeof(update_status.update_server), "%s", "N/A");
+	}
+
+	app_state_set_update_status(&update_status);
 }
 
 static void run_power_refresh(void)
@@ -346,6 +370,10 @@ static void* backend_worker(void* arg)
 		case BACKEND_CMD_SENSOR_DATA_REFRESH:
 			err = run_sensor_data_refresh(cmd.line_id);
 			break;
+		case BACKEND_CMD_UPDATE_STATUS_REFRESH:
+			controller_get_update_status();
+			publish_update_status_from_models();
+			break;
 		default:
 			err = 1;
 			break;
@@ -480,6 +508,16 @@ int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_SENSOR_DATA_REFRESH,
 		.line_id = sensor_index,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_update_status_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_UPDATE_STATUS_REFRESH,
 		.callback = callback,
 		.userdata = userdata,
 	};

@@ -12,6 +12,9 @@ void app_state_init(void)
 	pthread_mutex_lock(&state_mutex);
 	memset(&state, 0, sizeof(state));
 	snprintf(state.license_type, sizeof(state.license_type), "%s", "N/A");
+	snprintf(state.update_status.update_server,
+			sizeof(state.update_status.update_server), "%s", "N/A");
+	state.update_status.check_interval_hours = 24;
 	pthread_mutex_unlock(&state_mutex);
 }
 
@@ -98,6 +101,21 @@ void app_state_set_sensor_data(const app_state_sensor_data_t* sensor_data)
 	state.sensor_data.kind[sizeof(state.sensor_data.kind) - 1] = '\0';
 	state.sensor_data.valid = true;
 	state.sensor_data_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_update_status(const app_state_update_status_t* update_status)
+{
+	if (update_status == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.update_status = *update_status;
+	state.update_status.update_server[
+		sizeof(state.update_status.update_server) - 1] = '\0';
+	state.update_status.valid = true;
+	state.update_status_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

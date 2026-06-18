@@ -173,4 +173,23 @@ int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
 	return 0;
 }
 
+int backend_update_status_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_update_status_t update_status;
+
+	memset(&update_status, 0, sizeof(update_status));
+	update_status.is_pending = false;
+	update_status.auto_update = false;
+	update_status.check_interval_hours = 24;
+	snprintf(update_status.update_server, sizeof(update_status.update_server),
+			"%s", "https://github.com/Network-Engineering-PDU/firmware-update");
+	update_status.valid = true;
+
+	app_state_set_update_status(&update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
 #endif /* SIMULATOR_ENABLED */

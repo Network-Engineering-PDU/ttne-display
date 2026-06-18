@@ -10,6 +10,8 @@
 #include "models.h"
 #include "controller.h"
 #include "runbg.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
 #define TIMER_MSG_BOX_PERIOD 10000 
 #define TIMER_ROT 5000 
@@ -39,10 +41,12 @@ static lv_timer_t* timer_poll_update_status;  // Timer for polling update status
 static char update_dev[20];
 static pid_t update_pid;
 static bool update_confirmation_shown = false;  // Track if we've already shown the confirmation
+static bool update_status_refresh_pending;
 
 /* Function prototypes ********************************************************/
 static void timer_check_update_cb(lv_timer_t* timer);
 static void timer_poll_update_status_cb(lv_timer_t* timer);
+static void update_status_refresh_cb(int err, void* userdata);
 static void loader_cb(lv_event_t* e);
 static void txt_server_cb(lv_event_t* e);
 static void btn_auto_cb(lv_event_t* e);
@@ -54,7 +58,9 @@ static void msg_box_update_cb(lv_event_t* e);
 static void msg_box_update_confirmation_cb(lv_event_t* e);
 static void msg_box_reboot_cb(lv_event_t* e);
 static void msg_box_factory_cb(lv_event_t* e);
-static void update_controls_from_status(const models_update_status_t* update_status);
+static void apply_update_status_snapshot(void);
+static void update_controls_from_status(
+        const app_state_update_status_t* update_status);
 static uint16_t period_sel_from_hours(int hours);
 static int period_hours_from_sel(uint16_t sel);
 
@@ -151,30 +157,56 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 /* Callbacks ******************************************************************/
 
 static void timer_poll_update_status_cb(lv_timer_t* timer) {
-    // Poll for pending updates from the remote server
-    controller_get_update_status();
-    
-    const models_update_status_t* update_status = models_get_update_status();
+    (void)timer;
+    if (update_status_refresh_pending) {
+        return;
+    }
+    if (backend_update_status_refresh(update_status_refresh_cb, NULL) == 0) {
+        update_status_refresh_pending = true;
+    }
+}
+
+static void update_status_refresh_cb(int err, void* userdata) {
+    (void)userdata;
+    update_status_refresh_pending = false;
+    if (err != 0) {
+        return;
+    }
+    apply_update_status_snapshot();
+}
+
+static void apply_update_status_snapshot(void) {
+    app_state_snapshot_t snapshot;
+    app_state_get_snapshot(&snapshot);
+    const app_state_update_status_t* update_status = &snapshot.update_status;
+
+    if (!update_status->valid) {
+        return;
+    }
+
     update_controls_from_status(update_status);
-    
-	    UI_POLL_LOG("Poll: pending=%d, auto_update=%d, shown=%d",
-	        update_status->is_pending, update_status->auto_update, update_confirmation_shown);
-    
+
+    UI_POLL_LOG("Poll: pending=%d, auto_update=%d, shown=%d",
+        update_status->is_pending, update_status->auto_update, update_confirmation_shown);
+
     // Only show confirmation once, when an update is pending and auto_update is enabled
     if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {
         update_confirmation_shown = true;
         LV_LOG_USER("Firmware update detected! Showing confirmation dialog.");
         
         // Stop polling while showing confirmation dialog
-        lv_timer_pause(timer);
+        if (timer_poll_update_status != NULL) {
+            lv_timer_pause(timer_poll_update_status);
+        }
         
         char msg[300];
-        sprintf(msg, "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
+        snprintf(msg, sizeof(msg), "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
         tt_obj_msg_box_create("Firmware Update", msg, "Updating device...", msg_box_update_confirmation_cb);
     }
 }
 
-static void update_controls_from_status(const models_update_status_t* update_status) {
+static void update_controls_from_status(
+        const app_state_update_status_t* update_status) {
     if (btn_auto != NULL) {
         uint16_t expected_sel = update_status->auto_update ? 0 : 1;
         if (lv_dropdown_get_selected(btn_auto) != expected_sel) {
@@ -191,7 +223,6 @@ static void update_controls_from_status(const models_update_status_t* update_sta
     }
 
     if (txt_server != NULL &&
-        update_status->update_server != NULL &&
         strcmp(update_status->update_server, "N/A") != 0 &&
         strlen(update_status->update_server) > 0 &&
         strcmp(lv_textarea_get_text(txt_server), update_status->update_server) != 0) {
@@ -311,7 +342,7 @@ static void msg_box_update_confirmation_cb(lv_event_t* e) {
         } else {
             // NO - reject update
             controller_post_update_confirm(false);
-            controller_get_update_status();
+            backend_update_status_refresh(update_status_refresh_cb, NULL);
             update_confirmation_shown = false;
         }
         lv_msgbox_close(obj);
