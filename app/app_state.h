@@ -167,6 +167,27 @@ typedef struct {
 } app_state_discovered_sensor_t;
 
 typedef struct {
+	char product_name[APP_STATE_NW_TEXT_LEN];
+	char product_pn[APP_STATE_NW_TEXT_LEN];
+	char product_sn[APP_STATE_NW_TEXT_LEN];
+	char lan_mac[APP_STATE_NW_TEXT_LEN];
+	char ip[APP_STATE_NW_TEXT_LEN];
+	char sw_version[APP_STATE_NW_TEXT_LEN];
+	char om_version[APP_STATE_NW_TEXT_LEN];
+	char pmb_version[APP_STATE_NW_TEXT_LEN];
+	char uptime[APP_STATE_NW_TEXT_LEN];
+	bool valid;
+} app_state_system_info_t;
+
+typedef struct {
+	int n_outlets;
+	int rated_current;
+	char controller[APP_STATE_NW_TEXT_LEN];
+	char type[APP_STATE_NW_TEXT_LEN];
+	bool valid;
+} app_state_pdu_info_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
@@ -181,6 +202,8 @@ typedef struct {
 	app_state_sensor_t sensors[APP_STATE_MAX_SENSORS];
 	app_state_discovered_sensor_t discovered_sensors[
 		APP_STATE_MAX_DISCOVERED_SENSORS];
+	app_state_system_info_t system_info;
+	app_state_pdu_info_t pdu_info;
 	char license_type[16];
 	int outlet_count;
 	int sensor_count;
@@ -198,6 +221,8 @@ typedef struct {
 	uint32_t modbus_revision;
 	uint32_t sensors_revision;
 	uint32_t discovered_sensors_revision;
+	uint32_t system_info_revision;
+	uint32_t pdu_info_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -219,6 +244,8 @@ void app_state_set_modbus(const app_state_modbus_t* modbus);
 void app_state_set_sensors(const app_state_sensor_t* sensors, int count);
 void app_state_set_discovered_sensors(
 		const app_state_discovered_sensor_t* sensors, int count);
+void app_state_set_system_info(const app_state_system_info_t* info);
+void app_state_set_pdu_info(const app_state_pdu_info_t* pdu_info);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 

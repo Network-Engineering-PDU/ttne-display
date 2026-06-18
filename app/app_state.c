@@ -18,6 +18,9 @@ void app_state_init(void)
 	state.nw_if.type = 1;
 	state.nw_if.dhcp = true;
 	state.nw_if.nw_mode = -1;
+	snprintf(state.system_info.product_name,
+			sizeof(state.system_info.product_name), "%s", "N/A");
+	snprintf(state.system_info.ip, sizeof(state.system_info.ip), "%s", "N/A");
 	pthread_mutex_unlock(&state_mutex);
 }
 
@@ -286,6 +289,49 @@ void app_state_set_discovered_sensors(
 				sizeof(state.discovered_sensors[i]));
 	}
 	state.discovered_sensors_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_system_info(const app_state_system_info_t* info)
+{
+	if (info == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.system_info = *info;
+	state.system_info.product_name[
+		sizeof(state.system_info.product_name) - 1] = '\0';
+	state.system_info.product_pn[
+		sizeof(state.system_info.product_pn) - 1] = '\0';
+	state.system_info.product_sn[
+		sizeof(state.system_info.product_sn) - 1] = '\0';
+	state.system_info.lan_mac[sizeof(state.system_info.lan_mac) - 1] = '\0';
+	state.system_info.ip[sizeof(state.system_info.ip) - 1] = '\0';
+	state.system_info.sw_version[
+		sizeof(state.system_info.sw_version) - 1] = '\0';
+	state.system_info.om_version[
+		sizeof(state.system_info.om_version) - 1] = '\0';
+	state.system_info.pmb_version[
+		sizeof(state.system_info.pmb_version) - 1] = '\0';
+	state.system_info.uptime[sizeof(state.system_info.uptime) - 1] = '\0';
+	state.system_info.valid = true;
+	state.system_info_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_pdu_info(const app_state_pdu_info_t* pdu_info)
+{
+	if (pdu_info == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.pdu_info = *pdu_info;
+	state.pdu_info.controller[sizeof(state.pdu_info.controller) - 1] = '\0';
+	state.pdu_info.type[sizeof(state.pdu_info.type) - 1] = '\0';
+	state.pdu_info.valid = true;
+	state.pdu_info_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

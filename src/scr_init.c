@@ -4,8 +4,8 @@
 #include "scr_init.h"
 #include "scr_splash.h"
 #include "tt_obj.h"
-#include "controller.h"
-#include "models.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
 #define TIMER_REFRESH_RATE 3000 // ms
 
@@ -14,19 +14,38 @@
 static lv_obj_t* init_scr;
 
 static lv_timer_t* timer;
+static bool refresh_pending;
 
 /* Function prototypes ********************************************************/
 
 static void init_timer_cb(lv_timer_t* timer);
+static void init_refresh_cb(int err, void* userdata);
 
 /* Callbacks ******************************************************************/
 
 static void init_timer_cb(lv_timer_t* timer)
 {
-	controller_get_sys_info();
-	const models_info_t* info = models_get_info();
-	if (strcmp(info->ip, "N/A") != 0) {
-		lv_timer_del(timer);
+	(void)timer;
+	if (!refresh_pending &&
+			backend_system_info_refresh(init_refresh_cb, NULL) == 0) {
+		refresh_pending = true;
+	}
+}
+
+static void init_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	refresh_pending = false;
+	if (err != 0) {
+		return;
+	}
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	if (strcmp(snapshot.system_info.ip, "N/A") != 0) {
+		if (timer != NULL) {
+			lv_timer_del(timer);
+			timer = NULL;
+		}
 		scr_splash_show(true);
 	}
 }

@@ -57,6 +57,9 @@ typedef enum {
 	BACKEND_CMD_BLE_DISCOVERED_REFRESH,
 	BACKEND_CMD_BLE_CONFIRM_MAC,
 	BACKEND_CMD_BLE_CONFIRM_ALL,
+	BACKEND_CMD_SYSTEM_INFO_REFRESH,
+	BACKEND_CMD_PDU_INFO_REFRESH,
+	BACKEND_CMD_PDU_SET_RATED_CURRENT,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -344,6 +347,55 @@ static void publish_discovered_from_models(void)
 		sensors[i].valid = true;
 	}
 	app_state_set_discovered_sensors(sensors, len);
+}
+
+static void publish_system_info_from_models(void)
+{
+	const models_info_t* model = models_get_info();
+	app_state_system_info_t info;
+
+	memset(&info, 0, sizeof(info));
+	if (model != NULL) {
+		snprintf(info.product_name, sizeof(info.product_name), "%s",
+				model->product_name != NULL ? model->product_name : "N/A");
+		snprintf(info.product_pn, sizeof(info.product_pn), "%s",
+				model->product_pn != NULL ? model->product_pn : "N/A");
+		snprintf(info.product_sn, sizeof(info.product_sn), "%s",
+				model->product_sn != NULL ? model->product_sn : "N/A");
+		snprintf(info.lan_mac, sizeof(info.lan_mac), "%s",
+				model->lan_mac != NULL ? model->lan_mac : "N/A");
+		snprintf(info.ip, sizeof(info.ip), "%s",
+				model->ip != NULL ? model->ip : "N/A");
+		snprintf(info.sw_version, sizeof(info.sw_version), "%s",
+				model->sw_version != NULL ? model->sw_version : "N/A");
+		snprintf(info.om_version, sizeof(info.om_version), "%s",
+				model->om_version != NULL ? model->om_version : "N/A");
+		snprintf(info.pmb_version, sizeof(info.pmb_version), "%s",
+				model->pmb_version != NULL ? model->pmb_version : "N/A");
+		snprintf(info.uptime, sizeof(info.uptime), "%s",
+				model->uptime != NULL ? model->uptime : "N/A");
+	} else {
+		snprintf(info.product_name, sizeof(info.product_name), "%s", "N/A");
+		snprintf(info.ip, sizeof(info.ip), "%s", "N/A");
+	}
+	app_state_set_system_info(&info);
+}
+
+static void publish_pdu_info_from_models(void)
+{
+	const models_pdu_info_t* model = models_get_pdu_info();
+	app_state_pdu_info_t pdu_info;
+
+	memset(&pdu_info, 0, sizeof(pdu_info));
+	if (model != NULL) {
+		pdu_info.n_outlets = model->n_outlets;
+		pdu_info.rated_current = model->rated_current;
+		snprintf(pdu_info.controller, sizeof(pdu_info.controller), "%s",
+				model->controller != NULL ? model->controller : "N/A");
+		snprintf(pdu_info.type, sizeof(pdu_info.type), "%s",
+				model->type != NULL ? model->type : "N/A");
+	}
+	app_state_set_pdu_info(&pdu_info);
 }
 
 static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
@@ -864,6 +916,23 @@ static void* backend_worker(void* arg)
 			controller_get_sensors();
 			publish_sensors_from_models();
 			break;
+		case BACKEND_CMD_SYSTEM_INFO_REFRESH:
+			controller_get_sys_info();
+			publish_system_info_from_models();
+			break;
+		case BACKEND_CMD_PDU_INFO_REFRESH:
+			controller_get_pdu_info();
+			publish_pdu_info_from_models();
+			break;
+		case BACKEND_CMD_PDU_SET_RATED_CURRENT: {
+			const models_pdu_info_t* current = models_get_pdu_info();
+			models_pdu_info_t pdu_info = current != NULL ?
+					*current : (models_pdu_info_t){0};
+			pdu_info.rated_current = cmd.value;
+			controller_put_pdu_info(&pdu_info);
+			publish_pdu_info_from_models();
+			break;
+		}
 		default:
 			err = 1;
 			break;
@@ -1313,6 +1382,38 @@ int backend_ble_confirm_all(backend_callback_t callback, void* userdata)
 {
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_BLE_CONFIRM_ALL,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_system_info_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SYSTEM_INFO_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_pdu_info_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_PDU_INFO_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_pdu_set_rated_current(int rated_current,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_PDU_SET_RATED_CURRENT,
+		.value = rated_current,
 		.callback = callback,
 		.userdata = userdata,
 	};

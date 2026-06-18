@@ -7,8 +7,13 @@
 #include "screen.h"
 #include "utils.h"
 #include "tt_colors.h"
-#include "controller.h"
-#include "models.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
+
+#define NW_TYPE_ETH_DHCP 2
+#define NW_TYPE_ETH_STATIC 3
+#define NW_TYPE_WIFI_DHCP 4
+#define NW_TYPE_WIFI_STATIC 5
 
 #define TIMER_REFRESH_RATE 10000 // ms
 
@@ -64,13 +69,15 @@ static void splash_fetch_cb(int err, void* userdata)
 
 static void splash_update_display(void)
 {
-	char str[100];
-	const models_info_t* info = models_get_info();
-	const models_nw_if_t* nw_if = models_get_nw_if();
-	const char* ip = nw_if->params.ip;
+	char str[192];
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	const app_state_system_info_t* info = &snapshot.system_info;
+	const app_state_nw_if_t* nw_if = &snapshot.nw_if;
+	const char* ip = nw_if->ip;
 	
 	// Check if initialization is complete
-	if (!flag_init && strcmp(info->product_name, "N/A") != 0) {
+	if (!flag_init && info->valid && strcmp(info->product_name, "N/A") != 0) {
 		flag_init = true;
 		if (init_spinner != NULL) {
 			lv_obj_del(init_spinner);
@@ -79,29 +86,29 @@ static void splash_update_display(void)
 	}
 	
 	const char* iface = "";
-	if (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC) {
+	if (nw_if->type == NW_TYPE_ETH_DHCP || nw_if->type == NW_TYPE_ETH_STATIC) {
 		iface = "(ETH)";
-	} else if (nw_if->type == WIFI_DHCP || nw_if->type == WIFI_STATIC) {
+	} else if (nw_if->type == NW_TYPE_WIFI_DHCP || nw_if->type == NW_TYPE_WIFI_STATIC) {
 		iface = "(WIFI)";
 	}
 
 	if (ip == NULL || ip[0] == '\0') {
-		if (nw_if->lan1_ip != NULL && nw_if->lan1_ip[0] != '\0') {
+		if (nw_if->lan1_ip[0] != '\0') {
 			ip = nw_if->lan1_ip;
 			iface = "(LAN1)";
-		} else if (nw_if->wifi_ip != NULL && nw_if->wifi_ip[0] != '\0') {
+		} else if (nw_if->wifi_ip[0] != '\0') {
 			ip = nw_if->wifi_ip;
 			iface = "(WIFI)";
-		} else if (info->ip != NULL && strcmp(info->ip, "N/A") != 0) {
+		} else if (strcmp(info->ip, "N/A") != 0) {
 			ip = info->ip;
 		} else {
 			ip = "";
 		}
 	}
 	
-	sprintf(str, "%s", "PowerIT Easy");
+	snprintf(str, sizeof(str), "%s", "PowerIT Easy");
 	lv_label_set_text(lbl_system, str);
-	sprintf(str, "%s: %s %s", "IP", ip, iface);
+	snprintf(str, sizeof(str), "%s: %s %s", "IP", ip, iface);
 	lv_label_set_text(lbl_ip, str);
 }
 
@@ -109,9 +116,8 @@ static void splash_timer_cb(lv_timer_t* timer)
 {
 	(void) timer;
 	
-	/* Make async requests instead of blocking */
-	controller_get_sys_info_async(splash_fetch_cb, NULL);
-	controller_get_nw_if_async(splash_fetch_cb, NULL);
+	backend_system_info_refresh(splash_fetch_cb, NULL);
+	backend_network_if_refresh(splash_fetch_cb, NULL);
 	
 	splash_update_display();
 }

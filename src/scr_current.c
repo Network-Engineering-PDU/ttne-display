@@ -7,8 +7,8 @@
 #include "tt_obj.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 #include "screen.h"
 
 #ifdef UI_DEBUG_LOGS
@@ -30,6 +30,15 @@ static const char* rated_current_labels[6] = {
     "30 A",
     "23 A",
 };
+
+static void rated_current_cb(int err, void* userdata)
+{
+	(void)userdata;
+	if (err != 0) {
+		tt_obj_info_box_create("Rated Current",
+				"Could not save rated current", 1);
+	}
+}
 
 static void select_current_button(int current)
 {
@@ -55,14 +64,8 @@ static void current_btn_cb(lv_event_t* e)
     const int* current_ptr = lv_event_get_user_data(e);
     int current = current_ptr ? *current_ptr : 0;
 
-    const models_pdu_info_t* pdu_info = models_get_pdu_info();
-    models_pdu_info_t new_info = *pdu_info;
-    new_info.rated_current = current;
-    models_set_pdu_info(&new_info);
-    
     UI_DEBUG_PRINTF("[scr_current] Setting rated current to %d A\n", current);
-    controller_put_pdu_info(&new_info);
-    UI_DEBUG_PRINTF("[scr_current] PUT request sent to backend\n");
+    backend_pdu_set_rated_current(current, rated_current_cb, NULL);
 
     select_current_button(current);
 
@@ -90,8 +93,10 @@ void scr_current_create(lv_obj_t* l_menu, lv_obj_t* btn)
         LV_FLEX_ALIGN_CENTER
     );
 
-    const models_pdu_info_t* pdu_info = models_get_pdu_info();
-    int selected_current = pdu_info ? pdu_info->rated_current : 0;
+    app_state_snapshot_t snapshot;
+    app_state_get_snapshot(&snapshot);
+    int selected_current = snapshot.pdu_info.valid ?
+            snapshot.pdu_info.rated_current : 0;
 
     /* Create 2x3 grid buttons with fixed 31% width to force 3 columns */
     for (int i = 0; i < 6; ++i) {

@@ -23,6 +23,25 @@ static app_state_modbus_t sim_modbus = {
 	.addr = 1,
 	.valid = true,
 };
+static app_state_system_info_t sim_system_info = {
+	.product_name = "PowerIT Easy",
+	.product_pn = "SIM-PDU",
+	.product_sn = "SIM0001",
+	.lan_mac = "00:11:22:33:44:55",
+	.ip = "192.168.1.120",
+	.sw_version = "sim",
+	.om_version = "sim",
+	.pmb_version = "sim",
+	.uptime = "00:01",
+	.valid = true,
+};
+static app_state_pdu_info_t sim_pdu_info = {
+	.n_outlets = 8,
+	.rated_current = 16,
+	.controller = "sim",
+	.type = "PDU",
+	.valid = true,
+};
 static app_state_sensor_t sim_sensors[APP_STATE_MAX_SENSORS];
 static int sim_sensor_count;
 static app_state_discovered_sensor_t sim_discovered[2] = {
@@ -107,6 +126,8 @@ static void ensure_sim_outlets(void)
 	app_state_set_nw_if(&sim_nw_if);
 	app_state_set_nw_services(&sim_nw_services);
 	app_state_set_modbus(&sim_modbus);
+	app_state_set_system_info(&sim_system_info);
+	app_state_set_pdu_info(&sim_pdu_info);
 	if (sim_sensor_count == 0) {
 		sim_sensor_count = 1;
 		sim_sensors[0].id = 1;
@@ -619,6 +640,37 @@ int backend_ble_confirm_all(backend_callback_t callback, void* userdata)
 		backend_ble_confirm_mac(sim_discovered[i].mac, NULL, NULL);
 	}
 	app_state_set_sensors(sim_sensors, sim_sensor_count);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_system_info_refresh(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	app_state_set_system_info(&sim_system_info);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_pdu_info_refresh(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	app_state_set_pdu_info(&sim_pdu_info);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_pdu_set_rated_current(int rated_current,
+		backend_callback_t callback, void* userdata)
+{
+	sim_pdu_info.rated_current = rated_current;
+	app_state_set_pdu_info(&sim_pdu_info);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

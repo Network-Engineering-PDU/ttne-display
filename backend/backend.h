@@ -67,6 +67,10 @@ int backend_ble_discovered_refresh(backend_callback_t callback, void* userdata);
 int backend_ble_confirm_mac(const char* mac, backend_callback_t callback,
 		void* userdata);
 int backend_ble_confirm_all(backend_callback_t callback, void* userdata);
+int backend_system_info_refresh(backend_callback_t callback, void* userdata);
+int backend_pdu_info_refresh(backend_callback_t callback, void* userdata);
+int backend_pdu_set_rated_current(int rated_current,
+		backend_callback_t callback, void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

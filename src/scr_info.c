@@ -5,8 +5,8 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
 /* Global variables ***********************************************************/
 
@@ -28,45 +28,54 @@ static lv_obj_t* lbl_uptime;
 
 static void menu_cb(lv_event_t* e);
 static void refresh_info_display(void);
+static void info_refresh_cb(int err, void* userdata);
 
 /* Callbacks ******************************************************************/
 
 static void refresh_info_display(void)
 {
-	char str[100];
-	const models_info_t* info = models_get_info();
-	const models_pdu_info_t* pdu_info = models_get_pdu_info();
+	char str[192];
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	const app_state_system_info_t* info = &snapshot.system_info;
+	const app_state_pdu_info_t* pdu_info = &snapshot.pdu_info;
 
-	printf("[scr_info] Refreshing display with rated_current=%d\n", pdu_info->rated_current);
-
-	sprintf(str, "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, "PowerIT Easy");
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, "PowerIT Easy");
 	lv_label_set_text(lbl_name, str);
-	sprintf(str, "  %s: #%06X %s", "PN", TT_COLOR_GREEN_NE, info->product_pn);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "PN", TT_COLOR_GREEN_NE, info->product_pn);
 	lv_label_set_text(lbl_pn, str);
-	sprintf(str, "  %s: #%06X %s", "SN", TT_COLOR_GREEN_NE, info->product_sn);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "SN", TT_COLOR_GREEN_NE, info->product_sn);
 	lv_label_set_text(lbl_sn, str);
-	sprintf(str, "  %s: #%06X %s", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
 	lv_label_set_text(lbl_mac, str);
-	sprintf(str, "  %s: #%06X %s", "IP", TT_COLOR_GREEN_NE, info->ip);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "IP", TT_COLOR_GREEN_NE, info->ip);
 	lv_label_set_text(lbl_ip, str);
 
-	sprintf(str, "  %s: #%06X %d", "Outlets", TT_COLOR_GREEN_NE, pdu_info->n_outlets);
+	snprintf(str, sizeof(str), "  %s: #%06X %d", "Outlets", TT_COLOR_GREEN_NE, pdu_info->n_outlets);
 	lv_label_set_text(lbl_outlets, str);
-	sprintf(str, "  %s: #%06X %d A", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
+	snprintf(str, sizeof(str), "  %s: #%06X %d A", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
 	lv_label_set_text(lbl_rated_curr, str);
-	sprintf(str, "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
 	lv_label_set_text(lbl_controller, str);
 
-	sprintf(str, "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
 	lv_label_set_text(lbl_version, str);
-	sprintf(str, "  %s: #%06X %s", "OM version", TT_COLOR_GREEN_NE, info->om_version);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "OM version", TT_COLOR_GREEN_NE, info->om_version);
 	lv_label_set_text(lbl_om_version, str);
-	sprintf(str, "  %s: #%06X %s", "PMB version", TT_COLOR_GREEN_NE, info->pmb_version);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "PMB version", TT_COLOR_GREEN_NE, info->pmb_version);
 	lv_label_set_text(lbl_pmb_version, str);
-	sprintf(str, "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, GIT_VERSION);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, GIT_VERSION);
 	lv_label_set_text(lbl_display_version, str);
-	sprintf(str, "  %s: #%06X %s", "Uptime (HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "Uptime (HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
 	lv_label_set_text(lbl_uptime, str);
+}
+
+static void info_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	if (err == 0) {
+		refresh_info_display();
+	}
 }
 
 static void menu_cb(lv_event_t* e)
@@ -79,10 +88,8 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
 		if (curr_page == page) {
 			LV_LOG_USER("Info cb - page change detected");
-			printf("[scr_info] Menu callback triggered, fetching fresh data\n");
-			controller_get_sys_info();
-			controller_get_pdu_info();
-			refresh_info_display();
+			backend_system_info_refresh(info_refresh_cb, NULL);
+			backend_pdu_info_refresh(info_refresh_cb, NULL);
 		}
 	}
 }
