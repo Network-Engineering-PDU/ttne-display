@@ -15,6 +15,9 @@ void app_state_init(void)
 	snprintf(state.update_status.update_server,
 			sizeof(state.update_status.update_server), "%s", "N/A");
 	state.update_status.check_interval_hours = 24;
+	state.nw_if.type = 1;
+	state.nw_if.dhcp = true;
+	state.nw_if.nw_mode = -1;
 	pthread_mutex_unlock(&state_mutex);
 }
 
@@ -167,6 +170,42 @@ void app_state_set_bt_status(const app_state_bt_status_t* bt_status)
 	}
 	state.bt_status.valid = true;
 	state.bt_status_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_nw_if(const app_state_nw_if_t* nw_if)
+{
+	if (nw_if == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.nw_if = *nw_if;
+	state.nw_if.eth_interface[sizeof(state.nw_if.eth_interface) - 1] = '\0';
+	state.nw_if.ip[sizeof(state.nw_if.ip) - 1] = '\0';
+	state.nw_if.mask[sizeof(state.nw_if.mask) - 1] = '\0';
+	state.nw_if.gw[sizeof(state.nw_if.gw) - 1] = '\0';
+	state.nw_if.dns[sizeof(state.nw_if.dns) - 1] = '\0';
+	state.nw_if.ssid[sizeof(state.nw_if.ssid) - 1] = '\0';
+	state.nw_if.pass[sizeof(state.nw_if.pass) - 1] = '\0';
+	state.nw_if.lan1_ip[sizeof(state.nw_if.lan1_ip) - 1] = '\0';
+	state.nw_if.lan2_ip[sizeof(state.nw_if.lan2_ip) - 1] = '\0';
+	state.nw_if.wifi_ip[sizeof(state.nw_if.wifi_ip) - 1] = '\0';
+	state.nw_if.valid = true;
+	state.nw_if_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_nw_info(const app_state_nw_info_t* nw_info)
+{
+	if (nw_info == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.nw_info = *nw_info;
+	state.nw_info.valid = true;
+	state.nw_info_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

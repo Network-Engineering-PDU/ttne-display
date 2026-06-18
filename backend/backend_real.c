@@ -44,6 +44,9 @@ typedef enum {
 	BACKEND_CMD_BLUETOOTH_SCAN,
 	BACKEND_CMD_BLUETOOTH_DEVICE_ACTION,
 	BACKEND_CMD_BLUETOOTH_PAIRING_RESPONSE,
+	BACKEND_CMD_NETWORK_IF_REFRESH,
+	BACKEND_CMD_NETWORK_IF_SAVE,
+	BACKEND_CMD_NETWORK_INFO_REFRESH,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -55,6 +58,7 @@ typedef struct {
 	bool discoverable;
 	char text[128];
 	char action[32];
+	app_state_nw_if_t nw_if;
 	backend_callback_t callback;
 	void* userdata;
 } backend_cmd_t;
@@ -203,6 +207,76 @@ static void publish_bluetooth_from_models(void)
 	}
 
 	app_state_set_bt_status(&bt_status);
+}
+
+static void publish_network_if_from_models(void)
+{
+	const models_nw_if_t* model = models_get_nw_if();
+	app_state_nw_if_t nw_if;
+
+	memset(&nw_if, 0, sizeof(nw_if));
+	if (model == NULL) {
+		nw_if.type = UNCONF;
+		nw_if.dhcp = true;
+		nw_if.nw_mode = -1;
+		app_state_set_nw_if(&nw_if);
+		return;
+	}
+
+	nw_if.type = model->type;
+	nw_if.dhcp = model->dhcp;
+	nw_if.nw_mode = model->nw_mode;
+	snprintf(nw_if.eth_interface, sizeof(nw_if.eth_interface), "%s",
+			model->eth_interface != NULL ? model->eth_interface : "");
+	snprintf(nw_if.ip, sizeof(nw_if.ip), "%s",
+			model->params.ip != NULL ? model->params.ip : "");
+	snprintf(nw_if.mask, sizeof(nw_if.mask), "%s",
+			model->params.mask != NULL ? model->params.mask : "");
+	snprintf(nw_if.gw, sizeof(nw_if.gw), "%s",
+			model->params.gw != NULL ? model->params.gw : "");
+	snprintf(nw_if.dns, sizeof(nw_if.dns), "%s",
+			model->params.dns != NULL ? model->params.dns : "");
+	snprintf(nw_if.ssid, sizeof(nw_if.ssid), "%s",
+			model->params.ssid != NULL ? model->params.ssid : "");
+	snprintf(nw_if.pass, sizeof(nw_if.pass), "%s",
+			model->params.pass != NULL ? model->params.pass : "");
+	snprintf(nw_if.lan1_ip, sizeof(nw_if.lan1_ip), "%s",
+			model->lan1_ip != NULL ? model->lan1_ip : "");
+	snprintf(nw_if.lan2_ip, sizeof(nw_if.lan2_ip), "%s",
+			model->lan2_ip != NULL ? model->lan2_ip : "");
+	snprintf(nw_if.wifi_ip, sizeof(nw_if.wifi_ip), "%s",
+			model->wifi_ip != NULL ? model->wifi_ip : "");
+
+	app_state_set_nw_if(&nw_if);
+}
+
+static void publish_network_info_from_models(void)
+{
+	const models_nw_info_t* model = models_get_nw_info();
+	app_state_nw_info_t nw_info = {
+		.connected = model != NULL && model->connected,
+		.valid = true,
+	};
+	app_state_set_nw_info(&nw_info);
+}
+
+static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
+		models_nw_if_t* model)
+{
+	memset(model, 0, sizeof(*model));
+	model->type = nw_if->type;
+	model->dhcp = nw_if->dhcp;
+	model->eth_interface = nw_if->eth_interface;
+	model->params.ip = nw_if->ip;
+	model->params.mask = nw_if->mask;
+	model->params.gw = nw_if->gw;
+	model->params.dns = nw_if->dns;
+	model->params.ssid = nw_if->ssid;
+	model->params.pass = nw_if->pass;
+	model->lan1_ip = nw_if->lan1_ip;
+	model->lan2_ip = nw_if->lan2_ip;
+	model->wifi_ip = nw_if->wifi_ip;
+	model->nw_mode = nw_if->nw_mode;
 }
 
 static void run_power_refresh(void)
@@ -621,6 +695,21 @@ static void* backend_worker(void* arg)
 			controller_get_bluetooth();
 			publish_bluetooth_from_models();
 			break;
+		case BACKEND_CMD_NETWORK_IF_REFRESH:
+			controller_get_nw_if();
+			publish_network_if_from_models();
+			break;
+		case BACKEND_CMD_NETWORK_IF_SAVE: {
+			models_nw_if_t model;
+			model_from_app_network_if(&cmd.nw_if, &model);
+			controller_put_nw_if(&model);
+			publish_network_if_from_models();
+			break;
+		}
+		case BACKEND_CMD_NETWORK_INFO_REFRESH:
+			controller_get_nw_info();
+			publish_network_info_from_models();
+			break;
 		default:
 			err = 1;
 			break;
@@ -928,6 +1017,41 @@ int backend_bluetooth_pairing_response(bool accept, backend_callback_t callback,
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_BLUETOOTH_PAIRING_RESPONSE,
 		.status = accept,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_network_if_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NETWORK_IF_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_network_if_save(const app_state_nw_if_t* nw_if,
+		backend_callback_t callback, void* userdata)
+{
+	if (nw_if == NULL) {
+		return -1;
+	}
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NETWORK_IF_SAVE,
+		.nw_if = *nw_if,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_network_info_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NETWORK_INFO_REFRESH,
 		.callback = callback,
 		.userdata = userdata,
 	};

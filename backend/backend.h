@@ -7,6 +7,8 @@ extern "C" {
 
 #include <stdbool.h>
 
+#include "app/app_state.h"
+
 typedef void (*backend_callback_t)(int err, void* userdata);
 
 int backend_init(void);
@@ -48,6 +50,10 @@ int backend_bluetooth_device_action(const char* mac, const char* action,
 		backend_callback_t callback, void* userdata);
 int backend_bluetooth_pairing_response(bool accept, backend_callback_t callback,
 		void* userdata);
+int backend_network_if_refresh(backend_callback_t callback, void* userdata);
+int backend_network_if_save(const app_state_nw_if_t* nw_if,
+		backend_callback_t callback, void* userdata);
+int backend_network_info_refresh(backend_callback_t callback, void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

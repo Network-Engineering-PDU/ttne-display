@@ -13,6 +13,7 @@ extern "C" {
 #define APP_STATE_SENSOR_TEXT_LEN 64
 #define APP_STATE_MAX_BT_DEVICES 12
 #define APP_STATE_BT_TEXT_LEN 64
+#define APP_STATE_NW_TEXT_LEN 128
 
 typedef struct {
 	int line_id;
@@ -114,6 +115,28 @@ typedef struct {
 } app_state_bt_status_t;
 
 typedef struct {
+	int type;
+	bool dhcp;
+	char eth_interface[APP_STATE_NW_TEXT_LEN];
+	char ip[APP_STATE_NW_TEXT_LEN];
+	char mask[APP_STATE_NW_TEXT_LEN];
+	char gw[APP_STATE_NW_TEXT_LEN];
+	char dns[APP_STATE_NW_TEXT_LEN];
+	char ssid[APP_STATE_NW_TEXT_LEN];
+	char pass[APP_STATE_NW_TEXT_LEN];
+	char lan1_ip[APP_STATE_NW_TEXT_LEN];
+	char lan2_ip[APP_STATE_NW_TEXT_LEN];
+	char wifi_ip[APP_STATE_NW_TEXT_LEN];
+	int nw_mode;
+	bool valid;
+} app_state_nw_if_t;
+
+typedef struct {
+	bool connected;
+	bool valid;
+} app_state_nw_info_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
@@ -121,6 +144,8 @@ typedef struct {
 	app_state_update_status_t update_status;
 	app_state_usb_update_t usb_update;
 	app_state_bt_status_t bt_status;
+	app_state_nw_if_t nw_if;
+	app_state_nw_info_t nw_info;
 	char license_type[16];
 	int outlet_count;
 	uint32_t outlet_revision;
@@ -130,6 +155,8 @@ typedef struct {
 	uint32_t update_status_revision;
 	uint32_t usb_update_revision;
 	uint32_t bt_status_revision;
+	uint32_t nw_if_revision;
+	uint32_t nw_info_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -144,6 +171,8 @@ void app_state_set_sensor_data(const app_state_sensor_data_t* sensor_data);
 void app_state_set_update_status(const app_state_update_status_t* update_status);
 void app_state_set_usb_update(const app_state_usb_update_t* usb_update);
 void app_state_set_bt_status(const app_state_bt_status_t* bt_status);
+void app_state_set_nw_if(const app_state_nw_if_t* nw_if);
+void app_state_set_nw_info(const app_state_nw_info_t* nw_info);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 
