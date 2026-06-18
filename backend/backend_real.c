@@ -20,6 +20,7 @@ typedef enum {
 	BACKEND_CMD_OUTLETS_SET_ALL,
 	BACKEND_CMD_OUTLET_DATA_REFRESH,
 	BACKEND_CMD_LICENSE_REFRESH,
+	BACKEND_CMD_POWER_REFRESH,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -97,6 +98,35 @@ static void publish_license_from_models(void)
 {
 	const models_license_t* license = models_get_license();
 	app_state_set_license_type(license != NULL ? license->type_id : "N/A");
+}
+
+static void run_power_refresh(void)
+{
+	app_state_power_t power;
+	memset(&power, 0, sizeof(power));
+
+	controller_get_in_sw();
+	const models_in_sw_t* in_sw = models_get_in_sw();
+	power.branch = in_sw->branch;
+	power.sys_type = in_sw->sys_type;
+	power.curr_type = in_sw->curr_type;
+	power.input_count = APP_STATE_MAX_POWER_INPUTS;
+
+	for (int i = 0; i < APP_STATE_MAX_POWER_INPUTS; i++) {
+		controller_get_in_data(i);
+		const models_in_data_t* in_data = models_get_in_data();
+		power.inputs[i].voltage = in_data->voltage;
+		power.inputs[i].current = in_data->current;
+		power.inputs[i].active_power = in_data->active_power;
+		power.inputs[i].reactive_power = in_data->reactive_power;
+		power.inputs[i].apparent_power = in_data->apparent_power;
+		power.inputs[i].power_factor = in_data->power_factor;
+		power.inputs[i].phase = in_data->phase;
+		power.inputs[i].frequency = in_data->frequency;
+		power.inputs[i].energy = in_data->energy;
+	}
+
+	app_state_set_power(&power);
 }
 
 static void backend_push_result(int err, backend_callback_t callback, void* userdata)
@@ -206,6 +236,9 @@ static void* backend_worker(void* arg)
 		case BACKEND_CMD_LICENSE_REFRESH:
 			controller_get_license();
 			publish_license_from_models();
+			break;
+		case BACKEND_CMD_POWER_REFRESH:
+			run_power_refresh();
 			break;
 		default:
 			err = 1;
@@ -319,6 +352,16 @@ int backend_license_refresh(backend_callback_t callback, void* userdata)
 {
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_LICENSE_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_power_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_POWER_REFRESH,
 		.callback = callback,
 		.userdata = userdata,
 	};

@@ -3,6 +3,7 @@
 #include "backend/backend.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "app/app_state.h"
 
@@ -107,6 +108,38 @@ int backend_outlet_data_refresh(int outlet_id, backend_callback_t callback,
 int backend_license_refresh(backend_callback_t callback, void* userdata)
 {
 	app_state_set_license_type("B2");
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_power_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_power_t power;
+
+	memset(&power, 0, sizeof(power));
+	power.branch = 1;
+	power.sys_type = 2;
+	power.curr_type = 0;
+	power.input_count = APP_STATE_MAX_POWER_INPUTS;
+	power.valid = true;
+
+	for (int i = 0; i < APP_STATE_MAX_POWER_INPUTS; i++) {
+		power.inputs[i].voltage = 230.0f + (float)(i % 3);
+		power.inputs[i].current = 2.0f + (float)i * 0.2f;
+		power.inputs[i].active_power = power.inputs[i].voltage *
+				power.inputs[i].current * 0.95f;
+		power.inputs[i].reactive_power = 8.0f + (float)i;
+		power.inputs[i].apparent_power = power.inputs[i].voltage *
+				power.inputs[i].current;
+		power.inputs[i].power_factor = 0.95f;
+		power.inputs[i].phase = 0.0f;
+		power.inputs[i].frequency = 50.0f;
+		power.inputs[i].energy = 5000.0f + (float)i * 100.0f;
+	}
+
+	app_state_set_power(&power);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

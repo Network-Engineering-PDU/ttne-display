@@ -66,6 +66,25 @@ void app_state_set_outlet_data(const app_state_outlet_data_t* outlet_data)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_power(const app_state_power_t* power)
+{
+	if (power == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.power = *power;
+	if (state.power.input_count < 0) {
+		state.power.input_count = 0;
+	}
+	if (state.power.input_count > APP_STATE_MAX_POWER_INPUTS) {
+		state.power.input_count = APP_STATE_MAX_POWER_INPUTS;
+	}
+	state.power.valid = true;
+	state.power_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {
