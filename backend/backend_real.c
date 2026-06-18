@@ -23,12 +23,18 @@ typedef enum {
 	BACKEND_CMD_POWER_REFRESH,
 	BACKEND_CMD_SENSOR_DATA_REFRESH,
 	BACKEND_CMD_UPDATE_STATUS_REFRESH,
+	BACKEND_CMD_UPDATE_CONFIRM,
+	BACKEND_CMD_UPDATE_SET_AUTO,
+	BACKEND_CMD_UPDATE_SET_INTERVAL,
+	BACKEND_CMD_UPDATE_SET_SERVER,
 } backend_cmd_type_t;
 
 typedef struct {
 	backend_cmd_type_t type;
 	int line_id;
+	int value;
 	bool status;
+	char text[128];
 	backend_callback_t callback;
 	void* userdata;
 } backend_cmd_t;
@@ -374,6 +380,23 @@ static void* backend_worker(void* arg)
 			controller_get_update_status();
 			publish_update_status_from_models();
 			break;
+		case BACKEND_CMD_UPDATE_CONFIRM:
+			controller_post_update_confirm(cmd.status);
+			controller_get_update_status();
+			publish_update_status_from_models();
+			break;
+		case BACKEND_CMD_UPDATE_SET_AUTO:
+			controller_set_auto_update(cmd.status);
+			publish_update_status_from_models();
+			break;
+		case BACKEND_CMD_UPDATE_SET_INTERVAL:
+			controller_set_update_check_interval(cmd.value);
+			publish_update_status_from_models();
+			break;
+		case BACKEND_CMD_UPDATE_SET_SERVER:
+			controller_set_update_server(cmd.text);
+			publish_update_status_from_models();
+			break;
 		default:
 			err = 1;
 			break;
@@ -521,6 +544,54 @@ int backend_update_status_refresh(backend_callback_t callback, void* userdata)
 		.callback = callback,
 		.userdata = userdata,
 	};
+	return backend_submit(&cmd);
+}
+
+int backend_update_confirm(bool confirm, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_UPDATE_CONFIRM,
+		.status = confirm,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_update_set_auto(bool enabled, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_UPDATE_SET_AUTO,
+		.status = enabled,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_update_set_interval(int hours, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_UPDATE_SET_INTERVAL,
+		.value = hours,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_update_set_server(const char* server, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_UPDATE_SET_SERVER,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", server != NULL ? server : "");
 	return backend_submit(&cmd);
 }
 

@@ -25,6 +25,14 @@ int backend_power_refresh(backend_callback_t callback, void* userdata);
 int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
 		void* userdata);
 int backend_update_status_refresh(backend_callback_t callback, void* userdata);
+int backend_update_confirm(bool confirm, backend_callback_t callback,
+		void* userdata);
+int backend_update_set_auto(bool enabled, backend_callback_t callback,
+		void* userdata);
+int backend_update_set_interval(int hours, backend_callback_t callback,
+		void* userdata);
+int backend_update_set_server(const char* server, backend_callback_t callback,
+		void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

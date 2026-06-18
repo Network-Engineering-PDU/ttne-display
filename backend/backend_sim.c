@@ -11,6 +11,13 @@
 
 static app_state_outlet_t sim_outlets[SIM_OUTLETS];
 static bool sim_initialized;
+static app_state_update_status_t sim_update_status = {
+	.is_pending = false,
+	.auto_update = false,
+	.update_server = "https://github.com/Network-Engineering-PDU/firmware-update",
+	.check_interval_hours = 24,
+	.valid = true,
+};
 
 static void ensure_sim_outlets(void)
 {
@@ -175,17 +182,55 @@ int backend_sensor_data_refresh(int sensor_index, backend_callback_t callback,
 
 int backend_update_status_refresh(backend_callback_t callback, void* userdata)
 {
-	app_state_update_status_t update_status;
+	app_state_set_update_status(&sim_update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
 
-	memset(&update_status, 0, sizeof(update_status));
-	update_status.is_pending = false;
-	update_status.auto_update = false;
-	update_status.check_interval_hours = 24;
-	snprintf(update_status.update_server, sizeof(update_status.update_server),
-			"%s", "https://github.com/Network-Engineering-PDU/firmware-update");
-	update_status.valid = true;
+int backend_update_confirm(bool confirm, backend_callback_t callback,
+		void* userdata)
+{
+	if (confirm) {
+		sim_update_status.is_pending = false;
+	}
+	app_state_set_update_status(&sim_update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
 
-	app_state_set_update_status(&update_status);
+int backend_update_set_auto(bool enabled, backend_callback_t callback,
+		void* userdata)
+{
+	sim_update_status.auto_update = enabled;
+	app_state_set_update_status(&sim_update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_update_set_interval(int hours, backend_callback_t callback,
+		void* userdata)
+{
+	sim_update_status.check_interval_hours = hours;
+	app_state_set_update_status(&sim_update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_update_set_server(const char* server, backend_callback_t callback,
+		void* userdata)
+{
+	snprintf(sim_update_status.update_server,
+			sizeof(sim_update_status.update_server), "%s",
+			server != NULL ? server : "");
+	app_state_set_update_status(&sim_update_status);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

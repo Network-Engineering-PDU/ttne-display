@@ -47,6 +47,8 @@ static bool update_status_refresh_pending;
 static void timer_check_update_cb(lv_timer_t* timer);
 static void timer_poll_update_status_cb(lv_timer_t* timer);
 static void update_status_refresh_cb(int err, void* userdata);
+static void update_settings_cb(int err, void* userdata);
+static void update_confirm_cb(int err, void* userdata);
 static void loader_cb(lv_event_t* e);
 static void txt_server_cb(lv_event_t* e);
 static void btn_auto_cb(lv_event_t* e);
@@ -175,6 +177,20 @@ static void update_status_refresh_cb(int err, void* userdata) {
     apply_update_status_snapshot();
 }
 
+static void update_settings_cb(int err, void* userdata) {
+    (void)userdata;
+    if (err == 0) {
+        apply_update_status_snapshot();
+    }
+}
+
+static void update_confirm_cb(int err, void* userdata) {
+    (void)userdata;
+    if (err == 0) {
+        apply_update_status_snapshot();
+    }
+}
+
 static void apply_update_status_snapshot(void) {
     app_state_snapshot_t snapshot;
     app_state_get_snapshot(&snapshot);
@@ -236,7 +252,7 @@ static void btn_auto_cb(lv_event_t* e) {
         uint16_t sel = lv_dropdown_get_selected(obj);
         bool enabled = (sel == 0); // 0 is ON, 1 is OFF
         LV_LOG_USER("Auto-update changed to: %s", enabled ? "ON" : "OFF");
-        controller_set_auto_update(enabled);
+        backend_update_set_auto(enabled, update_settings_cb, NULL);
     }
 }
 
@@ -245,7 +261,7 @@ static void dd_period_cb(lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_target(e);
         int hours = period_hours_from_sel(lv_dropdown_get_selected(obj));
         LV_LOG_USER("OTA periodic check interval changed to: %d hours", hours);
-        controller_set_update_check_interval(hours);
+        backend_update_set_interval(hours, update_settings_cb, NULL);
     }
 }
 
@@ -287,7 +303,7 @@ static void txt_server_cb(lv_event_t* e) {
         lv_obj_t* txt_obj = lv_event_get_target(e);
         const char* server_addr = lv_textarea_get_text(txt_obj);
         if (server_addr && strlen(server_addr) > 0) {
-            controller_set_update_server(server_addr);
+            backend_update_set_server(server_addr, update_settings_cb, NULL);
         }
     }
 }
@@ -335,14 +351,13 @@ static void msg_box_update_confirmation_cb(lv_event_t* e) {
         lv_obj_t* obj = lv_event_get_current_target(e);
         if (lv_msgbox_get_active_btn(obj) == 0) {
             // YES - confirm update
-            controller_post_update_confirm(true);
+            backend_update_confirm(true, update_confirm_cb, NULL);
             lv_obj_t* loader_scr = tt_obj_loader_create("Updating Device...", NULL);
             lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
             lv_scr_load(loader_scr);
         } else {
             // NO - reject update
-            controller_post_update_confirm(false);
-            backend_update_status_refresh(update_status_refresh_cb, NULL);
+            backend_update_confirm(false, update_confirm_cb, NULL);
             update_confirmation_shown = false;
         }
         lv_msgbox_close(obj);
