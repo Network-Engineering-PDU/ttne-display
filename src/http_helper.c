@@ -21,7 +21,11 @@ size_t write_cb(char* ptr, size_t size, size_t nmemb, void* userdata)
 	// printf("Receive chunk of %zu bytes\n", realsize);
 
 	while (req->buflen < req->len + realsize + 1) {
-		req->buffer = realloc(req->buffer, req->buflen + CHUNK_SIZE);
+		char* buffer = realloc(req->buffer, req->buflen + CHUNK_SIZE);
+		if (buffer == NULL) {
+			return 0;
+		}
+		req->buffer = buffer;
 		req->buflen += CHUNK_SIZE;
 	}
 	memcpy(&req->buffer[req->len], ptr, realsize);
@@ -37,8 +41,9 @@ int http_helper_get(http_get_req_t* req, char* url)
 {
 	int err = 0;
 
-	CURL* curl;
+	CURL* curl = NULL;
 	CURLcode res;
+	struct curl_slist* headers = NULL;
 
 	req->buffer = NULL;
 	req->len = 0;
@@ -47,10 +52,14 @@ int http_helper_get(http_get_req_t* req, char* url)
 	curl = curl_easy_init();
 
 	if (curl) {
-		struct curl_slist* headers = NULL;
 		headers = curl_slist_append(headers, "accept: application/json");
 		req->buffer = malloc(CHUNK_SIZE);
+		if (req->buffer == NULL) {
+			err = 1;
+			goto cleanup;
+		}
 		req->buflen = CHUNK_SIZE;
+		req->buffer[0] = '\0';
 
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
@@ -69,8 +78,17 @@ int http_helper_get(http_get_req_t* req, char* url)
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;
 		}
+	} else {
+		err = 1;
 	}
-	curl_easy_cleanup(curl);
+
+cleanup:
+	if (headers != NULL) {
+		curl_slist_free_all(headers);
+	}
+	if (curl != NULL) {
+		curl_easy_cleanup(curl);
+	}
 
 	return err;
 }
@@ -79,8 +97,9 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 {
 	int err = 0;
 
-	CURL* curl;
+	CURL* curl = NULL;
 	CURLcode res;
+	struct curl_slist* headers = NULL;
 
 	req->buffer = NULL;
 	req->len = 0;
@@ -89,13 +108,17 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 	curl = curl_easy_init();
 
 	if (curl) {
-		struct curl_slist* headers = NULL;
 		headers = curl_slist_append(headers, "accept: application/json");
 		if (post_data) {
 			headers = curl_slist_append(headers, "Content-Type: application/json");
 		}
 		req->buffer = malloc(CHUNK_SIZE);
+		if (req->buffer == NULL) {
+			err = 1;
+			goto cleanup;
+		}
 		req->buflen = CHUNK_SIZE;
+		req->buffer[0] = '\0';
 
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
@@ -117,8 +140,17 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;
 		}
+	} else {
+		err = 1;
 	}
-	curl_easy_cleanup(curl);
+
+cleanup:
+	if (headers != NULL) {
+		curl_slist_free_all(headers);
+	}
+	if (curl != NULL) {
+		curl_easy_cleanup(curl);
+	}
 
 	return err;
 }
@@ -127,8 +159,9 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 {
 	int err = 0;
 
-	CURL* curl;
+	CURL* curl = NULL;
 	CURLcode res;
+	struct curl_slist* headers = NULL;
 
 	req->buffer = NULL;
 	req->len = 0;
@@ -137,11 +170,15 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 	curl = curl_easy_init();
 
 	if (curl) {
-		struct curl_slist* headers = NULL;
 		headers = curl_slist_append(headers, "accept: application/json");
 		headers = curl_slist_append(headers, "Content-Type: application/json");
 		req->buffer = malloc(CHUNK_SIZE);
+		if (req->buffer == NULL) {
+			err = 1;
+			goto cleanup;
+		}
 		req->buflen = CHUNK_SIZE;
+		req->buffer[0] = '\0';
 
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
@@ -164,8 +201,17 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 			LV_LOG_ERROR("HTTP PUT failed: status %d\n", retcode);
 			err = 1;
 		}
+	} else {
+		err = 1;
 	}
-	curl_easy_cleanup(curl);
+
+cleanup:
+	if (headers != NULL) {
+		curl_slist_free_all(headers);
+	}
+	if (curl != NULL) {
+		curl_easy_cleanup(curl);
+	}
 
 	return err;
 }

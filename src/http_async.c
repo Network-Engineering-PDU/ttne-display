@@ -57,7 +57,11 @@ static size_t write_cb(char* ptr, size_t size, size_t nmemb, void* userdata)
 	async_req_state_t* req = (async_req_state_t*) userdata;
 
 	while (req->buflen < req->len + realsize + 1) {
-		req->buffer = realloc(req->buffer, req->buflen + 4096);
+		void* buffer = realloc(req->buffer, req->buflen + 4096);
+		if (buffer == NULL) {
+			return 0;
+		}
+		req->buffer = buffer;
 		req->buflen += 4096;
 	}
 	memcpy(&((char*)req->buffer)[req->len], ptr, realsize);
@@ -210,6 +214,7 @@ int http_async_get(const char* url, http_async_callback_t callback, void* userda
 	}
 	req->buflen = 4096;
 	req->len = 0;
+	((char*)req->buffer)[0] = '\0';
 	req->callback = callback;
 	req->userdata = userdata;
 	req->status = ASYNC_REQ_PENDING;

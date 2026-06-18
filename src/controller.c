@@ -173,6 +173,7 @@ void controller_put_out_sw(const models_out_sw_t* out_sw, int line_id)
 	}
 	printf("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
+	free(put_data);
 	http_helper_free(&req);
 }
 
@@ -371,6 +372,7 @@ void controller_put_nw_if(const models_nw_if_t* nw_if)
 	}
 	printf("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
+	free(put_data);
 	http_helper_free(&req);
 }
 
@@ -446,6 +448,8 @@ void controller_put_license(const models_license_t* license)
 		LV_LOG_ERROR("License error");
 	}
 	printf("Buffer received: %s\n", req.buffer);
+	cJSON_Delete(json);
+	free(put_data);
 	http_helper_free(&req);
 }
 
@@ -470,6 +474,8 @@ void controller_put_modbus(const models_modbus_t* modbus)
 		LV_LOG_ERROR("Modbus error");
 	}
 	printf("Buffer received: %s\n", req.buffer);
+	cJSON_Delete(json);
+	free(put_data);
 	http_helper_free(&req);
 }
 
@@ -684,6 +690,7 @@ void controller_post_update_confirm(bool confirm)
 	}
 	printf("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
+	free(post_data);
 	http_helper_free(&req);
 }
 
@@ -703,6 +710,7 @@ void controller_put_update_settings(bool auto_update, const char* update_server,
 	}
 	printf("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
+	free(put_data);
 	http_helper_free(&req);
 }
 
