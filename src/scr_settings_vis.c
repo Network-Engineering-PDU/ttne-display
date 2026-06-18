@@ -9,14 +9,11 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
-#include "config.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 #include "screen.h"
 
 #define TIMER_ROT 5000 // ms
-
-extern void reset_program();
 
 /* Global variables ***********************************************************/
 
@@ -36,6 +33,7 @@ static void txt_inactivity_cb(lv_event_t* e);
 static void txt_pdu_info_cb(lv_event_t* e);
 static void update_pdu_info_display();
 static void save_pdu_info_field(int field_id, const char* value);
+static void visual_config_cb(int err, void* userdata);
 
 static int rotation_to_dropdown_index(int rotation);
 static int dropdown_index_to_rotation(int index);
@@ -55,17 +53,7 @@ static void menu_cb(lv_event_t* e)
         lv_obj_t* curr_page = lv_event_get_user_data(e);
         lv_obj_t* page = lv_menu_get_cur_main_page(menu);
         if (curr_page == page) {
-            // Update rotation
-            int rotation = config_get_rotation();
-            lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(rotation));
-            
-            // Update Screen Saver
-            char inactivity_time_str[10];
-            sprintf(inactivity_time_str, "%d", config_get_inactivity_time());
-            lv_textarea_set_text(txt_screen_saver, inactivity_time_str);
-            
-            // Update PDU info fields
-            update_pdu_info_display();
+            backend_visual_config_refresh(visual_config_cb, NULL);
         }
     }
 }
@@ -90,7 +78,7 @@ static void rotate_cb(lv_event_t* e)
 
         const char* orientation = (rotation == 3) ? "Horizontal" : "Vertical";
         char msg[300];
-        sprintf(msg, "Are you sure you want to save screen orientation?\n"
+        snprintf(msg, sizeof(msg), "Are you sure you want to save screen orientation?\n"
                 "Orientation: " TT_COLOR_GREEN_NE_STR " %s#\n"
                 "(changes will be reverted in 5 seconds)",
                 orientation);
@@ -114,7 +102,7 @@ static void txt_inactivity_cb(lv_event_t* e)
             tt_obj_info_box_create("ERROR", "Time must be [1-300]", 1);
             return;
         }
-        config_set_inactivity_time(t);
+        backend_visual_set_inactivity(t, visual_config_cb, NULL);
     }
 }
 
@@ -157,8 +145,9 @@ static void msg_box_rot_cb(lv_event_t* e)
             timer_rot = NULL;
         }
         if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-            config_set_rotation(dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation)));
-            reset_program();
+            backend_visual_save_rotation_and_restart(
+                    dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation)),
+                    NULL, NULL);
         } else {
             revert_rot();
         }
@@ -169,7 +158,10 @@ static void msg_box_rot_cb(lv_event_t* e)
 
 static void revert_rot()
 {
-    int rotation = config_get_rotation();
+    app_state_snapshot_t snapshot;
+    app_state_get_snapshot(&snapshot);
+    int rotation = snapshot.visual_config.valid ?
+            snapshot.visual_config.rotation : 2;
     screen_set_rotation(rotation);
     lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(rotation));
 }
@@ -178,14 +170,36 @@ static void revert_rot()
 
 static void update_pdu_info_display()
 {
-    // These calls assume getters exist in your config.h/controller.h
-    lv_textarea_set_text(txt_fields[0], config_get_pdu_company());
-    lv_textarea_set_text(txt_fields[1], config_get_pdu_rack());
-    lv_textarea_set_text(txt_fields[2], config_get_pdu_system());
-    lv_textarea_set_text(txt_fields[3], config_get_pdu_ups());
-    lv_textarea_set_text(txt_fields[4], config_get_pdu_elec_board());
-    lv_textarea_set_text(txt_fields[5], config_get_pdu_breaker());
-    lv_textarea_set_text(txt_fields[6], config_get_pdu_service());
+    app_state_snapshot_t snapshot;
+    app_state_get_snapshot(&snapshot);
+    const app_state_visual_config_t* visual = &snapshot.visual_config;
+    if (!visual->valid) {
+        return;
+    }
+
+    lv_dropdown_set_selected(dd_rotation,
+            rotation_to_dropdown_index(visual->rotation));
+
+    char inactivity_time_str[10];
+    snprintf(inactivity_time_str, sizeof(inactivity_time_str), "%d",
+            visual->inactivity_time);
+    lv_textarea_set_text(txt_screen_saver, inactivity_time_str);
+
+    lv_textarea_set_text(txt_fields[0], visual->pdu_company);
+    lv_textarea_set_text(txt_fields[1], visual->pdu_rack);
+    lv_textarea_set_text(txt_fields[2], visual->pdu_system);
+    lv_textarea_set_text(txt_fields[3], visual->pdu_ups);
+    lv_textarea_set_text(txt_fields[4], visual->pdu_elec_board);
+    lv_textarea_set_text(txt_fields[5], visual->pdu_breaker);
+    lv_textarea_set_text(txt_fields[6], visual->pdu_service);
+}
+
+static void visual_config_cb(int err, void* userdata)
+{
+    (void)userdata;
+    if (err == 0) {
+        update_pdu_info_display();
+    }
 }
 
 static int rotation_to_dropdown_index(int rotation)
@@ -205,16 +219,7 @@ static int dropdown_index_to_rotation(int index)
 
 static void save_pdu_info_field(int field_id, const char* value)
 {
-    switch(field_id) {
-        case 0: config_set_pdu_company(value); break;
-        case 1: config_set_pdu_rack(value); break;
-        case 2: config_set_pdu_system(value); break;
-        case 3: config_set_pdu_ups(value); break;
-        case 4: config_set_pdu_elec_board(value); break;
-        case 5: config_set_pdu_breaker(value); break;
-        case 6: config_set_pdu_service(value); break;
-        default: break;
-    }
+    backend_visual_set_pdu_field(field_id, value, visual_config_cb, NULL);
 }
 
 /* Layout Helper **************************************************************/
@@ -260,7 +265,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     lv_obj_t* row_rot = create_setting_row(cont, "Screen rotation");
     dd_rotation = tt_obj_dropdown_create(row_rot, "Vertical\nHorizontal", rotate_cb);
     lv_obj_set_width(dd_rotation, LV_PCT(50));
-    lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(config_get_rotation()));
+    lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(2));
 
     // 2. Screen Saver Row
     lv_obj_t* row_saver = create_setting_row(cont, "Screen saver (min)");
@@ -288,5 +293,5 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
         lv_obj_add_event_cb(txt_fields[i], txt_pdu_info_cb, LV_EVENT_ALL, (void*)(uintptr_t)i);
     }
 
-    update_pdu_info_display();
+    backend_visual_config_refresh(visual_config_cb, NULL);
 }

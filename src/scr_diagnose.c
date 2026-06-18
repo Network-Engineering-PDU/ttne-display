@@ -7,8 +7,6 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
 
 /* Global variables ***********************************************************/
 
@@ -42,7 +40,7 @@ lv_obj_t* scr_diagnose_create(lv_obj_t* menu)
 
 	tt_obj_label_color_create(diagnose_cont, "Diagnose system");
 	char msg[50];
-	sprintf(msg, TT_COLOR_GREEN_NE_STR "     No error found#");
+	snprintf(msg, sizeof(msg), TT_COLOR_GREEN_NE_STR "     No error found#");
 	tt_obj_label_color_create(diagnose_cont, msg);
 
 	return lv_obj_get_parent(diagnose_cont);

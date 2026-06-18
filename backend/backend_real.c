@@ -10,7 +10,10 @@
 #include "controller.h"
 #include "models.h"
 #include "runbg.h"
+#include "config.h"
 #include "app/app_state.h"
+
+extern void reset_program(void);
 
 #define BACKEND_QUEUE_SIZE 32
 
@@ -60,6 +63,10 @@ typedef enum {
 	BACKEND_CMD_SYSTEM_INFO_REFRESH,
 	BACKEND_CMD_PDU_INFO_REFRESH,
 	BACKEND_CMD_PDU_SET_RATED_CURRENT,
+	BACKEND_CMD_VISUAL_CONFIG_REFRESH,
+	BACKEND_CMD_VISUAL_SET_INACTIVITY,
+	BACKEND_CMD_VISUAL_SET_PDU_FIELD,
+	BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -396,6 +403,60 @@ static void publish_pdu_info_from_models(void)
 				model->type != NULL ? model->type : "N/A");
 	}
 	app_state_set_pdu_info(&pdu_info);
+}
+
+static void publish_visual_config_from_config(void)
+{
+	app_state_visual_config_t visual_config;
+
+	memset(&visual_config, 0, sizeof(visual_config));
+	visual_config.rotation = config_get_rotation();
+	visual_config.inactivity_time = config_get_inactivity_time();
+	snprintf(visual_config.pdu_company, sizeof(visual_config.pdu_company),
+			"%s", config_get_pdu_company());
+	snprintf(visual_config.pdu_rack, sizeof(visual_config.pdu_rack),
+			"%s", config_get_pdu_rack());
+	snprintf(visual_config.pdu_system, sizeof(visual_config.pdu_system),
+			"%s", config_get_pdu_system());
+	snprintf(visual_config.pdu_ups, sizeof(visual_config.pdu_ups),
+			"%s", config_get_pdu_ups());
+	snprintf(visual_config.pdu_elec_board,
+			sizeof(visual_config.pdu_elec_board), "%s",
+			config_get_pdu_elec_board());
+	snprintf(visual_config.pdu_breaker, sizeof(visual_config.pdu_breaker),
+			"%s", config_get_pdu_breaker());
+	snprintf(visual_config.pdu_service, sizeof(visual_config.pdu_service),
+			"%s", config_get_pdu_service());
+	app_state_set_visual_config(&visual_config);
+}
+
+static void set_visual_pdu_field(int field_id, const char* value)
+{
+	switch (field_id) {
+	case 0:
+		config_set_pdu_company(value);
+		break;
+	case 1:
+		config_set_pdu_rack(value);
+		break;
+	case 2:
+		config_set_pdu_system(value);
+		break;
+	case 3:
+		config_set_pdu_ups(value);
+		break;
+	case 4:
+		config_set_pdu_elec_board(value);
+		break;
+	case 5:
+		config_set_pdu_breaker(value);
+		break;
+	case 6:
+		config_set_pdu_service(value);
+		break;
+	default:
+		break;
+	}
 }
 
 static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
@@ -933,6 +994,22 @@ static void* backend_worker(void* arg)
 			publish_pdu_info_from_models();
 			break;
 		}
+		case BACKEND_CMD_VISUAL_CONFIG_REFRESH:
+			publish_visual_config_from_config();
+			break;
+		case BACKEND_CMD_VISUAL_SET_INACTIVITY:
+			config_set_inactivity_time(cmd.value);
+			publish_visual_config_from_config();
+			break;
+		case BACKEND_CMD_VISUAL_SET_PDU_FIELD:
+			set_visual_pdu_field(cmd.value, cmd.text);
+			publish_visual_config_from_config();
+			break;
+		case BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART:
+			config_set_rotation(cmd.value);
+			publish_visual_config_from_config();
+			reset_program();
+			break;
 		default:
 			err = 1;
 			break;
@@ -946,6 +1023,8 @@ static void* backend_worker(void* arg)
 
 int backend_init(void)
 {
+	controller_init();
+
 	pthread_mutex_lock(&mutex);
 	queue_head = 0;
 	queue_tail = 0;
@@ -1414,6 +1493,53 @@ int backend_pdu_set_rated_current(int rated_current,
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_PDU_SET_RATED_CURRENT,
 		.value = rated_current,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_visual_config_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_VISUAL_CONFIG_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_visual_set_inactivity(int minutes, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_VISUAL_SET_INACTIVITY,
+		.value = minutes,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_visual_set_pdu_field(int field_id, const char* value,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_VISUAL_SET_PDU_FIELD,
+		.value = field_id,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", value != NULL ? value : "");
+	return backend_submit(&cmd);
+}
+
+int backend_visual_save_rotation_and_restart(int rotation,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART,
+		.value = rotation,
 		.callback = callback,
 		.userdata = userdata,
 	};

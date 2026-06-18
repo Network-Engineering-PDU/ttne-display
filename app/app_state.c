@@ -335,6 +335,33 @@ void app_state_set_pdu_info(const app_state_pdu_info_t* pdu_info)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_visual_config(const app_state_visual_config_t* visual_config)
+{
+	if (visual_config == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.visual_config = *visual_config;
+	state.visual_config.pdu_company[
+		sizeof(state.visual_config.pdu_company) - 1] = '\0';
+	state.visual_config.pdu_rack[
+		sizeof(state.visual_config.pdu_rack) - 1] = '\0';
+	state.visual_config.pdu_system[
+		sizeof(state.visual_config.pdu_system) - 1] = '\0';
+	state.visual_config.pdu_ups[
+		sizeof(state.visual_config.pdu_ups) - 1] = '\0';
+	state.visual_config.pdu_elec_board[
+		sizeof(state.visual_config.pdu_elec_board) - 1] = '\0';
+	state.visual_config.pdu_breaker[
+		sizeof(state.visual_config.pdu_breaker) - 1] = '\0';
+	state.visual_config.pdu_service[
+		sizeof(state.visual_config.pdu_service) - 1] = '\0';
+	state.visual_config.valid = true;
+	state.visual_config_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

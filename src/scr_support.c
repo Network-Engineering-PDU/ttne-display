@@ -7,8 +7,6 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
 #include "screen.h"
 
 /* Global variables ***********************************************************/

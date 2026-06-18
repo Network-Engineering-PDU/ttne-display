@@ -71,6 +71,13 @@ int backend_system_info_refresh(backend_callback_t callback, void* userdata);
 int backend_pdu_info_refresh(backend_callback_t callback, void* userdata);
 int backend_pdu_set_rated_current(int rated_current,
 		backend_callback_t callback, void* userdata);
+int backend_visual_config_refresh(backend_callback_t callback, void* userdata);
+int backend_visual_set_inactivity(int minutes, backend_callback_t callback,
+		void* userdata);
+int backend_visual_set_pdu_field(int field_id, const char* value,
+		backend_callback_t callback, void* userdata);
+int backend_visual_save_rotation_and_restart(int rotation,
+		backend_callback_t callback, void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

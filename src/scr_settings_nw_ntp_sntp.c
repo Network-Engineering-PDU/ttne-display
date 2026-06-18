@@ -4,20 +4,18 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
 #include "config.h"
 #include "screen.h"
 #include "ttne_display.h"
-#include "runbg.h"
-
-static lv_obj_t* ntp_enable_cbx;
-static lv_obj_t* ntp_offset_combo;
-static lv_obj_t* ntp_server_txt;
 
 void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 {
+    (void)menu;
+    (void)btn;
     /*
+    lv_obj_t* ntp_enable_cbx;
+    lv_obj_t* ntp_offset_combo;
+    lv_obj_t* ntp_server_txt;
     lv_obj_t* ntp_page = tt_obj_menu_page_create(menu, btn, NULL, "NTP - SNTP");
     lv_obj_t* cont = tt_obj_cont_create(ntp_page);
 

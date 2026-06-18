@@ -1,6 +1,5 @@
 #include <lvgl/lvgl.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include "ttne_display.h"
 #include "tt_keyboard.h"
@@ -19,8 +18,8 @@
 #include "scr_sensors.h"
 #include "scr_settings_menu.h"
 
+#include "backend/backend.h"
 #include "config.h"
-#include "controller.h"
 #include "screen.h"
 
 /* Global variables ***********************************************************/
@@ -52,12 +51,10 @@ void ttne_display(void)
 {
 	config_init();
 	tt_styles_init();
-	controller_init();
 	screen_init();
 	
-	/* Use async calls for initialization to avoid blocking UI */
-	controller_get_sys_info_async(NULL, NULL);
-	controller_get_pdu_info_async(NULL, NULL);
+	backend_system_info_refresh(NULL, NULL);
+	backend_pdu_info_refresh(NULL, NULL);
 
 	uint8_t rotation = config_get_rotation();
 	screen_set_rotation(rotation);

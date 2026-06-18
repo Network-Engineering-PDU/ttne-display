@@ -15,12 +15,9 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
 #include "config.h"
 #include "screen.h"
 #include "ttne_display.h"
-#include "runbg.h"
 #include "scr_support.h"
 
 static lv_obj_t* l_menu;

@@ -11,12 +11,9 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
 #include "config.h"
 #include "screen.h"
 #include "ttne_display.h"
-#include "runbg.h"
 
 /* Global variables ***********************************************************/
 static lv_obj_t* menu;

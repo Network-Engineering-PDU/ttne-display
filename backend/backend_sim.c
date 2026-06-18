@@ -42,6 +42,18 @@ static app_state_pdu_info_t sim_pdu_info = {
 	.type = "PDU",
 	.valid = true,
 };
+static app_state_visual_config_t sim_visual_config = {
+	.rotation = 3,
+	.inactivity_time = 5,
+	.pdu_company = "Network Engineering",
+	.pdu_rack = "Rack A",
+	.pdu_system = "System A",
+	.pdu_ups = "UPS A",
+	.pdu_elec_board = "Board A",
+	.pdu_breaker = "Breaker A",
+	.pdu_service = "Critical",
+	.valid = true,
+};
 static app_state_sensor_t sim_sensors[APP_STATE_MAX_SENSORS];
 static int sim_sensor_count;
 static app_state_discovered_sensor_t sim_discovered[2] = {
@@ -128,6 +140,7 @@ static void ensure_sim_outlets(void)
 	app_state_set_modbus(&sim_modbus);
 	app_state_set_system_info(&sim_system_info);
 	app_state_set_pdu_info(&sim_pdu_info);
+	app_state_set_visual_config(&sim_visual_config);
 	if (sim_sensor_count == 0) {
 		sim_sensor_count = 1;
 		sim_sensors[0].id = 1;
@@ -671,6 +684,60 @@ int backend_pdu_set_rated_current(int rated_current,
 {
 	sim_pdu_info.rated_current = rated_current;
 	app_state_set_pdu_info(&sim_pdu_info);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_visual_config_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_set_visual_config(&sim_visual_config);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_visual_set_inactivity(int minutes, backend_callback_t callback,
+		void* userdata)
+{
+	sim_visual_config.inactivity_time = minutes;
+	app_state_set_visual_config(&sim_visual_config);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_visual_set_pdu_field(int field_id, const char* value,
+		backend_callback_t callback, void* userdata)
+{
+	char* fields[] = {
+		sim_visual_config.pdu_company,
+		sim_visual_config.pdu_rack,
+		sim_visual_config.pdu_system,
+		sim_visual_config.pdu_ups,
+		sim_visual_config.pdu_elec_board,
+		sim_visual_config.pdu_breaker,
+		sim_visual_config.pdu_service,
+	};
+	if (field_id >= 0 && field_id < 7) {
+		snprintf(fields[field_id], APP_STATE_NW_TEXT_LEN, "%s",
+				value != NULL ? value : "");
+	}
+	app_state_set_visual_config(&sim_visual_config);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_visual_save_rotation_and_restart(int rotation,
+		backend_callback_t callback, void* userdata)
+{
+	sim_visual_config.rotation = rotation;
+	app_state_set_visual_config(&sim_visual_config);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}
