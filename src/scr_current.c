@@ -11,6 +11,12 @@
 #include "controller.h"
 #include "screen.h"
 
+#ifdef UI_DEBUG_LOGS
+#define UI_DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define UI_DEBUG_PRINTF(...) ((void)0)
+#endif
+
 /* Global variables ***********************************************************/
 static lv_obj_t* menu;
 
@@ -46,7 +52,6 @@ static void current_btn_cb(lv_event_t* e)
         return;
     }
 
-    lv_obj_t* btn = lv_event_get_current_target(e);
     const int* current_ptr = lv_event_get_user_data(e);
     int current = current_ptr ? *current_ptr : 0;
 
@@ -55,9 +60,9 @@ static void current_btn_cb(lv_event_t* e)
     new_info.rated_current = current;
     models_set_pdu_info(&new_info);
     
-    printf("[scr_current] Setting rated current to %d A\n", current);
+    UI_DEBUG_PRINTF("[scr_current] Setting rated current to %d A\n", current);
     controller_put_pdu_info(&new_info);
-    printf("[scr_current] PUT request sent to backend\n");
+    UI_DEBUG_PRINTF("[scr_current] PUT request sent to backend\n");
 
     select_current_button(current);
 

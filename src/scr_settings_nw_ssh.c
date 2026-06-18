@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_ssh.h"
 #include "tt_obj.h"
@@ -13,7 +15,6 @@
 
 static lv_obj_t* btn_ssh;
 static bool running = false;
-static bool is_page_active = false; // Renamed for clarity
 
 /* Function prototypes ********************************************************/
 static void menu_cb(lv_event_t* e);

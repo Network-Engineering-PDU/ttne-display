@@ -778,6 +778,7 @@ typedef struct {
 
 static void async_sys_info_cb(int err, void* buffer, size_t len, void* userdata)
 {
+	(void)len;
 	async_ctx_t* ctx = (async_ctx_t*)userdata;
 	
 	if (err == 0 && buffer != NULL) {
@@ -818,6 +819,7 @@ void controller_get_sys_info_async(controller_callback_t callback, void* userdat
 
 static void async_pdu_info_cb(int err, void* buffer, size_t len, void* userdata)
 {
+	(void)len;
 	async_ctx_t* ctx = (async_ctx_t*)userdata;
 	
 	if (err == 0 && buffer != NULL) {
@@ -854,6 +856,7 @@ void controller_get_pdu_info_async(controller_callback_t callback, void* userdat
 
 static void async_nw_if_cb(int err, void* buffer, size_t len, void* userdata)
 {
+	(void)len;
 	async_ctx_t* ctx = (async_ctx_t*)userdata;
 	
 	if (err == 0 && buffer != NULL) {

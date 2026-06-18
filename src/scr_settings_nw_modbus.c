@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_modbus.h"
 #include "tt_obj.h"

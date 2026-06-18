@@ -87,7 +87,6 @@ static void txt_num_cb(lv_event_t* e);
 static void cbx_pass_cb(lv_event_t* e);
 
 static void update_data();
-static bool is_ethernet();
 static bool is_static();
 static void save_nw_if_async(const models_nw_if_t* nw_if);
 static models_nw_if_t clone_nw_if(const models_nw_if_t* nw_if);
@@ -580,12 +579,6 @@ static void cbx_pass_cb(lv_event_t* e)
 }
 
 /* Function definitions *******************************************************/
-
-static bool is_ethernet()
-{
-	const models_nw_if_t* nw_if = models_get_nw_if();
-	return (nw_if->type == ETH_DHCP || nw_if->type == ETH_STATIC);
-}
 
 static bool is_static()
 {
