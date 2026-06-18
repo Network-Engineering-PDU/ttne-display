@@ -7,8 +7,6 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
 #include "runbg.h"
 #include "app/app_state.h"
 #include "backend/backend.h"
@@ -392,7 +390,7 @@ static void msg_box_reboot_cb(lv_event_t* e) {
         if (lv_msgbox_get_active_btn(obj) == 0) {
             lv_obj_t* loader_scr = tt_obj_loader_create("Rebooting Device...", NULL);
             lv_scr_load(loader_scr);
-            controller_post_reboot();
+            backend_system_reboot(NULL, NULL);
         }
         lv_msgbox_close(obj);
     }
@@ -407,7 +405,7 @@ static void msg_box_factory_cb(lv_event_t* e) {
             }
             lv_obj_t* loader_scr = tt_obj_loader_create("Resetting to factory defaults...", NULL);
             lv_scr_load(loader_scr);
-            controller_post_fact_reset();
+            backend_system_factory_reset(NULL, NULL);
         }
         lv_msgbox_close(obj);
     }

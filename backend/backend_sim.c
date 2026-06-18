@@ -237,4 +237,27 @@ int backend_update_set_server(const char* server, backend_callback_t callback,
 	return 0;
 }
 
+int backend_system_reboot(backend_callback_t callback, void* userdata)
+{
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_system_factory_reset(backend_callback_t callback, void* userdata)
+{
+	snprintf(sim_update_status.update_server,
+			sizeof(sim_update_status.update_server), "%s",
+			"https://github.com/Network-Engineering-PDU/firmware-update");
+	sim_update_status.auto_update = false;
+	sim_update_status.check_interval_hours = 24;
+	sim_update_status.is_pending = false;
+	app_state_set_update_status(&sim_update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
 #endif /* SIMULATOR_ENABLED */

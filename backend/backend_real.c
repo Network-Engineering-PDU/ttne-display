@@ -27,6 +27,8 @@ typedef enum {
 	BACKEND_CMD_UPDATE_SET_AUTO,
 	BACKEND_CMD_UPDATE_SET_INTERVAL,
 	BACKEND_CMD_UPDATE_SET_SERVER,
+	BACKEND_CMD_SYSTEM_REBOOT,
+	BACKEND_CMD_SYSTEM_FACTORY_RESET,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -397,6 +399,12 @@ static void* backend_worker(void* arg)
 			controller_set_update_server(cmd.text);
 			publish_update_status_from_models();
 			break;
+		case BACKEND_CMD_SYSTEM_REBOOT:
+			controller_post_reboot();
+			break;
+		case BACKEND_CMD_SYSTEM_FACTORY_RESET:
+			controller_post_fact_reset();
+			break;
 		default:
 			err = 1;
 			break;
@@ -592,6 +600,26 @@ int backend_update_set_server(const char* server, backend_callback_t callback,
 		.userdata = userdata,
 	};
 	snprintf(cmd.text, sizeof(cmd.text), "%s", server != NULL ? server : "");
+	return backend_submit(&cmd);
+}
+
+int backend_system_reboot(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SYSTEM_REBOOT,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_system_factory_reset(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SYSTEM_FACTORY_RESET,
+		.callback = callback,
+		.userdata = userdata,
+	};
 	return backend_submit(&cmd);
 }
 
