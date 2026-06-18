@@ -3,6 +3,7 @@
 #include "backend/backend.h"
 
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -17,6 +18,8 @@ typedef enum {
 	BACKEND_CMD_OUTLETS_REFRESH,
 	BACKEND_CMD_OUTLET_SET,
 	BACKEND_CMD_OUTLETS_SET_ALL,
+	BACKEND_CMD_OUTLET_DATA_REFRESH,
+	BACKEND_CMD_LICENSE_REFRESH,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -65,6 +68,35 @@ static void publish_outlets_from_models(void)
 		outlets[i].status = model_outlets[i].status;
 	}
 	app_state_set_outlets(outlets, len);
+}
+
+static void publish_outlet_data_from_models(int outlet_id)
+{
+	const models_out_data_t* model_data = models_get_out_data();
+	app_state_outlet_data_t outlet_data = {
+		.voltage = model_data->voltage,
+		.current = model_data->current,
+		.active_power = model_data->active_power,
+		.reactive_power = model_data->reactive_power,
+		.apparent_power = model_data->apparent_power,
+		.power_factor = model_data->power_factor,
+		.phase = model_data->phase,
+		.frequency = model_data->frequency,
+		.energy = model_data->energy,
+		.fuse = model_data->fuse,
+		.outlet_id = outlet_id,
+		.valid = true,
+	};
+
+	snprintf(outlet_data.conn, sizeof(outlet_data.conn), "%s",
+			model_data->conn != NULL ? model_data->conn : "N/A");
+	app_state_set_outlet_data(&outlet_data);
+}
+
+static void publish_license_from_models(void)
+{
+	const models_license_t* license = models_get_license();
+	app_state_set_license_type(license != NULL ? license->type_id : "N/A");
 }
 
 static void backend_push_result(int err, backend_callback_t callback, void* userdata)
@@ -167,6 +199,14 @@ static void* backend_worker(void* arg)
 		case BACKEND_CMD_OUTLETS_SET_ALL:
 			run_outlets_set_all(cmd.status);
 			break;
+		case BACKEND_CMD_OUTLET_DATA_REFRESH:
+			controller_get_out_data(cmd.line_id);
+			publish_outlet_data_from_models(cmd.line_id);
+			break;
+		case BACKEND_CMD_LICENSE_REFRESH:
+			controller_get_license();
+			publish_license_from_models();
+			break;
 		default:
 			err = 1;
 			break;
@@ -257,6 +297,28 @@ int backend_outlets_set_all(bool status, backend_callback_t callback,
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_OUTLETS_SET_ALL,
 		.status = status,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_outlet_data_refresh(int outlet_id, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_OUTLET_DATA_REFRESH,
+		.line_id = outlet_id,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_license_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_LICENSE_REFRESH,
 		.callback = callback,
 		.userdata = userdata,
 	};

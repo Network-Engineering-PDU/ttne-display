@@ -1,6 +1,7 @@
 #include "app/app_state.h"
 
 #include <pthread.h>
+#include <stdio.h>
 #include <string.h>
 
 static app_state_snapshot_t state;
@@ -10,6 +11,7 @@ void app_state_init(void)
 {
 	pthread_mutex_lock(&state_mutex);
 	memset(&state, 0, sizeof(state));
+	snprintf(state.license_type, sizeof(state.license_type), "%s", "N/A");
 	pthread_mutex_unlock(&state_mutex);
 }
 
@@ -47,6 +49,32 @@ void app_state_set_outlet(int index, bool status)
 		state.outlets[index].status = status;
 		state.outlet_revision++;
 	}
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_outlet_data(const app_state_outlet_data_t* outlet_data)
+{
+	if (outlet_data == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.outlet_data = *outlet_data;
+	state.outlet_data.conn[sizeof(state.outlet_data.conn) - 1] = '\0';
+	state.outlet_data.valid = true;
+	state.outlet_data_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_license_type(const char* license_type)
+{
+	if (license_type == NULL) {
+		license_type = "N/A";
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	snprintf(state.license_type, sizeof(state.license_type), "%s", license_type);
+	state.license_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

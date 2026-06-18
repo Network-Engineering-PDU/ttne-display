@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "lvgl/lvgl.h"
 
@@ -6,8 +8,8 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
 #define TIMER_REFRESH_RATE 2000 // ms
 
@@ -42,7 +44,9 @@ static lv_obj_t* lbl_e;
 static lv_obj_t* lbl_c;
 static lv_obj_t* lbl_fuse;
 
-static models_out_sw_t out_sw;
+static bool out_sw_status;
+static bool data_request_pending;
+static bool license_request_pending;
 
 static lv_timer_t* timer;
 
@@ -53,7 +57,12 @@ static void out_data_timer_cb(lv_timer_t* timer);
 static void btn_toggle_cb(lv_event_t* e);
 static void msg_box_outlet_cb(lv_event_t* e);
 
-static void read_license();
+static void outlet_data_refresh_cb(int err, void* userdata);
+static void outlet_license_refresh_cb(int err, void* userdata);
+static void outlet_set_cb(int err, void* userdata);
+static void apply_outlet_status(void);
+static void apply_outlet_data(void);
+static void apply_license(void);
 static const char* get_fuse_str(fuse_t fuse_code);
 
 /* Callbacks ******************************************************************/
@@ -67,19 +76,16 @@ static void menu_cb(lv_event_t* e)
 			lv_obj_t* curr_page = lv_event_get_user_data(e);
 			lv_obj_t* page = lv_menu_get_cur_main_page(obj);
 			if (curr_page == page) {
-				controller_get_out_sw();
-				const models_out_sw_t* current_out_sw =
-						models_get_out_sw_id(outlet_id);
-				if (current_out_sw == NULL) {
-					return;
-				}
-				memcpy(&out_sw, current_out_sw, sizeof(models_out_sw_t));
-				tt_obj_btn_toggle_set_state(btn_en, out_sw.status);
+				apply_outlet_status();
 				if (timer == NULL) {
 					timer = lv_timer_create(out_data_timer_cb,
 							TIMER_REFRESH_RATE, NULL);
 				}
-				read_license();
+				if (!license_request_pending &&
+						backend_license_refresh(outlet_license_refresh_cb,
+								NULL) == 0) {
+					license_request_pending = true;
+				}
 				out_data_timer_cb(timer);
 				if (!running) {
 				running = true;
@@ -101,40 +107,104 @@ static void menu_cb(lv_event_t* e)
 static void out_data_timer_cb(lv_timer_t* timer)
 {
 	(void)timer;
-	controller_get_out_data(outlet_id);
-	const models_out_data_t* out_data = models_get_out_data();
-	char label[50];
-	sprintf(label, "Voltage: #%06X %.1f V" ,
+	if (data_request_pending) {
+		return;
+	}
+	if (backend_outlet_data_refresh(outlet_id, outlet_data_refresh_cb,
+			NULL) == 0) {
+		data_request_pending = true;
+	}
+}
+
+static void outlet_data_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	data_request_pending = false;
+	if (err != 0) {
+		tt_obj_info_box_create("Outlet data", "Could not refresh outlet data", 1);
+		return;
+	}
+	apply_outlet_data();
+}
+
+static void outlet_license_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	license_request_pending = false;
+	if (err != 0) {
+		tt_obj_info_box_create("Outlet data", "Could not read license", 1);
+		return;
+	}
+	apply_license();
+}
+
+static void outlet_set_cb(int err, void* userdata)
+{
+	bool requested_status = (bool)(intptr_t)userdata;
+	if (err != 0) {
+		tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
+		tt_obj_info_box_create("Outlet", "Could not update outlet", 1);
+		return;
+	}
+	out_sw_status = requested_status;
+	tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
+}
+
+static void apply_outlet_status(void)
+{
+	app_state_snapshot_t snapshot;
+	int index = outlet_id - 1;
+
+	app_state_get_snapshot(&snapshot);
+	if (index >= 0 && index < snapshot.outlet_count &&
+			index < APP_STATE_MAX_OUTLETS) {
+		out_sw_status = snapshot.outlets[index].status;
+		tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
+	}
+}
+
+static void apply_outlet_data(void)
+{
+	app_state_snapshot_t snapshot;
+	char label[96];
+	app_state_get_snapshot(&snapshot);
+	const app_state_outlet_data_t* out_data = &snapshot.outlet_data;
+
+	if (!out_data->valid || out_data->outlet_id != outlet_id) {
+		return;
+	}
+
+	snprintf(label, sizeof(label), "Voltage: #%06X %.1f V" ,
 			TT_COLOR_GREEN_NE, out_data->voltage);
 	lv_label_set_text(lbl_v, label);
-	sprintf(label, "Current: #%06X %.1f A" ,
+	snprintf(label, sizeof(label), "Current: #%06X %.1f A" ,
 			TT_COLOR_GREEN_NE, out_data->current);
 	lv_label_set_text(lbl_i, label);
-	sprintf(label, "Active power: #%06X %.1f W" ,
+	snprintf(label, sizeof(label), "Active power: #%06X %.1f W" ,
 			TT_COLOR_GREEN_NE, out_data->active_power);
 	lv_label_set_text(lbl_p, label);
-	sprintf(label, "Reactive power: #%06X %.2f VAr" ,
+	snprintf(label, sizeof(label), "Reactive power: #%06X %.2f VAr" ,
 			TT_COLOR_GREEN_NE, out_data->reactive_power);
 	lv_label_set_text(lbl_q, label);
-	sprintf(label, "Apparent power: #%06X %.2f VA" ,
+	snprintf(label, sizeof(label), "Apparent power: #%06X %.2f VA" ,
 			TT_COLOR_GREEN_NE, out_data->apparent_power);
 	lv_label_set_text(lbl_s, label);
-	sprintf(label, "Power factor: #%06X %.2f" ,
+	snprintf(label, sizeof(label), "Power factor: #%06X %.2f" ,
 			TT_COLOR_GREEN_NE, out_data->power_factor);
 	lv_label_set_text(lbl_pf, label);
-	sprintf(label, "Frequency: #%06X %.2f Hz" ,
+	snprintf(label, sizeof(label), "Frequency: #%06X %.2f Hz" ,
 			TT_COLOR_GREEN_NE, out_data->frequency);
 	lv_label_set_text(lbl_f, label);
-	sprintf(label, "Phase: #%06X %.1f deg" ,
+	snprintf(label, sizeof(label), "Phase: #%06X %.1f deg" ,
 			TT_COLOR_GREEN_NE, out_data->phase);
 	lv_label_set_text(lbl_ph, label);
-	sprintf(label, "Energy: #%06X %.1f Wh" ,
+	snprintf(label, sizeof(label), "Energy: #%06X %.1f Wh" ,
 			TT_COLOR_GREEN_NE, out_data->energy);
 	lv_label_set_text(lbl_e, label);
-	sprintf(label, "Connector: #%06X %s" ,
+	snprintf(label, sizeof(label), "Connector: #%06X %s" ,
 			TT_COLOR_GREEN_NE, out_data->conn);
 	lv_label_set_text(lbl_c, label);
-	sprintf(label, "Fuse: #%06X %s" ,
+	snprintf(label, sizeof(label), "Fuse: #%06X %s" ,
 			TT_COLOR_GREEN_NE, get_fuse_str(out_data->fuse));
 	lv_label_set_text(lbl_fuse, label);
 }
@@ -163,10 +233,15 @@ static void msg_box_outlet_cb(lv_event_t* e)
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			out_sw.status = lv_obj_get_state(btn_en) & LV_STATE_CHECKED;
-			controller_put_out_sw(&out_sw, outlet_id-1);
+			bool requested_status =
+					(lv_obj_get_state(btn_en) & LV_STATE_CHECKED) != 0;
+			if (backend_outlet_set(outlet_id - 1, requested_status,
+					outlet_set_cb, (void*)(intptr_t)requested_status) != 0) {
+				tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
+				tt_obj_info_box_create("Outlet", "Outlet update unavailable", 1);
+			}
 		} else {
-			tt_obj_btn_toggle_set_state(btn_en, out_sw.status);
+			tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
 		}
 		lv_msgbox_close(obj);
 	}
@@ -174,30 +249,30 @@ static void msg_box_outlet_cb(lv_event_t* e)
 
 /* Function definitions *******************************************************/
 
-static void read_license()
+static void apply_license(void)
 {
-	controller_get_license();
-	const models_license_t* license = models_get_license();
-	LV_LOG_USER("License readed: %s", license->type_id);
-	if (strcmp(license->type_id, "A1") == 0) {
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+
+	if (strcmp(snapshot.license_type, "A1") == 0) {
 		LV_LOG_USER("A1");
 		lv_obj_add_flag(btn_en, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(data_cont, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_relay_license, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_data_license, LV_OBJ_FLAG_HIDDEN);
-	} else if (strcmp(license->type_id, "A2") == 0) {
+	} else if (strcmp(snapshot.license_type, "A2") == 0) {
 		LV_LOG_USER("A2");
 		lv_obj_add_flag(btn_en, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(data_cont, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_relay_license, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(lbl_data_license, LV_OBJ_FLAG_HIDDEN);
-	} else if (strcmp(license->type_id, "B1") == 0) {
+	} else if (strcmp(snapshot.license_type, "B1") == 0) {
 		LV_LOG_USER("B1");
 		lv_obj_clear_flag(btn_en, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(data_cont, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(lbl_relay_license, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_data_license, LV_OBJ_FLAG_HIDDEN);
-	} else if (strcmp(license->type_id, "B2") == 0) {
+	} else if (strcmp(snapshot.license_type, "B2") == 0) {
 		LV_LOG_USER("B2");
 		lv_obj_clear_flag(btn_en, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(data_cont, LV_OBJ_FLAG_HIDDEN);
