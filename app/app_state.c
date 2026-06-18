@@ -119,6 +119,23 @@ void app_state_set_update_status(const app_state_update_status_t* update_status)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_usb_update(const app_state_usb_update_t* usb_update)
+{
+	if (usb_update == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.usb_update = *usb_update;
+	state.usb_update.device_name[
+		sizeof(state.usb_update.device_name) - 1] = '\0';
+	state.usb_update.update_dev[
+		sizeof(state.usb_update.update_dev) - 1] = '\0';
+	state.usb_update.valid = true;
+	state.usb_update_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

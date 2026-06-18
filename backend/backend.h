@@ -35,6 +35,10 @@ int backend_update_set_server(const char* server, backend_callback_t callback,
 		void* userdata);
 int backend_system_reboot(backend_callback_t callback, void* userdata);
 int backend_system_factory_reset(backend_callback_t callback, void* userdata);
+int backend_usb_update_detect(backend_callback_t callback, void* userdata);
+int backend_usb_update_start(const char* update_dev, backend_callback_t callback,
+		void* userdata);
+int backend_usb_update_poll(backend_callback_t callback, void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

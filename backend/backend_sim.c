@@ -11,6 +11,7 @@
 
 static app_state_outlet_t sim_outlets[SIM_OUTLETS];
 static bool sim_initialized;
+static bool sim_usb_running;
 static app_state_update_status_t sim_update_status = {
 	.is_pending = false,
 	.auto_update = false,
@@ -254,6 +255,58 @@ int backend_system_factory_reset(backend_callback_t callback, void* userdata)
 	sim_update_status.check_interval_hours = 24;
 	sim_update_status.is_pending = false;
 	app_state_set_update_status(&sim_update_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_usb_update_detect(backend_callback_t callback, void* userdata)
+{
+	app_state_usb_update_t usb_update;
+
+	memset(&usb_update, 0, sizeof(usb_update));
+	usb_update.device_found = true;
+	snprintf(usb_update.device_name, sizeof(usb_update.device_name), "%s",
+			"SIM_USB");
+	snprintf(usb_update.update_dev, sizeof(usb_update.update_dev), "%s",
+			"sdb1");
+	app_state_set_usb_update(&usb_update);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_usb_update_start(const char* update_dev, backend_callback_t callback,
+		void* userdata)
+{
+	app_state_usb_update_t usb_update;
+
+	memset(&usb_update, 0, sizeof(usb_update));
+	snprintf(usb_update.update_dev, sizeof(usb_update.update_dev), "%s",
+			update_dev != NULL ? update_dev : "sdb1");
+	usb_update.running = true;
+	sim_usb_running = true;
+	app_state_set_usb_update(&usb_update);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_usb_update_poll(backend_callback_t callback, void* userdata)
+{
+	app_state_usb_update_t usb_update;
+
+	memset(&usb_update, 0, sizeof(usb_update));
+	snprintf(usb_update.update_dev, sizeof(usb_update.update_dev), "%s",
+			"sdb1");
+	usb_update.running = false;
+	usb_update.complete = true;
+	usb_update.result = sim_usb_running ? 0 : 1;
+	sim_usb_running = false;
+	app_state_set_usb_update(&usb_update);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

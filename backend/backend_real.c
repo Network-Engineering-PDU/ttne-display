@@ -9,9 +9,16 @@
 
 #include "controller.h"
 #include "models.h"
+#include "runbg.h"
 #include "app/app_state.h"
 
 #define BACKEND_QUEUE_SIZE 32
+
+#ifdef SIMULATOR_ENABLED
+#define USB_MOUNT_DIR "/home/guille"
+#else
+#define USB_MOUNT_DIR "/run/mount"
+#endif
 
 typedef enum {
 	BACKEND_CMD_NONE = 0,
@@ -29,6 +36,9 @@ typedef enum {
 	BACKEND_CMD_UPDATE_SET_SERVER,
 	BACKEND_CMD_SYSTEM_REBOOT,
 	BACKEND_CMD_SYSTEM_FACTORY_RESET,
+	BACKEND_CMD_USB_UPDATE_DETECT,
+	BACKEND_CMD_USB_UPDATE_START,
+	BACKEND_CMD_USB_UPDATE_POLL,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -54,6 +64,8 @@ static int queue_tail;
 static int queue_count;
 static int result_count;
 static bool shutdown_requested;
+static pid_t usb_update_pid = -1;
+static char usb_update_dev[32];
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 static pthread_t worker;
@@ -264,6 +276,116 @@ static int run_sensor_data_refresh(int sensor_index)
 	return 0;
 }
 
+static const char* path_basename(const char* path)
+{
+	const char* base;
+
+	if (path == NULL) {
+		return "";
+	}
+	base = strrchr(path, '/');
+	return base != NULL ? base + 1 : path;
+}
+
+static int run_usb_update_detect(void)
+{
+	FILE* file = fopen("/proc/mounts", "r");
+	app_state_usb_update_t usb_update;
+	char line[500];
+	char dev[80];
+	char path[160];
+
+	memset(&usb_update, 0, sizeof(usb_update));
+	if (file == NULL) {
+		app_state_set_usb_update(&usb_update);
+		return 1;
+	}
+
+	while (fgets(line, sizeof(line), file) != NULL) {
+		dev[0] = '\0';
+		path[0] = '\0';
+		if (sscanf(line, "%79s %159s", dev, path) != 2) {
+			continue;
+		}
+		if (strstr(path, USB_MOUNT_DIR) != NULL) {
+			usb_update.device_found = true;
+			snprintf(usb_update.device_name, sizeof(usb_update.device_name),
+					"%s", path_basename(path));
+			snprintf(usb_update.update_dev, sizeof(usb_update.update_dev),
+					"%s", path_basename(dev));
+			break;
+		}
+	}
+	fclose(file);
+
+	app_state_set_usb_update(&usb_update);
+	return usb_update.device_found ? 0 : 1;
+}
+
+static int run_usb_update_start(const char* update_dev)
+{
+	app_state_usb_update_t usb_update;
+
+	memset(&usb_update, 0, sizeof(usb_update));
+	snprintf(usb_update.update_dev, sizeof(usb_update.update_dev), "%s",
+			update_dev != NULL ? update_dev : "");
+	if (usb_update.update_dev[0] == '\0') {
+		app_state_set_usb_update(&usb_update);
+		return 1;
+	}
+
+	usb_update_pid = runbg_run("/usr/bin/usb_autorun.sh", "add",
+			usb_update.update_dev, NULL);
+	snprintf(usb_update_dev, sizeof(usb_update_dev), "%s",
+			usb_update.update_dev);
+	usb_update.running = usb_update_pid > 0;
+	usb_update.complete = false;
+	usb_update.result = usb_update.running ? 0 : 1;
+	app_state_set_usb_update(&usb_update);
+	return usb_update.running ? 0 : 1;
+}
+
+static int run_usb_update_poll(void)
+{
+	app_state_usb_update_t usb_update;
+	int running;
+	int result;
+
+	memset(&usb_update, 0, sizeof(usb_update));
+	snprintf(usb_update.update_dev, sizeof(usb_update.update_dev), "%s",
+			usb_update_dev);
+	if (usb_update_pid <= 0) {
+		usb_update.complete = true;
+		usb_update.result = 1;
+		app_state_set_usb_update(&usb_update);
+		return 1;
+	}
+
+	result = runbg_check(usb_update_pid, &running);
+	if (result != 0) {
+		usb_update.complete = true;
+		usb_update.result = result;
+		app_state_set_usb_update(&usb_update);
+		return result;
+	}
+
+	if (running) {
+		usb_update.running = true;
+		app_state_set_usb_update(&usb_update);
+		return 0;
+	}
+
+	pid_t pid = runbg_run("/usr/bin/usb_autorun.sh", "remove",
+			usb_update_dev, NULL);
+	usb_update.result = runbg_check_wait(pid);
+	usb_update.complete = true;
+	usb_update.running = false;
+	usb_update_pid = -1;
+	usb_update_dev[0] = '\0';
+	app_state_set_usb_update(&usb_update);
+	return usb_update.result;
+}
+
 static void backend_push_result(int err, backend_callback_t callback, void* userdata)
 {
 	if (callback == NULL) {
@@ -404,6 +526,15 @@ static void* backend_worker(void* arg)
 			break;
 		case BACKEND_CMD_SYSTEM_FACTORY_RESET:
 			controller_post_fact_reset();
+			break;
+		case BACKEND_CMD_USB_UPDATE_DETECT:
+			err = run_usb_update_detect();
+			break;
+		case BACKEND_CMD_USB_UPDATE_START:
+			err = run_usb_update_start(cmd.text);
+			break;
+		case BACKEND_CMD_USB_UPDATE_POLL:
+			err = run_usb_update_poll();
 			break;
 		default:
 			err = 1;
@@ -617,6 +748,39 @@ int backend_system_factory_reset(backend_callback_t callback, void* userdata)
 {
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_SYSTEM_FACTORY_RESET,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_usb_update_detect(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_USB_UPDATE_DETECT,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_usb_update_start(const char* update_dev, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_USB_UPDATE_START,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s",
+			update_dev != NULL ? update_dev : "");
+	return backend_submit(&cmd);
+}
+
+int backend_usb_update_poll(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_USB_UPDATE_POLL,
 		.callback = callback,
 		.userdata = userdata,
 	};

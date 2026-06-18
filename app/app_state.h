@@ -77,11 +77,22 @@ typedef struct {
 } app_state_update_status_t;
 
 typedef struct {
+	bool device_found;
+	bool running;
+	bool complete;
+	int result;
+	char device_name[64];
+	char update_dev[32];
+	bool valid;
+} app_state_usb_update_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
 	app_state_sensor_data_t sensor_data;
 	app_state_update_status_t update_status;
+	app_state_usb_update_t usb_update;
 	char license_type[16];
 	int outlet_count;
 	uint32_t outlet_revision;
@@ -89,6 +100,7 @@ typedef struct {
 	uint32_t power_revision;
 	uint32_t sensor_data_revision;
 	uint32_t update_status_revision;
+	uint32_t usb_update_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -101,6 +113,7 @@ void app_state_set_outlet_data(const app_state_outlet_data_t* outlet_data);
 void app_state_set_power(const app_state_power_t* power);
 void app_state_set_sensor_data(const app_state_sensor_data_t* sensor_data);
 void app_state_set_update_status(const app_state_update_status_t* update_status);
+void app_state_set_usb_update(const app_state_usb_update_t* usb_update);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 

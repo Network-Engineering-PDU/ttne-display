@@ -7,7 +7,6 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "runbg.h"
 #include "app/app_state.h"
 #include "backend/backend.h"
 
@@ -24,22 +23,16 @@
 #define UI_POLL_LOG(...) ((void)0)
 #endif
 
-#ifdef SIMULATOR_ENABLED
-#define MOUNT_DIR "/home/guille"
-#else
-#define MOUNT_DIR "/run/mount"
-#endif
-
 /* Global variables ***********************************************************/
 static lv_obj_t* txt_server;
 static lv_obj_t* btn_auto; // This is now a dropdown
 static lv_obj_t* dd_period;
 static lv_timer_t* timer_check_update;
 static lv_timer_t* timer_poll_update_status;  // Timer for polling update status
-static char update_dev[20];
-static pid_t update_pid;
 static bool update_confirmation_shown = false;  // Track if we've already shown the confirmation
 static bool update_status_refresh_pending;
+static bool usb_detect_pending;
+static bool usb_update_poll_pending;
 
 /* Function prototypes ********************************************************/
 static void timer_check_update_cb(lv_timer_t* timer);
@@ -47,6 +40,9 @@ static void timer_poll_update_status_cb(lv_timer_t* timer);
 static void update_status_refresh_cb(int err, void* userdata);
 static void update_settings_cb(int err, void* userdata);
 static void update_confirm_cb(int err, void* userdata);
+static void usb_detect_cb(int err, void* userdata);
+static void usb_update_start_cb(int err, void* userdata);
+static void usb_update_poll_cb(int err, void* userdata);
 static void loader_cb(lv_event_t* e);
 static void txt_server_cb(lv_event_t* e);
 static void btn_auto_cb(lv_event_t* e);
@@ -63,16 +59,6 @@ static void update_controls_from_status(
         const app_state_update_status_t* update_status);
 static uint16_t period_sel_from_hours(int hours);
 static int period_hours_from_sel(uint16_t sel);
-
-static char* get_last_element(const char* str) {
-    char *last_element = NULL;
-    char *token = strtok((char*)str, "/");
-    while (token != NULL) {
-        last_element = token;
-        token = strtok(NULL, "/");
-    }
-    return last_element;
-}
 
 /* Main Screen Creation *******************************************************/
 
@@ -186,6 +172,51 @@ static void update_confirm_cb(int err, void* userdata) {
     (void)userdata;
     if (err == 0) {
         apply_update_status_snapshot();
+    }
+}
+
+static void usb_detect_cb(int err, void* userdata) {
+    (void)userdata;
+    usb_detect_pending = false;
+
+    app_state_snapshot_t snapshot;
+    app_state_get_snapshot(&snapshot);
+    const app_state_usb_update_t* usb_update = &snapshot.usb_update;
+    if (err != 0 || !usb_update->valid || !usb_update->device_found) {
+        tt_obj_info_box_create("Device update", "No USB detected", 1);
+        return;
+    }
+
+    char msg[200];
+    snprintf(msg, sizeof(msg), "USB device " TT_COLOR_GREEN_NE_STR
+            " %s detected. Update?", usb_update->device_name);
+    tt_obj_msg_box_create("Device update", msg, "Updating Device...",
+            msg_box_update_cb);
+}
+
+static void usb_update_start_cb(int err, void* userdata) {
+    (void)userdata;
+    if (err != 0) {
+        tt_obj_info_box_create("Device update", "Could not start USB update", 1);
+        return;
+    }
+    if (timer_check_update == NULL) {
+        timer_check_update = lv_timer_create(timer_check_update_cb,
+                TIMER_CHECK_UPDATE, NULL);
+    }
+}
+
+static void usb_update_poll_cb(int err, void* userdata) {
+    (void)userdata;
+    (void)err;
+    usb_update_poll_pending = false;
+
+    app_state_snapshot_t snapshot;
+    app_state_get_snapshot(&snapshot);
+    if (snapshot.usb_update.valid && snapshot.usb_update.complete &&
+            timer_check_update != NULL) {
+        lv_timer_del(timer_check_update);
+        timer_check_update = NULL;
     }
 }
 
@@ -308,25 +339,12 @@ static void txt_server_cb(lv_event_t* e) {
 
 static void btn_update_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        FILE* file = fopen("/proc/mounts", "r");
-        if (file == NULL) return;
-        
-        char line[500], dev[50], path[50];
-        int n_devices = 0;
-        while (fgets(line, 500, file) != NULL) {
-            sscanf(line, "%s %s", dev, path);
-            if (strstr(path, MOUNT_DIR) != NULL) {
-                n_devices++;
-                char* dev_name = get_last_element(path);
-                char msg[200];
-                sprintf(msg, "USB device " TT_COLOR_GREEN_NE_STR " %s detected. Update?", dev_name);
-                strcpy(update_dev, get_last_element(dev));
-                tt_obj_msg_box_create("Device update", msg, "Updating Device...", msg_box_update_cb);
-                break;
-            }
+        if (usb_detect_pending) {
+            return;
         }
-        if (n_devices == 0) tt_obj_info_box_create("Device update", "No USB detected", 1);
-        fclose(file);
+        if (backend_usb_update_detect(usb_detect_cb, NULL) == 0) {
+            usb_detect_pending = true;
+        }
     }
 }
 
@@ -334,8 +352,10 @@ static void msg_box_update_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t* obj = lv_event_get_current_target(e);
         if (lv_msgbox_get_active_btn(obj) == 0) {
-            update_pid = runbg_run("/usr/bin/usb_autorun.sh", "add", update_dev, NULL);
-            timer_check_update = lv_timer_create(timer_check_update_cb, TIMER_CHECK_UPDATE, NULL);
+            app_state_snapshot_t snapshot;
+            app_state_get_snapshot(&snapshot);
+            backend_usb_update_start(snapshot.usb_update.update_dev,
+                    usb_update_start_cb, NULL);
             lv_obj_t* loader_scr = tt_obj_loader_create("Updating Device...", NULL);
             lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
             lv_scr_load(loader_scr);
@@ -375,12 +395,12 @@ static void loader_cb(lv_event_t* e) {
 }
 
 static void timer_check_update_cb(lv_timer_t* timer) {
-    int running;
-    if (runbg_check(update_pid, &running) != 0) return;
-    if (!running) {
-        lv_timer_del(timer);
-        pid_t pid = runbg_run("/usr/bin/usb_autorun.sh", "remove", update_dev, NULL);
-        runbg_check_wait(pid);
+    (void)timer;
+    if (usb_update_poll_pending) {
+        return;
+    }
+    if (backend_usb_update_poll(usb_update_poll_cb, NULL) == 0) {
+        usb_update_poll_pending = true;
     }
 }
 
