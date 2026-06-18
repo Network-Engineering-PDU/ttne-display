@@ -14,6 +14,7 @@
 #include "ttne_display.h"
 #include "config.h"
 #include "http_async.h"
+#include "backend/backend.h"
 
 #ifndef SIMULATOR_ENABLED
 #define DISP_BUF_SIZE (128 * 1024)
@@ -157,6 +158,7 @@ int main(int argc, char **argv)
 
 	/* Initialize async HTTP module */
 	http_async_init();
+	backend_init();
 
 	ttne_display();
 
@@ -167,6 +169,7 @@ int main(int argc, char **argv)
 			
 			/* Process async HTTP callbacks */
 			http_async_process_callbacks();
+			backend_process();
 			
 			int inactivity_time = config_get_inactivity_time() * 60 * 1000; // In us
 			if ((int)lv_disp_get_inactive_time(NULL) > inactivity_time) {
@@ -175,6 +178,7 @@ int main(int argc, char **argv)
 			usleep(5 * 1000);
 	}
 
+	backend_cleanup();
 	http_async_cleanup();
 
 	return 0;

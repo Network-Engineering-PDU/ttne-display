@@ -10,10 +10,9 @@
 #include "tt_colors.h"
 #include "screen.h"
 #include "models.h"
-#include "controller.h"
+#include "backend/backend.h"
 
 #define MAX_OUTLETS 48
-#define TIMER_TOGGLE_ALL 500 // ms
 
 /* Global variables ***********************************************************/
 
@@ -30,8 +29,6 @@ static lv_obj_t* btn_dis_all;
 
 typedef struct tt_user_data_t {
 	lv_obj_t* active_screen;
-	bool action;
-	int line_id;
 } tt_user_data_t;
 
 /* Function prototypes ********************************************************/
@@ -41,7 +38,9 @@ static void btn_out_cb(lv_event_t* e);
 static void msg_box_all_cb(lv_event_t* e);
 static void btn_all_cb(lv_event_t* e);
 
-static void timer_toggle_all_cb(lv_timer_t* timer);
+static void outlets_refresh_cb(int err, void* userdata);
+static void outlets_set_all_cb(int err, void* userdata);
+static void update_outlet_buttons(void);
 
 /* Callbacks ******************************************************************/
 
@@ -54,24 +53,10 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* curr_page = lv_event_get_user_data(e);
 		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
 		if (curr_page == page) {
-			controller_get_out_sw();
-			int len;
-			const models_out_sw_t* out_sw = models_get_out_sw(&len);
-			if (len == 0) {
-				lv_obj_add_flag(btn_en_all, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_add_flag(btn_dis_all, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_clear_flag(lbl_no_out, LV_OBJ_FLAG_HIDDEN);
+			if (backend_outlets_refresh(outlets_refresh_cb, NULL) != 0) {
+				tt_obj_info_box_create("Outlets", "Outlet refresh unavailable", 1);
 			}
-			for (int i = 0; i < MAX_OUTLETS; i++) {
-				if (i < len) {
-					LV_LOG_USER("OUTLET %d (line %d) status: %d", i,
-							out_sw[i].line_id, out_sw[i].status);
-					tt_obj_btn_toggle_set_state(btn_out[i], out_sw[i].status);
-					lv_obj_clear_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);
-				} else {
-					lv_obj_add_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);
-				}
-			}
+			update_outlet_buttons();
 		}
 	}
 }
@@ -101,12 +86,17 @@ static void msg_box_all_cb(lv_event_t* e)
 					return;
 				}
 				tt_user_data->active_screen = lv_scr_act();
-				tt_user_data->action = action;
-			tt_user_data->line_id = 0;
-			lv_timer_create(timer_toggle_all_cb, TIMER_TOGGLE_ALL, tt_user_data);
-			loader_scr = tt_obj_loader_create(action ?
-					"Enabling all switches" : "Disabling all switches", NULL);
-			lv_scr_load(loader_scr);
+				loader_scr = tt_obj_loader_create(action ?
+						"Enabling all switches" : "Disabling all switches", NULL);
+				lv_scr_load(loader_scr);
+				if (backend_outlets_set_all(action, outlets_set_all_cb,
+						tt_user_data) != 0) {
+					lv_scr_load(tt_user_data->active_screen);
+					lv_obj_del(loader_scr);
+					loader_scr = NULL;
+					free(tt_user_data);
+					tt_obj_info_box_create("Outlets", "Outlet update unavailable", 1);
+				}
 		}
 		lv_msgbox_close(obj);
 	}
@@ -127,35 +117,69 @@ static void btn_all_cb(lv_event_t* e)
 	}
 }
 
-static void timer_toggle_all_cb(lv_timer_t* timer)
+static void outlets_refresh_cb(int err, void* userdata)
 {
-	tt_user_data_t* tt_user_data = timer->user_data;
-	lv_obj_t* scr = tt_user_data->active_screen;
-	bool action = tt_user_data->action;
-	int line_id = tt_user_data->line_id;
-	models_out_sw_t out_sw;
+	(void)userdata;
+	if (err != 0) {
+		tt_obj_info_box_create("Outlets", "Could not refresh outlets", 1);
+		return;
+	}
+	update_outlet_buttons();
+}
+
+static void outlets_set_all_cb(int err, void* userdata)
+{
+	tt_user_data_t* tt_user_data = userdata;
+	lv_obj_t* scr = tt_user_data != NULL ? tt_user_data->active_screen : NULL;
+
+	if (scr != NULL) {
+		lv_scr_load(scr);
+	}
+	if (loader_scr != NULL) {
+		lv_obj_del(loader_scr);
+		loader_scr = NULL;
+	}
+	if (tt_user_data != NULL) {
+		free(tt_user_data);
+	}
+
+	if (err != 0) {
+		tt_obj_info_box_create("Outlets", "Could not update outlets", 1);
+		return;
+	}
+
+	update_outlet_buttons();
+}
+
+static void update_outlet_buttons(void)
+{
 	int len;
-	models_get_out_sw(&len);
+	const models_out_sw_t* out_sw = models_get_out_sw(&len);
 	if (len > MAX_OUTLETS) {
 		len = MAX_OUTLETS;
 	}
-	if (line_id >= len) {
-		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		free(tt_user_data);
+
+	if (len == 0 || out_sw == NULL) {
+		lv_obj_add_flag(btn_en_all, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_add_flag(btn_dis_all, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_clear_flag(lbl_no_out, LV_OBJ_FLAG_HIDDEN);
+		for (int i = 0; i < MAX_OUTLETS; i++) {
+			lv_obj_add_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);
+		}
 		return;
 	}
-	out_sw.line_id = line_id;
-	out_sw.status = action;
-	tt_obj_btn_toggle_set_state(btn_out[line_id], action);
-	controller_put_out_sw(&out_sw, line_id);
-	tt_user_data->line_id++;
-	if (tt_user_data->line_id >= len) {
-		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		free(tt_user_data);
+
+	lv_obj_clear_flag(btn_en_all, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_clear_flag(btn_dis_all, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(lbl_no_out, LV_OBJ_FLAG_HIDDEN);
+
+	for (int i = 0; i < MAX_OUTLETS; i++) {
+		if (i < len) {
+			tt_obj_btn_toggle_set_state(btn_out[i], out_sw[i].status);
+			lv_obj_clear_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);
+		} else {
+			lv_obj_add_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);
+		}
 	}
 }
 
