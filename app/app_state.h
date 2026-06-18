@@ -137,6 +137,19 @@ typedef struct {
 } app_state_nw_info_t;
 
 typedef struct {
+	bool snmp;
+	bool modbus;
+	bool ssh;
+	bool bluetooth;
+	bool valid;
+} app_state_nw_services_t;
+
+typedef struct {
+	int addr;
+	bool valid;
+} app_state_modbus_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
@@ -146,6 +159,8 @@ typedef struct {
 	app_state_bt_status_t bt_status;
 	app_state_nw_if_t nw_if;
 	app_state_nw_info_t nw_info;
+	app_state_nw_services_t nw_services;
+	app_state_modbus_t modbus;
 	char license_type[16];
 	int outlet_count;
 	uint32_t outlet_revision;
@@ -157,6 +172,8 @@ typedef struct {
 	uint32_t bt_status_revision;
 	uint32_t nw_if_revision;
 	uint32_t nw_info_revision;
+	uint32_t nw_services_revision;
+	uint32_t modbus_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -173,6 +190,8 @@ void app_state_set_usb_update(const app_state_usb_update_t* usb_update);
 void app_state_set_bt_status(const app_state_bt_status_t* bt_status);
 void app_state_set_nw_if(const app_state_nw_if_t* nw_if);
 void app_state_set_nw_info(const app_state_nw_info_t* nw_info);
+void app_state_set_nw_services(const app_state_nw_services_t* nw_services);
+void app_state_set_modbus(const app_state_modbus_t* modbus);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 

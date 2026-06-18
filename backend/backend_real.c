@@ -47,6 +47,10 @@ typedef enum {
 	BACKEND_CMD_NETWORK_IF_REFRESH,
 	BACKEND_CMD_NETWORK_IF_SAVE,
 	BACKEND_CMD_NETWORK_INFO_REFRESH,
+	BACKEND_CMD_NETWORK_SERVICES_REFRESH,
+	BACKEND_CMD_NETWORK_SERVICE_SET,
+	BACKEND_CMD_MODBUS_REFRESH,
+	BACKEND_CMD_MODBUS_SET_ADDR,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -258,6 +262,29 @@ static void publish_network_info_from_models(void)
 		.valid = true,
 	};
 	app_state_set_nw_info(&nw_info);
+}
+
+static void publish_network_services_from_models(void)
+{
+	const models_nw_services_t* model = models_get_nw_services();
+	app_state_nw_services_t services = {
+		.snmp = model != NULL && model->snmp,
+		.modbus = model != NULL && model->modbus,
+		.ssh = model != NULL && model->ssh,
+		.bluetooth = model != NULL && model->bluetooth,
+		.valid = true,
+	};
+	app_state_set_nw_services(&services);
+}
+
+static void publish_modbus_from_models(void)
+{
+	const models_modbus_t* model = models_get_modbus();
+	app_state_modbus_t modbus = {
+		.addr = model != NULL ? model->addr : 0,
+		.valid = true,
+	};
+	app_state_set_modbus(&modbus);
 }
 
 static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
@@ -710,6 +737,50 @@ static void* backend_worker(void* arg)
 			controller_get_nw_info();
 			publish_network_info_from_models();
 			break;
+		case BACKEND_CMD_NETWORK_SERVICES_REFRESH:
+			controller_get_nw_services();
+			publish_network_services_from_models();
+			break;
+		case BACKEND_CMD_NETWORK_SERVICE_SET:
+			if (strcmp(cmd.text, "ssh") == 0) {
+				if (cmd.status) {
+					controller_post_start_ssh();
+				} else {
+					controller_post_stop_ssh();
+				}
+			} else if (strcmp(cmd.text, "snmp") == 0) {
+				if (cmd.status) {
+					controller_post_start_snmp();
+				} else {
+					controller_post_stop_snmp();
+				}
+			} else if (strcmp(cmd.text, "modbus") == 0) {
+				if (cmd.status) {
+					controller_post_start_modbus();
+				} else {
+					controller_post_stop_modbus();
+				}
+			} else {
+				err = 1;
+			}
+			if (err == 0) {
+				controller_get_nw_services();
+				publish_network_services_from_models();
+			}
+			break;
+		case BACKEND_CMD_MODBUS_REFRESH:
+			controller_get_modbus();
+			publish_modbus_from_models();
+			break;
+		case BACKEND_CMD_MODBUS_SET_ADDR: {
+			models_modbus_t modbus = {
+				.addr = cmd.value,
+			};
+			controller_put_modbus(&modbus);
+			controller_get_modbus();
+			publish_modbus_from_models();
+			break;
+		}
 		default:
 			err = 1;
 			break;
@@ -1052,6 +1123,51 @@ int backend_network_info_refresh(backend_callback_t callback, void* userdata)
 {
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_NETWORK_INFO_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_network_services_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NETWORK_SERVICES_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_network_service_set(const char* service, bool enable,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NETWORK_SERVICE_SET,
+		.status = enable,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", service != NULL ? service : "");
+	return backend_submit(&cmd);
+}
+
+int backend_modbus_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_MODBUS_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_modbus_set_addr(int addr, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_MODBUS_SET_ADDR,
+		.value = addr,
 		.callback = callback,
 		.userdata = userdata,
 	};

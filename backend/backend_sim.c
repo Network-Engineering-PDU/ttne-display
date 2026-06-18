@@ -12,6 +12,17 @@
 static app_state_outlet_t sim_outlets[SIM_OUTLETS];
 static bool sim_initialized;
 static bool sim_usb_running;
+static app_state_nw_services_t sim_nw_services = {
+	.snmp = false,
+	.modbus = false,
+	.ssh = false,
+	.bluetooth = true,
+	.valid = true,
+};
+static app_state_modbus_t sim_modbus = {
+	.addr = 1,
+	.valid = true,
+};
 static app_state_bt_status_t sim_bt_status;
 static app_state_nw_if_t sim_nw_if = {
 	.type = 2,
@@ -76,6 +87,8 @@ static void ensure_sim_outlets(void)
 	sim_bt_status.devices[1].rssi = -58;
 	app_state_set_bt_status(&sim_bt_status);
 	app_state_set_nw_if(&sim_nw_if);
+	app_state_set_nw_services(&sim_nw_services);
+	app_state_set_modbus(&sim_modbus);
 	sim_initialized = true;
 }
 
@@ -459,6 +472,55 @@ int backend_network_info_refresh(backend_callback_t callback, void* userdata)
 		.valid = true,
 	};
 	app_state_set_nw_info(&nw_info);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_network_services_refresh(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	app_state_set_nw_services(&sim_nw_services);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_network_service_set(const char* service, bool enable,
+		backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	if (strcmp(service != NULL ? service : "", "ssh") == 0) {
+		sim_nw_services.ssh = enable;
+	} else if (strcmp(service != NULL ? service : "", "snmp") == 0) {
+		sim_nw_services.snmp = enable;
+	} else if (strcmp(service != NULL ? service : "", "modbus") == 0) {
+		sim_nw_services.modbus = enable;
+	}
+	app_state_set_nw_services(&sim_nw_services);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_modbus_refresh(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	app_state_set_modbus(&sim_modbus);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_modbus_set_addr(int addr, backend_callback_t callback,
+		void* userdata)
+{
+	sim_modbus.addr = addr;
+	app_state_set_modbus(&sim_modbus);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

@@ -209,6 +209,32 @@ void app_state_set_nw_info(const app_state_nw_info_t* nw_info)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_nw_services(const app_state_nw_services_t* nw_services)
+{
+	if (nw_services == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.nw_services = *nw_services;
+	state.nw_services.valid = true;
+	state.nw_services_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_modbus(const app_state_modbus_t* modbus)
+{
+	if (modbus == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.modbus = *modbus;
+	state.modbus.valid = true;
+	state.modbus_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

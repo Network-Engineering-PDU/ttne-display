@@ -6,21 +6,22 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 #include "config.h"
 #include "screen.h"
 #include "ttne_display.h"
-#include "runbg.h"
 
 /* Global variables ***********************************************************/
 static lv_obj_t* btn_snmp;
 static bool running = false;
+static bool refresh_pending;
 
 /* Function prototypes ********************************************************/
 static void menu_cb(lv_event_t* e);
 static void btn_snmp_cb(lv_event_t* e);
 static void msg_box_snmp_cb(lv_event_t* e);
+static void services_refresh_cb(int err, void* userdata);
 
 /* Callbacks ******************************************************************/
 
@@ -33,9 +34,10 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* curr_page = lv_event_get_user_data(e);
 		lv_obj_t* page = lv_menu_get_cur_main_page(menu);
 		if (curr_page == page) {
-			controller_get_nw_services();
-			const models_nw_services_t* nw_services = models_get_nw_services();
-			tt_obj_btn_toggle_set_state(btn_snmp, nw_services->snmp);
+			if (!refresh_pending &&
+					backend_network_services_refresh(services_refresh_cb, NULL) == 0) {
+				refresh_pending = true;
+			}
 			if (!running) {
 				running = true;
 				LV_LOG_USER("Settings open");
@@ -56,7 +58,7 @@ static void btn_snmp_cb(lv_event_t* e)
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		char msg[100];
-		sprintf(msg, "Are you sure you want to " TT_COLOR_GREEN_NE_STR
+		snprintf(msg, sizeof(msg), "Are you sure you want to " TT_COLOR_GREEN_NE_STR
 				" %s# SNMP?", (lv_obj_get_state(btn) & LV_STATE_CHECKED) ?
 				"enable" : "disable");
 		tt_obj_msg_box_create("SNMP service", msg, NULL, msg_box_snmp_cb);
@@ -71,21 +73,27 @@ static void msg_box_snmp_cb(lv_event_t* e)
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
 			bool enable = (lv_obj_get_state(btn_snmp) & LV_STATE_CHECKED) ? true : false;
-			if (enable) {
-				controller_post_start_snmp();
-			} else {
-				controller_post_stop_snmp();
-			}
-			// Update the model state immediately for UI consistency
-			models_nw_services_t* nw_services = (models_nw_services_t*)models_get_nw_services();
-			if (nw_services) {
-				nw_services->snmp = enable;
-			}
+			backend_network_service_set("snmp", enable, services_refresh_cb, NULL);
 		} else {
-			const models_nw_services_t* nw_services = models_get_nw_services();
-			tt_obj_btn_toggle_set_state(btn_snmp, nw_services->snmp);
+			app_state_snapshot_t snapshot;
+			app_state_get_snapshot(&snapshot);
+			tt_obj_btn_toggle_set_state(btn_snmp, snapshot.nw_services.snmp);
 		}
 		lv_msgbox_close(obj);
+	}
+}
+
+static void services_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	refresh_pending = false;
+	if (err != 0) {
+		return;
+	}
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	if (snapshot.nw_services.valid) {
+		tt_obj_btn_toggle_set_state(btn_snmp, snapshot.nw_services.snmp);
 	}
 }
 

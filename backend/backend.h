@@ -54,6 +54,12 @@ int backend_network_if_refresh(backend_callback_t callback, void* userdata);
 int backend_network_if_save(const app_state_nw_if_t* nw_if,
 		backend_callback_t callback, void* userdata);
 int backend_network_info_refresh(backend_callback_t callback, void* userdata);
+int backend_network_services_refresh(backend_callback_t callback, void* userdata);
+int backend_network_service_set(const char* service, bool enable,
+		backend_callback_t callback, void* userdata);
+int backend_modbus_refresh(backend_callback_t callback, void* userdata);
+int backend_modbus_set_addr(int addr, backend_callback_t callback,
+		void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */
