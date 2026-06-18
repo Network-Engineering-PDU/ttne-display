@@ -5,6 +5,12 @@
 
 #include "http_helper.h"
 
+#ifdef HTTP_DEBUG_LOGS
+#define HTTP_DEBUG_LOG(...) LV_LOG_USER(__VA_ARGS__)
+#else
+#define HTTP_DEBUG_LOG(...) ((void)0)
+#endif
+
 /* Global variables ***********************************************************/
 /* Function prototypes ********************************************************/
 
@@ -73,7 +79,7 @@ int http_helper_get(http_get_req_t* req, char* url)
 		res = curl_easy_perform(curl);
 		int retcode;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &retcode);
-		LV_LOG_USER("Curl result: %u, retcode: %d [%s]", res, retcode, url);
+		HTTP_DEBUG_LOG("Curl result: %u, retcode: %d [%s]", res, retcode, url);
 		if (res != CURLE_OK) {
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;
@@ -135,7 +141,7 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 		res = curl_easy_perform(curl);
 		int retcode;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &retcode);
-		LV_LOG_USER("Curl result: %u, retcode: %d [%s]", res, retcode, url);
+		HTTP_DEBUG_LOG("Curl result: %u, retcode: %d [%s]", res, retcode, url);
 		if (res != CURLE_OK) {
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;
@@ -193,7 +199,7 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 		res = curl_easy_perform(curl);
 		int retcode;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &retcode);
-		LV_LOG_USER("Curl result: %u, retcode: %d [%s]", res, retcode, url);
+		HTTP_DEBUG_LOG("Curl result: %u, retcode: %d [%s]", res, retcode, url);
 		if (res != CURLE_OK) {
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;

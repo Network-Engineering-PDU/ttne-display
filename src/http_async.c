@@ -10,6 +10,12 @@
 #define MAX_ASYNC_REQUESTS 64
 #define THREAD_POOL_SIZE 2
 
+#ifdef HTTP_DEBUG_LOGS
+#define HTTP_DEBUG_LOG(...) LV_LOG_USER(__VA_ARGS__)
+#else
+#define HTTP_DEBUG_LOG(...) ((void)0)
+#endif
+
 typedef enum {
 	ASYNC_REQ_EMPTY = 0,
 	ASYNC_REQ_PENDING,
@@ -125,7 +131,8 @@ static void* worker_thread(void* arg)
 			int retcode = 0;
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &retcode);
 
-			LV_LOG_USER("Async curl result: %u, retcode: %d [%s]", res, retcode, req->url);
+			HTTP_DEBUG_LOG("Async curl result: %u, retcode: %d [%s]", res,
+					retcode, req->url);
 
 			req->err = (res != CURLE_OK || retcode < 200 || retcode >= 300) ? 1 : 0;
 			curl_slist_free_all(headers);

@@ -11,6 +11,12 @@
 #include "json_helper.h"
 #include "http_async.h"
 
+#ifdef CONTROLLER_DEBUG_LOGS
+#define CTRL_DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define CTRL_DEBUG_PRINTF(...) ((void)0)
+#endif
+
 #define BASE_URL "http://localhost:8001/"
 #define NE_BASE_URL "http://localhost:80/"
 
@@ -118,13 +124,13 @@ void controller_put_pdu_info(const models_pdu_info_t* pdu_info)
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddNumberToObject(json, "rated_current", pdu_info->rated_current);
 	char* put_data = cJSON_PrintUnformatted(json);
-	printf("[controller] Sending PDU info PUT: %s\n", put_data);
+	CTRL_DEBUG_PRINTF("[controller] Sending PDU info PUT: %s\n", put_data);
 	int err = http_helper_put(&req, url, put_data);
 	if (err != 0) {
 		LV_LOG_ERROR("PDU info PUT error: %d", err);
-		printf("[controller] PDU info PUT failed with error: %d\n", err);
+		CTRL_DEBUG_PRINTF("[controller] PDU info PUT failed with error: %d\n", err);
 	} else {
-		printf("[controller] PDU info PUT succeeded\n");
+		CTRL_DEBUG_PRINTF("[controller] PDU info PUT succeeded\n");
 	}
 	cJSON_Delete(json);
 	free(put_data);
@@ -171,7 +177,7 @@ void controller_put_out_sw(const models_out_sw_t* out_sw, int line_id)
 	if (err == 0) {
 		models_set_out_sw_idx(out_sw, line_id);
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);
@@ -370,7 +376,7 @@ void controller_put_nw_if(const models_nw_if_t* nw_if)
 	if (err == 0) {
 		models_set_nw_if(nw_if);
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);
@@ -384,7 +390,7 @@ void controller_post_nw_reset()
 	if (err != 0) {
 		LV_LOG_ERROR("Nework reset error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -396,7 +402,7 @@ void controller_post_fact_reset()
 	if (err != 0) {
 		LV_LOG_ERROR("Factory reset error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -408,7 +414,7 @@ void controller_post_reboot()
 	if (err != 0) {
 		LV_LOG_ERROR("Reboot error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -420,7 +426,7 @@ void controller_post_start_scan()
 	if (err != 0) {
 		LV_LOG_ERROR("Start scan error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -432,7 +438,7 @@ void controller_post_stop_scan()
 	if (err != 0) {
 		LV_LOG_ERROR("Stop scan error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -447,7 +453,7 @@ void controller_put_license(const models_license_t* license)
 	if (err != 0) {
 		LV_LOG_ERROR("License error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);
@@ -473,7 +479,7 @@ void controller_put_modbus(const models_modbus_t* modbus)
 	if (err != 0) {
 		LV_LOG_ERROR("Modbus error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);
@@ -496,7 +502,7 @@ void controller_post_start_ssh()
 	if (err != 0) {
 		LV_LOG_ERROR("SSH start error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -508,7 +514,7 @@ void controller_post_stop_ssh()
 	if (err != 0) {
 		LV_LOG_ERROR("SSH stop error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -520,7 +526,7 @@ void controller_post_start_snmp()
 	if (err != 0) {
 		LV_LOG_ERROR("SNMP start error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -532,7 +538,7 @@ void controller_post_stop_snmp()
 	if (err != 0) {
 		LV_LOG_ERROR("SNMP stop error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -544,7 +550,7 @@ void controller_post_start_modbus()
 	if (err != 0) {
 		LV_LOG_ERROR("Modbus start error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -556,7 +562,7 @@ void controller_post_stop_modbus()
 	if (err != 0) {
 		LV_LOG_ERROR("Modbus stop error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -568,7 +574,7 @@ void controller_post_start_bluetooth()
 	if (err != 0) {
 		LV_LOG_ERROR("Bluetooth start error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -580,7 +586,7 @@ void controller_post_stop_bluetooth()
 	if (err != 0) {
 		LV_LOG_ERROR("Bluetooth stop error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	http_helper_free(&req);
 }
 
@@ -688,7 +694,7 @@ void controller_post_update_confirm(bool confirm)
 	if (err != 0) {
 		LV_LOG_ERROR("Update confirm error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
 	free(post_data);
 	http_helper_free(&req);
@@ -708,7 +714,7 @@ void controller_put_update_settings(bool auto_update, const char* update_server,
 	if (err != 0) {
 		LV_LOG_ERROR("Update settings error");
 	}
-	printf("Buffer received: %s\n", req.buffer);
+	CTRL_DEBUG_PRINTF("Buffer received: %s\n", req.buffer);
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);

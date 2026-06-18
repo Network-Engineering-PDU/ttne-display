@@ -18,6 +18,12 @@
 
 #define DEFAULT_UPDATE_SERVER "https://github.com/Network-Engineering-PDU/firmware-update"
 
+#ifdef UI_POLL_DEBUG_LOGS
+#define UI_POLL_LOG(...) LV_LOG_USER(__VA_ARGS__)
+#else
+#define UI_POLL_LOG(...) ((void)0)
+#endif
+
 #ifdef SIMULATOR_ENABLED
 #define MOUNT_DIR "/home/guille"
 #else
@@ -151,8 +157,8 @@ static void timer_poll_update_status_cb(lv_timer_t* timer) {
     const models_update_status_t* update_status = models_get_update_status();
     update_controls_from_status(update_status);
     
-    LV_LOG_USER("Poll: pending=%d, auto_update=%d, shown=%d", 
-        update_status->is_pending, update_status->auto_update, update_confirmation_shown);
+	    UI_POLL_LOG("Poll: pending=%d, auto_update=%d, shown=%d",
+	        update_status->is_pending, update_status->auto_update, update_confirmation_shown);
     
     // Only show confirmation once, when an update is pending and auto_update is enabled
     if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {

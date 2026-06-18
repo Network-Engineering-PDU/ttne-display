@@ -16,6 +16,12 @@
 #define MIN_SCAN_POLLS 3
 #define MAX_SCAN_RETRIES 30 // 30 * 2s = 60 seconds scan timeout
 
+#ifdef UI_POLL_DEBUG_LOGS
+#define UI_POLL_LOG(...) LV_LOG_USER(__VA_ARGS__)
+#else
+#define UI_POLL_LOG(...) ((void)0)
+#endif
+
 
 /* Global variables ***********************************************************/
 
@@ -228,7 +234,7 @@ static void timer_scan_cb(lv_timer_t* timer)
 	discovered_count = len;
 	scan_retries++;
 
-	LV_LOG_USER("Searching BLE sensors. Retries: %d (found=%d)",
+	UI_POLL_LOG("Searching BLE sensors. Retries: %d (found=%d)",
 			scan_retries, discovered_count);
 
 	if (discovered_count > 0 && scan_retries >= MIN_SCAN_POLLS) {
