@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "screen.h"
-#include "config.h"
+#include "app/app_state.h"
 
 #include "lvgl/lvgl.h"
 
@@ -40,7 +40,13 @@ void screen_set_rotation(int rotation)
 
 bool screen_is_landscape()
 {
-	int rotation = config_get_rotation();
+	app_state_snapshot_t snapshot;
+	int rotation = 3;
+
+	app_state_get_snapshot(&snapshot);
+	if (snapshot.visual_config.valid) {
+		rotation = snapshot.visual_config.rotation;
+	}
 	if (rotation == 1 || rotation == 3) {
 		return true;
 	}

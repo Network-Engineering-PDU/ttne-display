@@ -67,6 +67,8 @@ typedef enum {
 	BACKEND_CMD_VISUAL_SET_INACTIVITY,
 	BACKEND_CMD_VISUAL_SET_PDU_FIELD,
 	BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART,
+	BACKEND_CMD_LOGIN_CONFIG_REFRESH,
+	BACKEND_CMD_LOGIN_SET_SKIP,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -428,6 +430,15 @@ static void publish_visual_config_from_config(void)
 	snprintf(visual_config.pdu_service, sizeof(visual_config.pdu_service),
 			"%s", config_get_pdu_service());
 	app_state_set_visual_config(&visual_config);
+}
+
+static void publish_login_config_from_config(void)
+{
+	app_state_login_config_t login_config;
+
+	memset(&login_config, 0, sizeof(login_config));
+	login_config.skip_login = config_get_skip_login() != 0;
+	app_state_set_login_config(&login_config);
 }
 
 static void set_visual_pdu_field(int field_id, const char* value)
@@ -1010,6 +1021,13 @@ static void* backend_worker(void* arg)
 			publish_visual_config_from_config();
 			reset_program();
 			break;
+		case BACKEND_CMD_LOGIN_CONFIG_REFRESH:
+			publish_login_config_from_config();
+			break;
+		case BACKEND_CMD_LOGIN_SET_SKIP:
+			config_set_skip_login(cmd.status ? 1 : 0);
+			publish_login_config_from_config();
+			break;
 		default:
 			err = 1;
 			break;
@@ -1024,6 +1042,8 @@ static void* backend_worker(void* arg)
 int backend_init(void)
 {
 	controller_init();
+	publish_visual_config_from_config();
+	publish_login_config_from_config();
 
 	pthread_mutex_lock(&mutex);
 	queue_head = 0;
@@ -1540,6 +1560,28 @@ int backend_visual_save_rotation_and_restart(int rotation,
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART,
 		.value = rotation,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_login_config_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_LOGIN_CONFIG_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_login_set_skip(bool skip_login, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_LOGIN_SET_SKIP,
+		.status = skip_login,
 		.callback = callback,
 		.userdata = userdata,
 	};

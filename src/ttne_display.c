@@ -18,8 +18,8 @@
 #include "scr_sensors.h"
 #include "scr_settings_menu.h"
 
+#include "app/app_state.h"
 #include "backend/backend.h"
-#include "config.h"
 #include "screen.h"
 
 /* Global variables ***********************************************************/
@@ -49,14 +49,17 @@ static void menu_header_cb(lv_event_t* e)
 
 void ttne_display(void)
 {
-	config_init();
+	app_state_snapshot_t snapshot;
+
 	tt_styles_init();
 	screen_init();
 	
 	backend_system_info_refresh(NULL, NULL);
 	backend_pdu_info_refresh(NULL, NULL);
 
-	uint8_t rotation = config_get_rotation();
+	app_state_get_snapshot(&snapshot);
+	uint8_t rotation = snapshot.visual_config.valid ?
+			snapshot.visual_config.rotation : 3;
 	screen_set_rotation(rotation);
 
 	menu = lv_menu_create(lv_scr_act());

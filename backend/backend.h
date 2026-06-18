@@ -78,6 +78,9 @@ int backend_visual_set_pdu_field(int field_id, const char* value,
 		backend_callback_t callback, void* userdata);
 int backend_visual_save_rotation_and_restart(int rotation,
 		backend_callback_t callback, void* userdata);
+int backend_login_config_refresh(backend_callback_t callback, void* userdata);
+int backend_login_set_skip(bool skip_login, backend_callback_t callback,
+		void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

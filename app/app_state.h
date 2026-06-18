@@ -201,6 +201,11 @@ typedef struct {
 } app_state_visual_config_t;
 
 typedef struct {
+	bool skip_login;
+	bool valid;
+} app_state_login_config_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
@@ -218,6 +223,7 @@ typedef struct {
 	app_state_system_info_t system_info;
 	app_state_pdu_info_t pdu_info;
 	app_state_visual_config_t visual_config;
+	app_state_login_config_t login_config;
 	char license_type[16];
 	int outlet_count;
 	int sensor_count;
@@ -238,6 +244,7 @@ typedef struct {
 	uint32_t system_info_revision;
 	uint32_t pdu_info_revision;
 	uint32_t visual_config_revision;
+	uint32_t login_config_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -262,6 +269,7 @@ void app_state_set_discovered_sensors(
 void app_state_set_system_info(const app_state_system_info_t* info);
 void app_state_set_pdu_info(const app_state_pdu_info_t* pdu_info);
 void app_state_set_visual_config(const app_state_visual_config_t* visual_config);
+void app_state_set_login_config(const app_state_login_config_t* login_config);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 

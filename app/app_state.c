@@ -362,6 +362,19 @@ void app_state_set_visual_config(const app_state_visual_config_t* visual_config)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_login_config(const app_state_login_config_t* login_config)
+{
+	if (login_config == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.login_config = *login_config;
+	state.login_config.valid = true;
+	state.login_config_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

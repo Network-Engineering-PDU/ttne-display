@@ -27,6 +27,7 @@ static lv_disp_draw_buf_t disp_buf;
 static char* prog_name;
 
 static void hal_init(void);
+static int get_inactivity_timeout_ms(uint32_t* visual_revision);
 
 #ifdef SIMULATOR_ENABLED 
 
@@ -143,6 +144,20 @@ void reset_program()
 	execv(args[0], args);
 }
 
+static int get_inactivity_timeout_ms(uint32_t* visual_revision)
+{
+	app_state_snapshot_t snapshot;
+	int minutes = 5;
+
+	app_state_get_snapshot(&snapshot);
+	if (snapshot.visual_config.valid && snapshot.visual_config.inactivity_time > 0) {
+		minutes = snapshot.visual_config.inactivity_time;
+	}
+	if (visual_revision != NULL) {
+		*visual_revision = snapshot.visual_config_revision;
+	}
+	return minutes * 60 * 1000;
+}
 
 int main(int argc, char **argv)
 {
@@ -159,10 +174,15 @@ int main(int argc, char **argv)
 
 	/* Initialize async HTTP module */
 	http_async_init();
+	config_init();
 	app_state_init();
 	backend_init();
 
 	ttne_display();
+
+	uint32_t visual_revision = 0;
+	int inactivity_time = get_inactivity_timeout_ms(&visual_revision);
+	uint32_t last_inactivity_check = 0;
 
 	while (1) {
 			/* Periodically call the lv_task handler.
@@ -172,10 +192,24 @@ int main(int argc, char **argv)
 			/* Process async HTTP callbacks */
 			http_async_process_callbacks();
 			backend_process();
-			
-			int inactivity_time = config_get_inactivity_time() * 60 * 1000; // In us
-			if ((int)lv_disp_get_inactive_time(NULL) > inactivity_time) {
-				ttne_display_idle_cb();
+
+			uint32_t now = lv_tick_get();
+			if (now - last_inactivity_check >= 250) {
+				app_state_snapshot_t snapshot;
+
+				app_state_get_snapshot(&snapshot);
+				if (snapshot.visual_config.valid &&
+						snapshot.visual_config_revision != visual_revision) {
+					visual_revision = snapshot.visual_config_revision;
+					if (snapshot.visual_config.inactivity_time > 0) {
+						inactivity_time =
+								snapshot.visual_config.inactivity_time * 60 * 1000;
+					}
+				}
+				if ((int)lv_disp_get_inactive_time(NULL) > inactivity_time) {
+					ttne_display_idle_cb();
+				}
+				last_inactivity_check = now;
 			}
 			usleep(5 * 1000);
 	}

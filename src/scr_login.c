@@ -10,7 +10,8 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "tt_styles.h"
-#include "config.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 #include "screen.h"
 
 #define LOGIN_PASSWORD "469130"
@@ -99,7 +100,7 @@ static void btn_login_cb(lv_event_t* e)
 		return;
 	}
 
-	config_set_skip_login(skip_password ? 1 : 0);
+	backend_login_set_skip(skip_password, NULL, NULL);
 
 	lv_obj_t* msgbox;
 	if (skip_password) {
@@ -164,5 +165,8 @@ lv_obj_t* scr_login_create(lv_obj_t* main_menu_scr)
 
 bool scr_login_is_required()
 {
-	return !login_ok_this_boot && !config_get_skip_login();
+	app_state_snapshot_t snapshot;
+
+	app_state_get_snapshot(&snapshot);
+	return !login_ok_this_boot && !snapshot.login_config.skip_login;
 }

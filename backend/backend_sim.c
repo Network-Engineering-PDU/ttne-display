@@ -54,6 +54,10 @@ static app_state_visual_config_t sim_visual_config = {
 	.pdu_service = "Critical",
 	.valid = true,
 };
+static app_state_login_config_t sim_login_config = {
+	.skip_login = false,
+	.valid = true,
+};
 static app_state_sensor_t sim_sensors[APP_STATE_MAX_SENSORS];
 static int sim_sensor_count;
 static app_state_discovered_sensor_t sim_discovered[2] = {
@@ -141,6 +145,7 @@ static void ensure_sim_outlets(void)
 	app_state_set_system_info(&sim_system_info);
 	app_state_set_pdu_info(&sim_pdu_info);
 	app_state_set_visual_config(&sim_visual_config);
+	app_state_set_login_config(&sim_login_config);
 	if (sim_sensor_count == 0) {
 		sim_sensor_count = 1;
 		sim_sensors[0].id = 1;
@@ -738,6 +743,26 @@ int backend_visual_save_rotation_and_restart(int rotation,
 {
 	sim_visual_config.rotation = rotation;
 	app_state_set_visual_config(&sim_visual_config);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_login_config_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_set_login_config(&sim_login_config);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_login_set_skip(bool skip_login, backend_callback_t callback,
+		void* userdata)
+{
+	sim_login_config.skip_login = skip_login;
+	app_state_set_login_config(&sim_login_config);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}
