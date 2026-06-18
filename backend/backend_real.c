@@ -39,6 +39,11 @@ typedef enum {
 	BACKEND_CMD_USB_UPDATE_DETECT,
 	BACKEND_CMD_USB_UPDATE_START,
 	BACKEND_CMD_USB_UPDATE_POLL,
+	BACKEND_CMD_BLUETOOTH_REFRESH,
+	BACKEND_CMD_BLUETOOTH_SET,
+	BACKEND_CMD_BLUETOOTH_SCAN,
+	BACKEND_CMD_BLUETOOTH_DEVICE_ACTION,
+	BACKEND_CMD_BLUETOOTH_PAIRING_RESPONSE,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -46,7 +51,10 @@ typedef struct {
 	int line_id;
 	int value;
 	bool status;
+	bool pairable;
+	bool discoverable;
 	char text[128];
+	char action[32];
 	backend_callback_t callback;
 	void* userdata;
 } backend_cmd_t;
@@ -143,6 +151,58 @@ static void publish_update_status_from_models(void)
 	}
 
 	app_state_set_update_status(&update_status);
+}
+
+static void publish_bluetooth_from_models(void)
+{
+	const models_bt_status_t* model_status = models_get_bt_status();
+	app_state_bt_status_t bt_status;
+
+	memset(&bt_status, 0, sizeof(bt_status));
+	if (model_status == NULL) {
+		app_state_set_bt_status(&bt_status);
+		return;
+	}
+
+	snprintf(bt_status.controller_mac, sizeof(bt_status.controller_mac), "%s",
+			model_status->controller_mac != NULL ?
+					model_status->controller_mac : "");
+	snprintf(bt_status.name, sizeof(bt_status.name), "%s",
+			model_status->name != NULL ? model_status->name : "");
+	bt_status.powered = model_status->powered;
+	bt_status.pairable = model_status->pairable;
+	bt_status.discoverable = model_status->discoverable;
+	bt_status.discovering = model_status->discovering;
+	bt_status.pairing_request = model_status->pairing_request;
+	snprintf(bt_status.pairing_mac, sizeof(bt_status.pairing_mac), "%s",
+			model_status->pairing_mac != NULL ? model_status->pairing_mac : "");
+	snprintf(bt_status.pairing_name, sizeof(bt_status.pairing_name), "%s",
+			model_status->pairing_name != NULL ? model_status->pairing_name : "");
+	snprintf(bt_status.pairing_passkey, sizeof(bt_status.pairing_passkey), "%s",
+			model_status->pairing_passkey != NULL ?
+					model_status->pairing_passkey : "");
+
+	bt_status.device_count = model_status->device_count;
+	if (bt_status.device_count > APP_STATE_MAX_BT_DEVICES) {
+		bt_status.device_count = APP_STATE_MAX_BT_DEVICES;
+	}
+	if (bt_status.device_count < 0) {
+		bt_status.device_count = 0;
+	}
+	for (int i = 0; i < bt_status.device_count; i++) {
+		const models_bt_device_t* model_device = &model_status->devices[i];
+		app_state_bt_device_t* device = &bt_status.devices[i];
+		snprintf(device->mac, sizeof(device->mac), "%s",
+				model_device->mac != NULL ? model_device->mac : "");
+		snprintf(device->name, sizeof(device->name), "%s",
+				model_device->name != NULL ? model_device->name : "");
+		device->paired = model_device->paired;
+		device->trusted = model_device->trusted;
+		device->connected = model_device->connected;
+		device->rssi = model_device->rssi;
+	}
+
+	app_state_set_bt_status(&bt_status);
 }
 
 static void run_power_refresh(void)
@@ -536,6 +596,31 @@ static void* backend_worker(void* arg)
 		case BACKEND_CMD_USB_UPDATE_POLL:
 			err = run_usb_update_poll();
 			break;
+		case BACKEND_CMD_BLUETOOTH_REFRESH:
+			controller_get_bluetooth();
+			publish_bluetooth_from_models();
+			break;
+		case BACKEND_CMD_BLUETOOTH_SET:
+			controller_put_bluetooth(cmd.status, cmd.pairable,
+					cmd.discoverable);
+			controller_get_bluetooth();
+			publish_bluetooth_from_models();
+			break;
+		case BACKEND_CMD_BLUETOOTH_SCAN:
+			controller_post_bluetooth_scan(cmd.status);
+			controller_get_bluetooth();
+			publish_bluetooth_from_models();
+			break;
+		case BACKEND_CMD_BLUETOOTH_DEVICE_ACTION:
+			controller_post_bluetooth_device_action(cmd.text, cmd.action);
+			controller_get_bluetooth();
+			publish_bluetooth_from_models();
+			break;
+		case BACKEND_CMD_BLUETOOTH_PAIRING_RESPONSE:
+			controller_post_bluetooth_pairing_response(cmd.status);
+			controller_get_bluetooth();
+			publish_bluetooth_from_models();
+			break;
 		default:
 			err = 1;
 			break;
@@ -781,6 +866,68 @@ int backend_usb_update_poll(backend_callback_t callback, void* userdata)
 {
 	backend_cmd_t cmd = {
 		.type = BACKEND_CMD_USB_UPDATE_POLL,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_bluetooth_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLUETOOTH_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_bluetooth_set(bool powered, bool pairable, bool discoverable,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLUETOOTH_SET,
+		.status = powered,
+		.pairable = pairable,
+		.discoverable = discoverable,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_bluetooth_scan(bool enable, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLUETOOTH_SCAN,
+		.status = enable,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_bluetooth_device_action(const char* mac, const char* action,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLUETOOTH_DEVICE_ACTION,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", mac != NULL ? mac : "");
+	snprintf(cmd.action, sizeof(cmd.action), "%s",
+			action != NULL ? action : "");
+	return backend_submit(&cmd);
+}
+
+int backend_bluetooth_pairing_response(bool accept, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_BLUETOOTH_PAIRING_RESPONSE,
+		.status = accept,
 		.callback = callback,
 		.userdata = userdata,
 	};

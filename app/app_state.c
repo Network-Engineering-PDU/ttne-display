@@ -136,6 +136,40 @@ void app_state_set_usb_update(const app_state_usb_update_t* usb_update)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_bt_status(const app_state_bt_status_t* bt_status)
+{
+	if (bt_status == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.bt_status = *bt_status;
+	state.bt_status.controller_mac[
+		sizeof(state.bt_status.controller_mac) - 1] = '\0';
+	state.bt_status.name[sizeof(state.bt_status.name) - 1] = '\0';
+	state.bt_status.pairing_mac[
+		sizeof(state.bt_status.pairing_mac) - 1] = '\0';
+	state.bt_status.pairing_name[
+		sizeof(state.bt_status.pairing_name) - 1] = '\0';
+	state.bt_status.pairing_passkey[
+		sizeof(state.bt_status.pairing_passkey) - 1] = '\0';
+	if (state.bt_status.device_count < 0) {
+		state.bt_status.device_count = 0;
+	}
+	if (state.bt_status.device_count > APP_STATE_MAX_BT_DEVICES) {
+		state.bt_status.device_count = APP_STATE_MAX_BT_DEVICES;
+	}
+	for (int i = 0; i < state.bt_status.device_count; i++) {
+		state.bt_status.devices[i].mac[
+			sizeof(state.bt_status.devices[i].mac) - 1] = '\0';
+		state.bt_status.devices[i].name[
+			sizeof(state.bt_status.devices[i].name) - 1] = '\0';
+	}
+	state.bt_status.valid = true;
+	state.bt_status_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_set_license_type(const char* license_type)
 {
 	if (license_type == NULL) {

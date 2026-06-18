@@ -11,6 +11,8 @@ extern "C" {
 #define APP_STATE_MAX_OUTLETS 48
 #define APP_STATE_MAX_POWER_INPUTS 6
 #define APP_STATE_SENSOR_TEXT_LEN 64
+#define APP_STATE_MAX_BT_DEVICES 12
+#define APP_STATE_BT_TEXT_LEN 64
 
 typedef struct {
 	int line_id;
@@ -87,12 +89,38 @@ typedef struct {
 } app_state_usb_update_t;
 
 typedef struct {
+	char mac[APP_STATE_BT_TEXT_LEN];
+	char name[APP_STATE_BT_TEXT_LEN];
+	bool paired;
+	bool trusted;
+	bool connected;
+	int rssi;
+} app_state_bt_device_t;
+
+typedef struct {
+	char controller_mac[APP_STATE_BT_TEXT_LEN];
+	char name[APP_STATE_BT_TEXT_LEN];
+	bool powered;
+	bool pairable;
+	bool discoverable;
+	bool discovering;
+	bool pairing_request;
+	char pairing_mac[APP_STATE_BT_TEXT_LEN];
+	char pairing_name[APP_STATE_BT_TEXT_LEN];
+	char pairing_passkey[APP_STATE_BT_TEXT_LEN];
+	app_state_bt_device_t devices[APP_STATE_MAX_BT_DEVICES];
+	int device_count;
+	bool valid;
+} app_state_bt_status_t;
+
+typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
 	app_state_power_t power;
 	app_state_sensor_data_t sensor_data;
 	app_state_update_status_t update_status;
 	app_state_usb_update_t usb_update;
+	app_state_bt_status_t bt_status;
 	char license_type[16];
 	int outlet_count;
 	uint32_t outlet_revision;
@@ -101,6 +129,7 @@ typedef struct {
 	uint32_t sensor_data_revision;
 	uint32_t update_status_revision;
 	uint32_t usb_update_revision;
+	uint32_t bt_status_revision;
 	uint32_t license_revision;
 } app_state_snapshot_t;
 
@@ -114,6 +143,7 @@ void app_state_set_power(const app_state_power_t* power);
 void app_state_set_sensor_data(const app_state_sensor_data_t* sensor_data);
 void app_state_set_update_status(const app_state_update_status_t* update_status);
 void app_state_set_usb_update(const app_state_usb_update_t* usb_update);
+void app_state_set_bt_status(const app_state_bt_status_t* bt_status);
 void app_state_set_license_type(const char* license_type);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 

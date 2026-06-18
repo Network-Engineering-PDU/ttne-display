@@ -39,6 +39,15 @@ int backend_usb_update_detect(backend_callback_t callback, void* userdata);
 int backend_usb_update_start(const char* update_dev, backend_callback_t callback,
 		void* userdata);
 int backend_usb_update_poll(backend_callback_t callback, void* userdata);
+int backend_bluetooth_refresh(backend_callback_t callback, void* userdata);
+int backend_bluetooth_set(bool powered, bool pairable, bool discoverable,
+		backend_callback_t callback, void* userdata);
+int backend_bluetooth_scan(bool enable, backend_callback_t callback,
+		void* userdata);
+int backend_bluetooth_device_action(const char* mac, const char* action,
+		backend_callback_t callback, void* userdata);
+int backend_bluetooth_pairing_response(bool accept, backend_callback_t callback,
+		void* userdata);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -12,6 +12,7 @@
 static app_state_outlet_t sim_outlets[SIM_OUTLETS];
 static bool sim_initialized;
 static bool sim_usb_running;
+static app_state_bt_status_t sim_bt_status;
 static app_state_update_status_t sim_update_status = {
 	.is_pending = false,
 	.auto_update = false,
@@ -31,6 +32,33 @@ static void ensure_sim_outlets(void)
 		sim_outlets[i].status = (i % 2) == 0;
 	}
 	app_state_set_outlets(sim_outlets, SIM_OUTLETS);
+
+	memset(&sim_bt_status, 0, sizeof(sim_bt_status));
+	snprintf(sim_bt_status.controller_mac, sizeof(sim_bt_status.controller_mac),
+			"%s", "00:11:22:33:44:55");
+	snprintf(sim_bt_status.name, sizeof(sim_bt_status.name), "%s", "PDU-SIM");
+	sim_bt_status.powered = true;
+	sim_bt_status.pairable = false;
+	sim_bt_status.discoverable = false;
+	sim_bt_status.discovering = false;
+	sim_bt_status.device_count = 2;
+	snprintf(sim_bt_status.devices[0].mac, sizeof(sim_bt_status.devices[0].mac),
+			"%s", "10:20:30:40:50:60");
+	snprintf(sim_bt_status.devices[0].name, sizeof(sim_bt_status.devices[0].name),
+			"%s", "Service Tablet");
+	sim_bt_status.devices[0].paired = true;
+	sim_bt_status.devices[0].trusted = true;
+	sim_bt_status.devices[0].connected = false;
+	sim_bt_status.devices[0].rssi = -42;
+	snprintf(sim_bt_status.devices[1].mac, sizeof(sim_bt_status.devices[1].mac),
+			"%s", "AA:BB:CC:DD:EE:01");
+	snprintf(sim_bt_status.devices[1].name, sizeof(sim_bt_status.devices[1].name),
+			"%s", "BLE Sensor Bridge");
+	sim_bt_status.devices[1].paired = false;
+	sim_bt_status.devices[1].trusted = false;
+	sim_bt_status.devices[1].connected = false;
+	sim_bt_status.devices[1].rssi = -58;
+	app_state_set_bt_status(&sim_bt_status);
 	sim_initialized = true;
 }
 
@@ -307,6 +335,76 @@ int backend_usb_update_poll(backend_callback_t callback, void* userdata)
 	usb_update.result = sim_usb_running ? 0 : 1;
 	sim_usb_running = false;
 	app_state_set_usb_update(&usb_update);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_bluetooth_refresh(backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	app_state_set_bt_status(&sim_bt_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_bluetooth_set(bool powered, bool pairable, bool discoverable,
+		backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	sim_bt_status.powered = powered;
+	sim_bt_status.pairable = pairable;
+	sim_bt_status.discoverable = discoverable;
+	app_state_set_bt_status(&sim_bt_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_bluetooth_scan(bool enable, backend_callback_t callback,
+		void* userdata)
+{
+	ensure_sim_outlets();
+	sim_bt_status.discovering = enable;
+	app_state_set_bt_status(&sim_bt_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_bluetooth_device_action(const char* mac, const char* action,
+		backend_callback_t callback, void* userdata)
+{
+	ensure_sim_outlets();
+	for (int i = 0; i < sim_bt_status.device_count; i++) {
+		app_state_bt_device_t* device = &sim_bt_status.devices[i];
+		if (strcmp(device->mac, mac != NULL ? mac : "") == 0) {
+			device->connected = action != NULL && strcmp(action, "connect") == 0;
+			if (device->connected) {
+				device->paired = true;
+			}
+			break;
+		}
+	}
+	app_state_set_bt_status(&sim_bt_status);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_bluetooth_pairing_response(bool accept, backend_callback_t callback,
+		void* userdata)
+{
+	ensure_sim_outlets();
+	(void)accept;
+	sim_bt_status.pairing_request = false;
+	app_state_set_bt_status(&sim_bt_status);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}

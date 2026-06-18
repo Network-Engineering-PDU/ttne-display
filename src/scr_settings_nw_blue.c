@@ -6,8 +6,8 @@
 #include "tt_obj.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
-#include "models.h"
-#include "controller.h"
+#include "app/app_state.h"
+#include "backend/backend.h"
 
 #define BT_REFRESH_PERIOD 4000
 
@@ -21,13 +21,18 @@ static lv_obj_t* btn_discoverable;
 static lv_obj_t* btn_scan;
 static lv_obj_t* lbl_status;
 static lv_obj_t* lbl_no_devices;
-static lv_obj_t* btn_device[MAX_BT_DEVICES];
-static lv_obj_t* lbl_device_name[MAX_BT_DEVICES];
-static lv_obj_t* lbl_device_mac[MAX_BT_DEVICES];
-static lv_obj_t* lbl_device_state[MAX_BT_DEVICES];
+static lv_obj_t* btn_device[APP_STATE_MAX_BT_DEVICES];
+static lv_obj_t* lbl_device_name[APP_STATE_MAX_BT_DEVICES];
+static lv_obj_t* lbl_device_mac[APP_STATE_MAX_BT_DEVICES];
+static lv_obj_t* lbl_device_state[APP_STATE_MAX_BT_DEVICES];
 static lv_obj_t* pairing_msg_box;
 static lv_timer_t* refresh_timer;
 static bool page_active;
+static bool refresh_pending;
+static bool action_pending;
+static char action_mac[APP_STATE_BT_TEXT_LEN];
+static char action_name[APP_STATE_BT_TEXT_LEN];
+static bool action_was_connected;
 
 /* Function prototypes ********************************************************/
 
@@ -38,9 +43,13 @@ static void refresh_cb(lv_event_t* e);
 static void device_cb(lv_event_t* e);
 static void pairing_msg_box_cb(lv_event_t* e);
 static void timer_cb(lv_timer_t* timer);
-static void update_bluetooth();
+static void update_bluetooth(void);
+static void bluetooth_refresh_cb(int err, void* userdata);
+static void bluetooth_action_cb(int err, void* userdata);
+static void apply_bluetooth_snapshot(void);
 static void ensure_timer(bool enable);
-static const models_bt_device_t* find_device_by_mac(const models_bt_status_t* bt_status,
+static const app_state_bt_device_t* find_device_by_mac(
+		const app_state_bt_status_t* bt_status,
 		const char* mac);
 
 /* Callbacks ******************************************************************/
@@ -75,17 +84,18 @@ static void settings_toggle_cb(lv_event_t* e)
 		bool powered = lv_obj_get_state(btn_powered) & LV_STATE_CHECKED;
 		bool pairable = lv_obj_get_state(btn_pairable) & LV_STATE_CHECKED;
 		bool discoverable = lv_obj_get_state(btn_discoverable) & LV_STATE_CHECKED;
-		controller_put_bluetooth(powered, pairable, discoverable);
-		update_bluetooth();
+		backend_bluetooth_set(powered, pairable, discoverable,
+				bluetooth_refresh_cb, NULL);
 	}
 }
 
 static void scan_cb(lv_event_t* e)
 {
 	if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-		const models_bt_status_t* bt_status = models_get_bt_status();
-		controller_post_bluetooth_scan(!bt_status->discovering);
-		update_bluetooth();
+		app_state_snapshot_t snapshot;
+		app_state_get_snapshot(&snapshot);
+		backend_bluetooth_scan(!snapshot.bt_status.discovering,
+				bluetooth_refresh_cb, NULL);
 	}
 }
 
@@ -100,36 +110,24 @@ static void device_cb(lv_event_t* e)
 {
 	if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
 		int device_idx = (long)lv_event_get_user_data(e);
-		const models_bt_status_t* bt_status = models_get_bt_status();
+		app_state_snapshot_t snapshot;
+		app_state_get_snapshot(&snapshot);
+		const app_state_bt_status_t* bt_status = &snapshot.bt_status;
 		if (device_idx < 0 || device_idx >= bt_status->device_count) {
 			return;
 		}
-		const models_bt_device_t* device = &bt_status->devices[device_idx];
-		bool was_connected = device->connected;
-		char mac[18];
-		char name[64];
-		strncpy(mac, device->mac, sizeof(mac) - 1);
-		mac[sizeof(mac) - 1] = '\0';
-		strncpy(name, device->name, sizeof(name) - 1);
-		name[sizeof(name) - 1] = '\0';
-
-		controller_post_bluetooth_device_action(mac,
-				was_connected ? "disconnect" : "connect");
-
-		update_bluetooth();
-		bt_status = models_get_bt_status();
-		const models_bt_device_t* updated_device = find_device_by_mac(bt_status, mac);
-		bool connected = updated_device && updated_device->connected;
-		bool disconnected = updated_device && !updated_device->connected;
-		char msg[120];
-		if (was_connected) {
-			sprintf(msg, "%s %s", name, disconnected ? "disconnected" :
-					"disconnect failed");
-		} else {
-			sprintf(msg, "%s %s", name, connected ? "connected" :
-					"connect failed");
+		if (action_pending) {
+			return;
 		}
-		tt_obj_info_box_create("Bluetooth", msg, connected || disconnected ? 0 : 1);
+		const app_state_bt_device_t* device = &bt_status->devices[device_idx];
+		action_was_connected = device->connected;
+		snprintf(action_mac, sizeof(action_mac), "%s", device->mac);
+		snprintf(action_name, sizeof(action_name), "%s", device->name);
+		if (backend_bluetooth_device_action(action_mac,
+				action_was_connected ? "disconnect" : "connect",
+				bluetooth_action_cb, NULL) == 0) {
+			action_pending = true;
+		}
 	}
 }
 
@@ -139,10 +137,9 @@ static void pairing_msg_box_cb(lv_event_t* e)
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		lv_obj_t* obj = lv_event_get_current_target(e);
 		bool accept = lv_msgbox_get_active_btn(obj) == 0;
-		controller_post_bluetooth_pairing_response(accept);
+		backend_bluetooth_pairing_response(accept, bluetooth_refresh_cb, NULL);
 		lv_msgbox_close(obj);
 		pairing_msg_box = NULL;
-		update_bluetooth();
 	}
 }
 
@@ -165,9 +162,13 @@ static void ensure_timer(bool enable)
 	}
 }
 
-static const models_bt_device_t* find_device_by_mac(const models_bt_status_t* bt_status,
+static const app_state_bt_device_t* find_device_by_mac(
+		const app_state_bt_status_t* bt_status,
 		const char* mac)
 {
+	if (bt_status == NULL || mac == NULL) {
+		return NULL;
+	}
 	for (int i = 0; i < bt_status->device_count; i++) {
 		if (strcmp(bt_status->devices[i].mac, mac) == 0) {
 			return &bt_status->devices[i];
@@ -178,16 +179,70 @@ static const models_bt_device_t* find_device_by_mac(const models_bt_status_t* bt
 
 static void update_bluetooth()
 {
-	controller_get_bluetooth();
-	const models_bt_status_t* bt_status = models_get_bt_status();
+	if (refresh_pending) {
+		return;
+	}
+	if (backend_bluetooth_refresh(bluetooth_refresh_cb, NULL) == 0) {
+		refresh_pending = true;
+	}
+}
+
+static void bluetooth_refresh_cb(int err, void* userdata)
+{
+	(void)userdata;
+	refresh_pending = false;
+	if (err != 0) {
+		return;
+	}
+	apply_bluetooth_snapshot();
+}
+
+static void bluetooth_action_cb(int err, void* userdata)
+{
+	(void)userdata;
+	action_pending = false;
+	if (err != 0) {
+		tt_obj_info_box_create("Bluetooth", "Bluetooth action failed", 1);
+		return;
+	}
+
+	apply_bluetooth_snapshot();
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	const app_state_bt_device_t* updated_device =
+			find_device_by_mac(&snapshot.bt_status, action_mac);
+	bool connected = updated_device != NULL && updated_device->connected;
+	bool disconnected = updated_device != NULL && !updated_device->connected;
+	char msg[120];
+	if (action_was_connected) {
+		snprintf(msg, sizeof(msg), "%s %s", action_name,
+				disconnected ? "disconnected" : "disconnect failed");
+	} else {
+		snprintf(msg, sizeof(msg), "%s %s", action_name,
+				connected ? "connected" : "connect failed");
+	}
+	tt_obj_info_box_create("Bluetooth", msg,
+			connected || disconnected ? 0 : 1);
+}
+
+static void apply_bluetooth_snapshot(void)
+{
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	const app_state_bt_status_t* bt_status = &snapshot.bt_status;
+
+	if (!bt_status->valid) {
+		return;
+	}
 
 	if (bt_status->pairing_request && pairing_msg_box == NULL) {
 		char msg[180];
 		if (strlen(bt_status->pairing_passkey) > 0) {
-			sprintf(msg, "%s wants to pair\nPasskey: %s",
+			snprintf(msg, sizeof(msg), "%s wants to pair\nPasskey: %s",
 					bt_status->pairing_name, bt_status->pairing_passkey);
 		} else {
-			sprintf(msg, "%s wants to pair", bt_status->pairing_name);
+			snprintf(msg, sizeof(msg), "%s wants to pair",
+					bt_status->pairing_name);
 		}
 		pairing_msg_box = tt_obj_msg_box_create("Bluetooth pairing", msg, NULL,
 				pairing_msg_box_cb);
@@ -202,7 +257,8 @@ static void update_bluetooth()
 	tt_obj_btn_set_text(btn_scan, bt_status->discovering ? "Stop scan" : "Scan devices");
 
 	char status[160];
-	sprintf(status, "%s  %s  %s", bt_status->powered ? "ON" : "OFF",
+	snprintf(status, sizeof(status), "%s  %s  %s",
+			bt_status->powered ? "ON" : "OFF",
 			bt_status->discoverable ? "Discoverable" : "Hidden",
 			bt_status->pairable ? "Pairable" : "Not pairable");
 	lv_label_set_text(lbl_status, status);
@@ -213,9 +269,9 @@ static void update_bluetooth()
 		lv_obj_add_flag(lbl_no_devices, LV_OBJ_FLAG_HIDDEN);
 	}
 
-	for (int i = 0; i < MAX_BT_DEVICES; i++) {
+	for (int i = 0; i < APP_STATE_MAX_BT_DEVICES; i++) {
 		if (i < bt_status->device_count) {
-			const models_bt_device_t* device = &bt_status->devices[i];
+			const app_state_bt_device_t* device = &bt_status->devices[i];
 			lv_obj_clear_flag(btn_device[i], LV_OBJ_FLAG_HIDDEN);
 			lv_label_set_text(lbl_device_name[i], device->name);
 			lv_label_set_text(lbl_device_mac[i], device->mac);
@@ -255,7 +311,7 @@ void scr_settings_nw_blue_create(lv_obj_t* menu_param, lv_obj_t* btn)
 	lbl_no_devices = tt_obj_label_color_create(page_handle, "No devices");
 	lv_obj_set_width(lbl_no_devices, LV_PCT(100));
 
-	for (int i = 0; i < MAX_BT_DEVICES; i++) {
+	for (int i = 0; i < APP_STATE_MAX_BT_DEVICES; i++) {
 		btn_device[i] = tt_obj_btn_create(page_handle, NULL, "", NULL,
 				LV_PCT(100), 68, LV_ALIGN_CENTER);
 		lv_obj_add_flag(btn_device[i], LV_OBJ_FLAG_CHECKABLE);
