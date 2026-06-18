@@ -55,7 +55,7 @@ add_subdirectory(lv_drivers)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-file(GLOB PROJECT_SRC "src/*.c")
+file(GLOB PROJECT_SRC "src/*.c" "app/*.c")
 if(SIMULATOR_ENABLED)
     list(APPEND PROJECT_SRC "backend/backend_sim.c")
 else()

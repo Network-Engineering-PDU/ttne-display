@@ -15,6 +15,7 @@
 #include "config.h"
 #include "http_async.h"
 #include "backend/backend.h"
+#include "app/app_state.h"
 
 #ifndef SIMULATOR_ENABLED
 #define DISP_BUF_SIZE (128 * 1024)
@@ -158,6 +159,7 @@ int main(int argc, char **argv)
 
 	/* Initialize async HTTP module */
 	http_async_init();
+	app_state_init();
 	backend_init();
 
 	ttne_display();
@@ -179,6 +181,7 @@ int main(int argc, char **argv)
 	}
 
 	backend_cleanup();
+	app_state_cleanup();
 	http_async_cleanup();
 
 	return 0;

@@ -8,6 +8,7 @@
 
 #include "controller.h"
 #include "models.h"
+#include "app/app_state.h"
 
 #define BACKEND_QUEUE_SIZE 32
 
@@ -43,6 +44,28 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 static pthread_t worker;
 static bool worker_started;
+
+static void publish_outlets_from_models(void)
+{
+	int len;
+	const models_out_sw_t* model_outlets = models_get_out_sw(&len);
+	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
+
+	if (model_outlets == NULL || len <= 0) {
+		app_state_set_outlets(NULL, 0);
+		return;
+	}
+
+	if (len > APP_STATE_MAX_OUTLETS) {
+		len = APP_STATE_MAX_OUTLETS;
+	}
+
+	for (int i = 0; i < len; i++) {
+		outlets[i].line_id = model_outlets[i].line_id;
+		outlets[i].status = model_outlets[i].status;
+	}
+	app_state_set_outlets(outlets, len);
+}
 
 static void backend_push_result(int err, backend_callback_t callback, void* userdata)
 {
@@ -112,6 +135,7 @@ static void run_outlets_set_all(bool status)
 		};
 		controller_put_out_sw(&out_sw, i);
 	}
+	publish_outlets_from_models();
 }
 
 static void* backend_worker(void* arg)
@@ -129,6 +153,7 @@ static void* backend_worker(void* arg)
 		switch (cmd.type) {
 		case BACKEND_CMD_OUTLETS_REFRESH:
 			controller_get_out_sw();
+			publish_outlets_from_models();
 			break;
 		case BACKEND_CMD_OUTLET_SET: {
 			models_out_sw_t out_sw = {
@@ -136,6 +161,7 @@ static void* backend_worker(void* arg)
 				.status = cmd.status,
 			};
 			controller_put_out_sw(&out_sw, cmd.line_id);
+			app_state_set_outlet(cmd.line_id, cmd.status);
 			break;
 		}
 		case BACKEND_CMD_OUTLETS_SET_ALL:

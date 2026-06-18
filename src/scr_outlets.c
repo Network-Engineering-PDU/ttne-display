@@ -9,8 +9,8 @@
 #include "tt_obj.h"
 #include "tt_colors.h"
 #include "screen.h"
-#include "models.h"
 #include "backend/backend.h"
+#include "app/app_state.h"
 
 #define MAX_OUTLETS 48
 
@@ -153,13 +153,16 @@ static void outlets_set_all_cb(int err, void* userdata)
 
 static void update_outlet_buttons(void)
 {
+	app_state_snapshot_t snapshot;
 	int len;
-	const models_out_sw_t* out_sw = models_get_out_sw(&len);
+
+	app_state_get_snapshot(&snapshot);
+	len = snapshot.outlet_count;
 	if (len > MAX_OUTLETS) {
 		len = MAX_OUTLETS;
 	}
 
-	if (len == 0 || out_sw == NULL) {
+	if (len == 0) {
 		lv_obj_add_flag(btn_en_all, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(btn_dis_all, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(lbl_no_out, LV_OBJ_FLAG_HIDDEN);
@@ -175,7 +178,8 @@ static void update_outlet_buttons(void)
 
 	for (int i = 0; i < MAX_OUTLETS; i++) {
 		if (i < len) {
-			tt_obj_btn_toggle_set_state(btn_out[i], out_sw[i].status);
+			tt_obj_btn_toggle_set_state(btn_out[i],
+					snapshot.outlets[i].status);
 			lv_obj_clear_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);
 		} else {
 			lv_obj_add_flag(btn_out[i], LV_OBJ_FLAG_HIDDEN);

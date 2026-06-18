@@ -2,17 +2,16 @@
 
 #include "backend/backend.h"
 
-#include "models.h"
+#include "app/app_state.h"
 
 #define SIM_OUTLETS 8
 
-static models_out_sw_t sim_outlets[SIM_OUTLETS];
+static app_state_outlet_t sim_outlets[SIM_OUTLETS];
+static bool sim_initialized;
 
 static void ensure_sim_outlets(void)
 {
-	int len;
-	models_get_out_sw(&len);
-	if (len > 0) {
+	if (sim_initialized) {
 		return;
 	}
 
@@ -20,7 +19,8 @@ static void ensure_sim_outlets(void)
 		sim_outlets[i].line_id = i;
 		sim_outlets[i].status = (i % 2) == 0;
 	}
-	models_set_out_sw(sim_outlets, SIM_OUTLETS);
+	app_state_set_outlets(sim_outlets, SIM_OUTLETS);
+	sim_initialized = true;
 }
 
 int backend_init(void)
@@ -51,11 +51,8 @@ int backend_outlet_set(int line_id, bool status, backend_callback_t callback,
 {
 	ensure_sim_outlets();
 	if (line_id >= 0 && line_id < SIM_OUTLETS) {
-		models_out_sw_t out_sw = {
-			.line_id = line_id,
-			.status = status,
-		};
-		models_set_out_sw_idx(&out_sw, line_id);
+		sim_outlets[line_id].status = status;
+		app_state_set_outlet(line_id, status);
 	}
 	if (callback != NULL) {
 		callback(0, userdata);
@@ -71,7 +68,7 @@ int backend_outlets_set_all(bool status, backend_callback_t callback,
 		sim_outlets[i].line_id = i;
 		sim_outlets[i].status = status;
 	}
-	models_set_out_sw(sim_outlets, SIM_OUTLETS);
+	app_state_set_outlets(sim_outlets, SIM_OUTLETS);
 	if (callback != NULL) {
 		callback(0, userdata);
 	}
