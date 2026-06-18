@@ -49,7 +49,7 @@ static uint8_t n_phases = 0;
 
 static void menu_cb(lv_event_t* e);
 static lv_obj_t* power_branch_column_create(lv_obj_t* parent);
-static void power_timer_cb();
+static void power_timer_cb(lv_timer_t* timer);
 static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
 		float data2, float data3);
 
@@ -68,23 +68,28 @@ static void menu_cb(lv_event_t* e)
 	lv_obj_t* obj = lv_event_get_current_target(e);
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
-		lv_obj_t* curr_page = lv_event_get_user_data(e);
-		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
-		if (curr_page == page) {
-			timer = lv_timer_create(power_timer_cb, TIMER_REFRESH_RATE, NULL);
-			power_timer_cb(timer);
-			if (!running) {
-				running = true;
+			lv_obj_t* curr_page = lv_event_get_user_data(e);
+			lv_obj_t* page = lv_menu_get_cur_main_page(obj);
+			if (curr_page == page) {
+				if (timer == NULL) {
+					timer = lv_timer_create(power_timer_cb, TIMER_REFRESH_RATE, NULL);
+				}
+				power_timer_cb(timer);
+				if (!running) {
+					running = true;
 			}
 			get_in_sw();
 		}
-	} else if (code == LV_EVENT_CLICKED) {
-		if (running) {
-			running = false;
-			lv_timer_del(timer);
+		} else if (code == LV_EVENT_CLICKED) {
+			if (running) {
+				running = false;
+				if (timer != NULL) {
+					lv_timer_del(timer);
+					timer = NULL;
+				}
+			}
 		}
 	}
-}
 
 static lv_obj_t* power_branch_column_create(lv_obj_t* parent)
 {
@@ -106,6 +111,9 @@ static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
 	char str[100];
 	if (n_phases == 1) {
 		sprintf(str, "%s: #%06X %.1f#", param, TT_COLOR_GREEN_NE, data1);
+	} else if (n_phases == 2) {
+		sprintf(str, "%s: #%06X %.1f# / #%06X %.1f#", param,
+				TT_COLOR_GREEN_NE, data1, TT_COLOR_GREEN_NE, data2);
 	} else if (n_phases == 3) {
 		sprintf(str, "%s: #%06X %.1f# / #%06X %.1f# / #%06X %.1f#", param,
 				TT_COLOR_GREEN_NE, data1, TT_COLOR_GREEN_NE, data2,
@@ -119,8 +127,9 @@ static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
 
 /* Callbacks ******************************************************************/
 
-static void power_timer_cb()
+static void power_timer_cb(lv_timer_t* timer)
 {
+	(void)timer;
 	models_in_data_t in_data[N_INPUTS];
 	for (int i = 0; i < N_INPUTS; i++) {
 		controller_get_in_data(i);

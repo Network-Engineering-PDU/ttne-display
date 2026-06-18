@@ -63,31 +63,39 @@ static void menu_cb(lv_event_t* e)
 	lv_event_code_t code = lv_event_get_code(e);
 	lv_obj_t* obj = lv_event_get_current_target(e);
 
-	if (code == LV_EVENT_VALUE_CHANGED) {
-		lv_obj_t* curr_page = lv_event_get_user_data(e);
-		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
-		if (curr_page == page) {
-			controller_get_out_sw();
-			const models_out_sw_t* current_out_sw =
-					models_get_out_sw_id(outlet_id);
-			memcpy(&out_sw, current_out_sw, sizeof(models_out_sw_t));
-			tt_obj_btn_toggle_set_state(btn_en, out_sw.status);
-			timer = lv_timer_create(out_data_timer_cb,
-					TIMER_REFRESH_RATE, NULL);
-			read_license();
-			out_data_timer_cb(timer);
-			if (!running) {
+		if (code == LV_EVENT_VALUE_CHANGED) {
+			lv_obj_t* curr_page = lv_event_get_user_data(e);
+			lv_obj_t* page = lv_menu_get_cur_main_page(obj);
+			if (curr_page == page) {
+				controller_get_out_sw();
+				const models_out_sw_t* current_out_sw =
+						models_get_out_sw_id(outlet_id);
+				if (current_out_sw == NULL) {
+					return;
+				}
+				memcpy(&out_sw, current_out_sw, sizeof(models_out_sw_t));
+				tt_obj_btn_toggle_set_state(btn_en, out_sw.status);
+				if (timer == NULL) {
+					timer = lv_timer_create(out_data_timer_cb,
+							TIMER_REFRESH_RATE, NULL);
+				}
+				read_license();
+				out_data_timer_cb(timer);
+				if (!running) {
 				running = true;
 				LV_LOG_USER("Outlet data open");
 			}
 		}
-	} else if (code == LV_EVENT_CLICKED) {
-		if (running) {
-			running = false;
-			lv_timer_del(timer);
-			LV_LOG_USER("Outlet data close");
+		} else if (code == LV_EVENT_CLICKED) {
+			if (running) {
+				running = false;
+				if (timer != NULL) {
+					lv_timer_del(timer);
+					timer = NULL;
+				}
+				LV_LOG_USER("Outlet data close");
+			}
 		}
-	}
 }
 
 static void out_data_timer_cb(lv_timer_t* timer)

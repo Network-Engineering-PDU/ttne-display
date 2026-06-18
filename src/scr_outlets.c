@@ -79,7 +79,7 @@ static void menu_cb(lv_event_t* e)
 static void btn_out_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
-	int out_id = (int)lv_event_get_user_data(e);
+	int out_id = (long)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		scr_outlet_data_set_out(out_id);
@@ -94,10 +94,14 @@ static void msg_box_all_cb(lv_event_t* e)
 	bool action = (bool)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
-		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			tt_user_data_t* tt_user_data = malloc(sizeof(tt_user_data_t));
-			tt_user_data->active_screen = lv_scr_act();
-			tt_user_data->action = action;
+			if (lv_msgbox_get_active_btn(obj) == 0) { // YES
+				tt_user_data_t* tt_user_data = malloc(sizeof(tt_user_data_t));
+				if (tt_user_data == NULL) {
+					lv_msgbox_close(obj);
+					return;
+				}
+				tt_user_data->active_screen = lv_scr_act();
+				tt_user_data->action = action;
 			tt_user_data->line_id = 0;
 			lv_timer_create(timer_toggle_all_cb, TIMER_TOGGLE_ALL, tt_user_data);
 			loader_scr = tt_obj_loader_create(action ?
@@ -132,6 +136,16 @@ static void timer_toggle_all_cb(lv_timer_t* timer)
 	models_out_sw_t out_sw;
 	int len;
 	models_get_out_sw(&len);
+	if (len > MAX_OUTLETS) {
+		len = MAX_OUTLETS;
+	}
+	if (line_id >= len) {
+		lv_timer_del(timer);
+		lv_scr_load(scr);
+		lv_obj_del(loader_scr);
+		free(tt_user_data);
+		return;
+	}
 	out_sw.line_id = line_id;
 	out_sw.status = action;
 	tt_obj_btn_toggle_set_state(btn_out[line_id], action);

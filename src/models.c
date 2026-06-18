@@ -40,6 +40,9 @@ static const char* stralloc(const char* str)
 		str = "N/A";
 	}
 	dest = malloc(strlen(str) + 1);
+	if (dest == NULL) {
+		return NULL;
+	}
 	strcpy(dest, str);
 	return dest;
 }
@@ -129,6 +132,10 @@ const models_out_sw_t* models_get_out_sw(int* len)
 
 const models_out_sw_t* models_get_out_sw_id(int id)
 {
+	if (id < 1 || id > out_sw_list_len || out_sw_list == NULL) {
+		LV_LOG_ERROR("Invalid outlet id (%d), length (%d)", id, out_sw_list_len);
+		return NULL;
+	}
 	return &out_sw_list[id-1];
 }
 
@@ -136,7 +143,16 @@ const models_out_sw_t* models_get_out_sw_id(int id)
 void models_set_out_sw(const models_out_sw_t* l_out_sw, int len)
 {
 	free((void*)out_sw_list);
+	out_sw_list = NULL;
+	out_sw_list_len = 0;
+	if (l_out_sw == NULL || len <= 0) {
+		return;
+	}
 	out_sw_list = malloc(len * sizeof(models_out_sw_t));
+	if (out_sw_list == NULL) {
+		LV_LOG_ERROR("Failed to allocate outlet switch list");
+		return;
+	}
 	for (int i = 0; i < len; i++) {
 		out_sw_list[i].line_id = l_out_sw[i].line_id;
 		out_sw_list[i].status = l_out_sw[i].status;
@@ -146,7 +162,8 @@ void models_set_out_sw(const models_out_sw_t* l_out_sw, int len)
 
 void models_set_out_sw_idx(const models_out_sw_t* l_out_sw, int line_id)
 {
-	if (line_id >= out_sw_list_len) {
+	if (l_out_sw == NULL || line_id < 0 || line_id >= out_sw_list_len ||
+			out_sw_list == NULL) {
 		LV_LOG_ERROR("line_id (%d) greater than outlets array length (%d)",
 				line_id, out_sw_list_len);
 		return;
@@ -185,6 +202,10 @@ const models_sensor_t* models_get_sensor(int* len)
 
 const models_sensor_t* models_get_sensor_id(int id)
 {
+	if (id < 1 || id > sensor_list_len || sensor_list == NULL) {
+		LV_LOG_ERROR("Invalid sensor id (%d), length (%d)", id, sensor_list_len);
+		return NULL;
+	}
 	return &sensor_list[id-1];
 }
 
@@ -196,7 +217,16 @@ void models_set_sensor(const models_sensor_t* l_sensor, int len)
 		free((void*)sensor_list[i].last_data.datetime);
 	}
 	free((void*)sensor_list);
+	sensor_list = NULL;
+	sensor_list_len = 0;
+	if (l_sensor == NULL || len <= 0) {
+		return;
+	}
 	sensor_list = malloc(len * sizeof(models_sensor_t));
+	if (sensor_list == NULL) {
+		LV_LOG_ERROR("Failed to allocate sensor list");
+		return;
+	}
 	for (int i = 0; i < len; i++) {
 		sensor_list[i].id = l_sensor[i].id;
 		sensor_list[i].mac = stralloc(l_sensor[i].mac);
@@ -226,7 +256,16 @@ void models_set_discovered(const models_discovered_sensor_t* list, int len)
 		free((void*)discovered_list[i].name);
 	}
 	free(discovered_list);
+	discovered_list = NULL;
+	discovered_list_len = 0;
+	if (list == NULL || len <= 0) {
+		return;
+	}
 	discovered_list = malloc(len * sizeof(models_discovered_sensor_t));
+	if (discovered_list == NULL) {
+		LV_LOG_ERROR("Failed to allocate discovered sensor list");
+		return;
+	}
 	for (int i = 0; i < len; i++) {
 		discovered_list[i].mac = stralloc(list[i].mac);
 		discovered_list[i].kind = stralloc(list[i].kind);
