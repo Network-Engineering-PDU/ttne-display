@@ -244,9 +244,12 @@ bool controller_post_ble_scan_start()
 		if (json != NULL) {
 			cJSON* result = cJSON_GetObjectItemCaseSensitive(json, "result");
 			cJSON* ok_field = cJSON_GetObjectItemCaseSensitive(json, "ok");
+			cJSON* success_field = cJSON_GetObjectItemCaseSensitive(json,
+					"success");
 			if ((result != NULL && cJSON_IsString(result) &&
 					strcmp(result->valuestring, "OK") == 0) ||
-					(ok_field != NULL && cJSON_IsTrue(ok_field))) {
+					(ok_field != NULL && cJSON_IsTrue(ok_field)) ||
+					(success_field != NULL && cJSON_IsTrue(success_field))) {
 				ok = true;
 			}
 			cJSON_Delete(json);
