@@ -11,6 +11,8 @@
 #include "backend/backend.h"
 
 #define TIMER_REFRESH_RATE 1000 // ms
+#define SENSOR_BATTERY_MIN_MV 2000
+#define SENSOR_BATTERY_MAX_MV 3000
 
 /* Global variables ***********************************************************/
 
@@ -40,6 +42,7 @@ static void sensor_data_refresh_cb(int err, void* userdata);
 static void sensor_data_apply(const app_state_sensor_data_t* sensor_data);
 static void sensor_data_apply_snapshot(void);
 static void sensor_data_stop_timer(void);
+static int sensor_battery_percent(const app_state_sensor_data_t* sensor_data);
 
 const char* f_int(char* buffer, int num, int max, int min);
 const char* f_float(char* buffer, float num, const char* format);
@@ -82,6 +85,7 @@ static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 {
 	char txt[160];
 	char buff[50];
+	int bat_pct;
 	const char* name = sensor_data->name;
 	const char* kind = sensor_data->kind;
 
@@ -107,12 +111,12 @@ static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 			f_int(buff, sensor_data->rssi, 0, -200));
 	tt_obj_card_set_text(card_rssi, txt);
 
-	if (sensor_data->bat_pct > 0 && sensor_data->bat_pct <= 100) {
+	bat_pct = sensor_battery_percent(sensor_data);
+	if (bat_pct >= 0) {
 		snprintf(txt, sizeof(txt), "#%06X %d# %%",
-				TT_COLOR_GREEN_NE, sensor_data->bat_pct);
+				TT_COLOR_GREEN_NE, bat_pct);
 	} else {
-		snprintf(txt, sizeof(txt), "#%06X %s# mV", TT_COLOR_GREEN_NE,
-				f_int(buff, sensor_data->bat_mv, 5000, 0));
+		snprintf(txt, sizeof(txt), "#%06X %s# %%", TT_COLOR_GREEN_NE, "N/A");
 	}
 	tt_obj_card_set_text(card_bat, txt);
 
@@ -122,6 +126,33 @@ static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 			lv_menu_set_page_title(sensor_data_page, title);
 		}
 	}
+}
+
+static int sensor_battery_percent(const app_state_sensor_data_t* sensor_data)
+{
+	int pct;
+
+	if (sensor_data == NULL) {
+		return -1;
+	}
+
+	if (sensor_data->bat_pct >= 0 && sensor_data->bat_pct <= 100) {
+		return sensor_data->bat_pct;
+	}
+
+	if (sensor_data->bat_mv <= 0) {
+		return -1;
+	}
+
+	pct = (sensor_data->bat_mv - SENSOR_BATTERY_MIN_MV) * 100 /
+			(SENSOR_BATTERY_MAX_MV - SENSOR_BATTERY_MIN_MV);
+	if (pct < 0) {
+		pct = 0;
+	}
+	if (pct > 100) {
+		pct = 100;
+	}
+	return pct;
 }
 
 static void sensor_data_timer_cb(lv_timer_t* timer)
