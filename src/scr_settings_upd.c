@@ -93,8 +93,10 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_align(auto_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t* lbl_auto = lv_label_create(auto_row);
-    lv_label_set_text(lbl_auto, "Automatic updates");
-    lv_obj_set_flex_grow(lbl_auto, 1);
+    lv_label_set_text(lbl_auto, "Automatic Updates");
+    lv_label_set_long_mode(lbl_auto, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_width(lbl_auto, 110);
+    lv_obj_set_scrollbar_mode(lbl_auto, LV_SCROLLBAR_MODE_OFF);
 
     // Create Dropdown for ON/OFF
     btn_auto = lv_dropdown_create(auto_row);
@@ -118,7 +120,9 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* lbl_period = lv_label_create(period_row);
     lv_label_set_text(lbl_period, "OTA Periodic Checks");
-    lv_obj_set_flex_grow(lbl_period, 1);
+    lv_label_set_long_mode(lbl_period, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_width(lbl_period, 110);
+    lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
 
     dd_period = tt_obj_dropdown_create(period_row, "Daily\nWeekly\nMonthly", dd_period_cb);
     lv_obj_set_size(dd_period, 80, 40);
