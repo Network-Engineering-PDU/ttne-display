@@ -63,7 +63,7 @@ void ttne_display(void)
 	screen_set_rotation(rotation);
 
 	menu = lv_menu_create(lv_scr_act());
-	lv_obj_set_size(menu, lv_disp_get_hor_res(NULL), lv_disp_get_ver_res(NULL));
+	lv_obj_set_size(menu, LV_PCT(100), LV_PCT(100));
 	main_page = lv_menu_page_create(menu, NULL);
 	lv_obj_t* main_cont = lv_menu_cont_create(main_page);
 	lv_obj_set_flex_flow(main_cont, LV_FLEX_FLOW_ROW_WRAP);

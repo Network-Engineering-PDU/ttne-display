@@ -185,7 +185,12 @@ lv_obj_t* tt_obj_menu_page_create(lv_obj_t* menu, lv_obj_t* btn,
 {
 	lv_obj_t* page = lv_menu_page_create(menu, NULL);
 	lv_menu_set_page_title_static(page, name);
+	lv_obj_set_style_bg_color(page, lv_color_hex(TT_COLOR_BG2), 0);
+	lv_obj_set_style_bg_opa(page, LV_OPA_COVER, 0);
+
 	lv_obj_t* cont = lv_menu_cont_create(page);
+	lv_obj_set_width(cont, LV_PCT(100));
+	lv_obj_set_style_min_height(cont, LV_PCT(100), 0);
 	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN_WRAP);
 	if (btn != NULL) {
 		lv_menu_set_load_page_event(menu, btn, page);
