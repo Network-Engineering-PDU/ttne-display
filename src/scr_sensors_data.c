@@ -193,8 +193,12 @@ lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 
 	card_info = tt_obj_card_create(sensor_data_cont, "", NULL);
 	lbl_mac = tt_obj_label_create(card_info, "");
+	lv_label_set_long_mode(lbl_mac, LV_LABEL_LONG_SCROLL_CIRCULAR);
+	lv_obj_set_width(lbl_mac, LV_PCT(100));
 	lv_obj_align(lbl_mac, LV_ALIGN_TOP_MID, 0, 0);
 	lbl_name = tt_obj_label_create(card_info, "");
+	lv_label_set_long_mode(lbl_name, LV_LABEL_LONG_SCROLL_CIRCULAR);
+	lv_obj_set_width(lbl_name, LV_PCT(100));
 	lv_obj_align(lbl_name, LV_ALIGN_CENTER, 0, 0);
 	card_rssi = tt_obj_card_create(sensor_data_cont, "", ASSET("rssi.png"));
 	card_bat = tt_obj_card_create(sensor_data_cont, "", ASSET("bat.png"));
