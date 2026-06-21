@@ -664,12 +664,12 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	
 	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
 	dd = tt_obj_dropdown_create(controls_cont, options, update_cb);
-	lv_obj_set_width(dd, 130);
+	lv_obj_set_width(dd, 140);
 	lv_obj_set_height(dd, 36);
 	
 	btn_dhcp = tt_obj_btn_toggle_create(controls_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
-	lv_obj_set_width(btn_dhcp, 130);
+	lv_obj_set_width(btn_dhcp, 140);
 	lv_obj_set_height(btn_dhcp, 36);
 
 	/* Single LAN mode container */
