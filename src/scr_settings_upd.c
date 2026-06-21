@@ -98,14 +98,14 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_t* lbl_auto = lv_label_create(auto_row);
     lv_label_set_text(lbl_auto, "Automatic Updates");
     lv_label_set_long_mode(lbl_auto, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_width(lbl_auto, LV_PCT(60));
+    lv_obj_set_width(lbl_auto, LV_PCT(57));
     lv_obj_set_scrollbar_mode(lbl_auto, LV_SCROLLBAR_MODE_OFF);
 
     // Create Dropdown for ON/OFF
     btn_auto = lv_dropdown_create(auto_row);
     lv_dropdown_set_options(btn_auto, "ON\nOFF");
     lv_dropdown_set_selected(btn_auto, 1);
-    lv_obj_set_size(btn_auto, LV_PCT(40), 40);
+    lv_obj_set_size(btn_auto, LV_PCT(43), 40);
     lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_VALUE_CHANGED, NULL);
     
     // UI Styling for dropdown to match the "X" box style
@@ -127,11 +127,11 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_t* lbl_period = lv_label_create(period_row);
     lv_label_set_text(lbl_period, "OTA Periodic Checks");
     lv_label_set_long_mode(lbl_period, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    lv_obj_set_width(lbl_period, LV_PCT(60));
+    lv_obj_set_width(lbl_period, LV_PCT(57));
     lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
 
     dd_period = tt_obj_dropdown_create(period_row, "Daily\nWeekly\nMonthly", dd_period_cb);
-    lv_obj_set_size(dd_period, LV_PCT(40), 40);
+    lv_obj_set_size(dd_period, LV_PCT(43), 40);
 
     /* 5. Bottom buttons */
     tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb2.png"));
