@@ -72,12 +72,12 @@ void ttne_display(void)
 	lv_obj_set_style_bg_color(menu, lv_color_hex(TT_COLOR_BG2), 0);
 
 	lv_obj_t* menu_header = lv_menu_get_main_header(menu);
-	lv_obj_set_height(menu_header, 40);
+	lv_obj_set_height(menu_header, 44);
 	lv_obj_add_style(menu_header, &header_style, 0);
 	lv_obj_add_flag(menu_header, LV_OBJ_FLAG_CLICKABLE);
 
 	lv_obj_t* menu_header_btn = lv_menu_get_main_header_back_btn(menu);
-	lv_obj_set_size(menu_header_btn, 30, 30);
+	lv_obj_set_size(menu_header_btn, 42, 42);
 	lv_obj_set_flex_flow(menu_header_btn, LV_FLEX_FLOW_COLUMN);
 	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_clear_flag(menu_header_btn, LV_OBJ_FLAG_CLICKABLE);
@@ -87,6 +87,7 @@ void ttne_display(void)
 
 	lv_obj_t* icon = lv_obj_get_child(menu_header_btn, 0);
 	lv_obj_set_layout(menu_header_btn, 0);
+	lv_obj_set_style_text_font(icon, &lv_font_montserrat_28, 0);
 	lv_obj_align(icon, LV_ALIGN_CENTER, 0, 0);
 
 	lv_menu_set_page_title_static(main_page, "Network Engineering");
