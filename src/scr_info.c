@@ -34,7 +34,7 @@ static void info_refresh_cb(int err, void* userdata);
 
 static void refresh_info_display(void)
 {
-	char str[192];
+	char str[256];
 	app_state_snapshot_t snapshot;
 	app_state_get_snapshot(&snapshot);
 	const app_state_system_info_t* info = &snapshot.system_info;
@@ -115,5 +115,7 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_om_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pmb_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_display_version = tt_obj_label_color_create(info_product_cont, "");
+	lv_label_set_long_mode(lbl_display_version, LV_LABEL_LONG_SCROLL_CIRCULAR);
+	lv_obj_set_width(lbl_display_version, LV_PCT(100));
 	lbl_uptime = tt_obj_label_color_create(info_product_cont, "");
 }
