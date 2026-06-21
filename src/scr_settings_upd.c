@@ -63,6 +63,7 @@ static int period_hours_from_sel(uint16_t sel);
 /* Main Screen Creation *******************************************************/
 
 void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
+    lv_obj_t* lbl_server;
 
     /* 1. Create page and main container */
     lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, "System Update");
@@ -74,7 +75,11 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_pad_column(main, 6, 0);
 
     /* 2. Remote update server Label */
-    tt_obj_label_create(main, "Remote server update file location I.P / DNS");
+    lbl_server = tt_obj_label_create(main,
+            "Remote server update file location I.P / DNS");
+    lv_label_set_long_mode(lbl_server, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_width(lbl_server, LV_PCT(100));
+    lv_obj_set_scrollbar_mode(lbl_server, LV_SCROLLBAR_MODE_OFF);
 
     /* 3. Large Text Area (Text VRB) */
     txt_server = tt_obj_txt_create(main, "IP / DNS", txt_server_cb);
