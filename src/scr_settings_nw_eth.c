@@ -652,7 +652,7 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	lv_obj_t* controls_cont = lv_obj_create(nw_cont2);
 	lv_obj_set_size(controls_cont, LV_PCT(100), LV_SIZE_CONTENT);
-	lv_obj_set_flex_flow(controls_cont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_flow(controls_cont, LV_FLEX_FLOW_ROW_WRAP);
 	lv_obj_set_flex_align(controls_cont, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_set_scrollbar_mode(controls_cont, LV_SCROLLBAR_MODE_OFF);
@@ -664,13 +664,13 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	
 	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
 	dd = tt_obj_dropdown_create(controls_cont, options, update_cb);
-	lv_obj_set_width(dd, LV_PCT(50));
+	lv_obj_set_width(dd, 130);
 	lv_obj_set_height(dd, 36);
 	
 	btn_dhcp = tt_obj_btn_toggle_create(controls_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
 	lv_obj_set_height(btn_dhcp, 36);
-	lv_obj_set_width(btn_dhcp, LV_PCT(48));
+	lv_obj_set_width(btn_dhcp, 90);
 
 	/* Single LAN mode container */
 	cont_single_lan = tt_obj_cont_create(nw_cont2);
