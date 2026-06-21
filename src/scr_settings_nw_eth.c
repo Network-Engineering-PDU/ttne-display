@@ -669,8 +669,8 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	
 	btn_dhcp = tt_obj_btn_toggle_create(controls_cont, update_cb, "DHCP");
 	lv_obj_add_style(btn_dhcp, &btn_style, 0);
+	lv_obj_set_width(btn_dhcp, 130);
 	lv_obj_set_height(btn_dhcp, 36);
-	lv_obj_set_width(btn_dhcp, 90);
 
 	/* Single LAN mode container */
 	cont_single_lan = tt_obj_cont_create(nw_cont2);
