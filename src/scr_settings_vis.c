@@ -13,12 +13,14 @@
 #include "backend/backend.h"
 #include "screen.h"
 
+#define TIMER_ROT 7000 // ms
+
 /* Global variables ***********************************************************/
 
 static lv_obj_t* dd_rotation;
 static lv_obj_t* txt_screen_saver;
+static lv_timer_t* timer_rot;
 static lv_obj_t* msg_box_rot;
-static bool rotation_save_pending;
 
 /* PDU location information pointers */
 static lv_obj_t* txt_fields[7]; 
@@ -32,16 +34,13 @@ static void txt_pdu_info_cb(lv_event_t* e);
 static void update_pdu_info_display();
 static void save_pdu_info_field(int field_id, const char* value);
 static void visual_config_cb(int err, void* userdata);
-static void rotation_save_cb(int err, void* userdata);
-static void rotation_restart_timer_cb(lv_timer_t* timer);
 
 static int rotation_to_dropdown_index(int rotation);
 static int dropdown_index_to_rotation(int index);
 static void revert_rot();
 static void msg_box_rot_cb(lv_event_t* e);
+static void timer_rot_cb(lv_timer_t* timer);
 static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text);
-
-extern void reset_program(void);
 
 /* Callbacks ******************************************************************/
 
@@ -63,22 +62,25 @@ static void rotate_cb(lv_event_t* e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED) {
-        if (rotation_save_pending) {
-            return;
-        }
-
         uint16_t rotation = dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation));
+        screen_set_rotation(rotation);
 
+        if (timer_rot) {
+            lv_timer_del(timer_rot);
+            timer_rot = NULL;
+        }
         if (msg_box_rot) {
             lv_obj_del(msg_box_rot);
             msg_box_rot = NULL;
         }
 
+        timer_rot = lv_timer_create(timer_rot_cb, TIMER_ROT, NULL);
+
         const char* orientation = (rotation == 3) ? "Horizontal" : "Vertical";
         char msg[300];
         snprintf(msg, sizeof(msg), "Are you sure you want to save screen orientation?\n"
                 "Orientation: " TT_COLOR_GREEN_NE_STR " %s#\n"
-                "The display app will restart after saving.",
+                "(changes will be reverted in 7 seconds)",
                 orientation);
                 
         msg_box_rot = tt_obj_msg_box_create("Screen rotation", msg, NULL, msg_box_rot_cb);
@@ -119,22 +121,33 @@ static void txt_pdu_info_cb(lv_event_t* e)
     }
 }
 
+static void timer_rot_cb(lv_timer_t* timer)
+{
+    if (msg_box_rot) {
+        lv_msgbox_close(msg_box_rot);
+        msg_box_rot = NULL;
+    }
+    if (timer) {
+        lv_timer_del(timer);
+    }
+    timer_rot = NULL;
+    revert_rot();
+}
+
 static void msg_box_rot_cb(lv_event_t* e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t* obj = lv_event_get_current_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
+        if (timer_rot) {
+            lv_timer_del(timer_rot);
+            timer_rot = NULL;
+        }
         if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-            if (backend_visual_save_rotation_and_restart(
+            backend_visual_save_rotation_and_restart(
                     dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation)),
-                    rotation_save_cb, NULL) == 0) {
-                rotation_save_pending = true;
-            } else {
-                tt_obj_info_box_create("Screen rotation",
-                        "Could not save screen orientation", 1);
-                revert_rot();
-            }
+                    NULL, NULL);
         } else {
             revert_rot();
         }
@@ -149,6 +162,7 @@ static void revert_rot()
     app_state_get_snapshot(&snapshot);
     int rotation = snapshot.visual_config.valid ?
             snapshot.visual_config.rotation : 2;
+    screen_set_rotation(rotation);
     lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(rotation));
 }
 
@@ -186,28 +200,6 @@ static void visual_config_cb(int err, void* userdata)
     if (err == 0) {
         update_pdu_info_display();
     }
-}
-
-static void rotation_save_cb(int err, void* userdata)
-{
-    lv_timer_t* timer;
-
-    (void)userdata;
-    rotation_save_pending = false;
-    if (err != 0) {
-        tt_obj_info_box_create("Screen rotation",
-                "Could not save screen orientation", 1);
-        revert_rot();
-        return;
-    }
-    timer = lv_timer_create(rotation_restart_timer_cb, 50, NULL);
-    lv_timer_set_repeat_count(timer, 1);
-}
-
-static void rotation_restart_timer_cb(lv_timer_t* timer)
-{
-    (void)timer;
-    reset_program();
 }
 
 static int rotation_to_dropdown_index(int rotation)
