@@ -13,8 +13,6 @@
 #include "config.h"
 #include "app/app_state.h"
 
-extern void reset_program(void);
-
 #define BACKEND_QUEUE_SIZE 32
 
 #ifdef SIMULATOR_ENABLED
@@ -1019,7 +1017,6 @@ static void* backend_worker(void* arg)
 		case BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART:
 			config_set_rotation(cmd.value);
 			publish_visual_config_from_config();
-			reset_program();
 			break;
 		case BACKEND_CMD_LOGIN_CONFIG_REFRESH:
 			publish_login_config_from_config();

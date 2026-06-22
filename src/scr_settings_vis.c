@@ -18,6 +18,7 @@
 static lv_obj_t* dd_rotation;
 static lv_obj_t* txt_screen_saver;
 static lv_obj_t* msg_box_rot;
+static bool rotation_save_pending;
 
 /* PDU location information pointers */
 static lv_obj_t* txt_fields[7]; 
@@ -31,12 +32,16 @@ static void txt_pdu_info_cb(lv_event_t* e);
 static void update_pdu_info_display();
 static void save_pdu_info_field(int field_id, const char* value);
 static void visual_config_cb(int err, void* userdata);
+static void rotation_save_cb(int err, void* userdata);
+static void rotation_restart_timer_cb(lv_timer_t* timer);
 
 static int rotation_to_dropdown_index(int rotation);
 static int dropdown_index_to_rotation(int index);
 static void revert_rot();
 static void msg_box_rot_cb(lv_event_t* e);
 static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text);
+
+extern void reset_program(void);
 
 /* Callbacks ******************************************************************/
 
@@ -58,6 +63,10 @@ static void rotate_cb(lv_event_t* e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED) {
+        if (rotation_save_pending) {
+            return;
+        }
+
         uint16_t rotation = dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation));
 
         if (msg_box_rot) {
@@ -117,9 +126,15 @@ static void msg_box_rot_cb(lv_event_t* e)
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-            backend_visual_save_rotation_and_restart(
+            if (backend_visual_save_rotation_and_restart(
                     dropdown_index_to_rotation(lv_dropdown_get_selected(dd_rotation)),
-                    NULL, NULL);
+                    rotation_save_cb, NULL) == 0) {
+                rotation_save_pending = true;
+            } else {
+                tt_obj_info_box_create("Screen rotation",
+                        "Could not save screen orientation", 1);
+                revert_rot();
+            }
         } else {
             revert_rot();
         }
@@ -171,6 +186,28 @@ static void visual_config_cb(int err, void* userdata)
     if (err == 0) {
         update_pdu_info_display();
     }
+}
+
+static void rotation_save_cb(int err, void* userdata)
+{
+    lv_timer_t* timer;
+
+    (void)userdata;
+    rotation_save_pending = false;
+    if (err != 0) {
+        tt_obj_info_box_create("Screen rotation",
+                "Could not save screen orientation", 1);
+        revert_rot();
+        return;
+    }
+    timer = lv_timer_create(rotation_restart_timer_cb, 50, NULL);
+    lv_timer_set_repeat_count(timer, 1);
+}
+
+static void rotation_restart_timer_cb(lv_timer_t* timer)
+{
+    (void)timer;
+    reset_program();
 }
 
 static int rotation_to_dropdown_index(int rotation)
