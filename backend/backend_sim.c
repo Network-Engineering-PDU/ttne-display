@@ -97,7 +97,7 @@ static app_state_update_status_t sim_update_status = {
 	.is_pending = false,
 	.auto_update = false,
 	.update_server = "https://github.com/Network-Engineering-PDU/firmware-update",
-	.check_interval_hours = 24,
+	.check_interval_hours = 168,
 	.valid = true,
 };
 
@@ -377,7 +377,7 @@ int backend_system_factory_reset(backend_callback_t callback, void* userdata)
 			sizeof(sim_update_status.update_server), "%s",
 			"https://github.com/Network-Engineering-PDU/firmware-update");
 	sim_update_status.auto_update = false;
-	sim_update_status.check_interval_hours = 24;
+	sim_update_status.check_interval_hours = 168;
 	sim_update_status.is_pending = false;
 	app_state_set_update_status(&sim_update_status);
 	if (callback != NULL) {

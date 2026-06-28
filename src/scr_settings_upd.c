@@ -136,6 +136,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
 
     dd_period = tt_obj_dropdown_create(period_row, "Daily\nWeekly\nMonthly", dd_period_cb);
+    lv_dropdown_set_selected(dd_period, 1);
     lv_obj_set_size(dd_period, LV_PCT(50), 40);
 
     /* 5. Bottom buttons */
@@ -311,27 +312,23 @@ static void dd_period_cb(lv_event_t* e) {
 
 static uint16_t period_sel_from_hours(int hours) {
     switch (hours) {
-        case 1:
-            return 0;
         case 168:
-            return 2;
+            return 1;
         case 720:
-            return 3;
+            return 2;
         case 24:
         default:
-            return 1;
+            return 0;
     }
 }
 
 static int period_hours_from_sel(uint16_t sel) {
     switch (sel) {
-        case 0:
-            return 1;
-        case 2:
-            return 168;
-        case 3:
-            return 720;
         case 1:
+            return 168;
+        case 2:
+            return 720;
+        case 0:
         default:
             return 24;
     }

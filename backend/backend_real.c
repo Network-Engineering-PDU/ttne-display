@@ -171,7 +171,7 @@ static void publish_update_status_from_models(void)
 				model_status->update_server != NULL
 						? model_status->update_server : "N/A");
 	} else {
-		update_status.check_interval_hours = 24;
+		update_status.check_interval_hours = 168;
 		snprintf(update_status.update_server,
 				sizeof(update_status.update_server), "%s", "N/A");
 	}

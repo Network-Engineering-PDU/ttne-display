@@ -802,7 +802,7 @@ int json_helper_update_update_status(const char* json_str)
 		.is_pending = false,
 		.auto_update = false,
 		.update_server = "",
-		.check_interval_hours = 24
+		.check_interval_hours = 168
 	};
 	
 	cJSON* is_pending = cJSON_GetObjectItemCaseSensitive(json, "is_pending");

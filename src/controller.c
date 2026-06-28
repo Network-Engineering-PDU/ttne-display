@@ -81,7 +81,7 @@ void controller_init()
 	update_status.is_pending = false;
 	update_status.auto_update = false;
 	update_status.update_server = "";
-	update_status.check_interval_hours = 24;
+	update_status.check_interval_hours = 168;
 	models_set_update_status(&update_status);
 }
 
