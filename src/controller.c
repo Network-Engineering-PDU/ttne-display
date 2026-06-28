@@ -42,7 +42,7 @@ void controller_init()
 
 	models_pdu_info_t pdu_info;
 	pdu_info.n_outlets = 0;
-	pdu_info.rated_current = 0;
+	pdu_info.rated_current = 32;
 	pdu_info.controller = "N/A";
 	pdu_info.type = "N/A";
 	models_set_pdu_info(&pdu_info);
