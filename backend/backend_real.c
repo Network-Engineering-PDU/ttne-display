@@ -396,7 +396,7 @@ static void publish_pdu_info_from_models(void)
 	app_state_pdu_info_t pdu_info;
 
 	memset(&pdu_info, 0, sizeof(pdu_info));
-	pdu_info.rated_current = 32;
+	pdu_info.rated_current = 16;
 	if (model != NULL) {
 		pdu_info.n_outlets = model->n_outlets;
 		pdu_info.rated_current = model->rated_current;
