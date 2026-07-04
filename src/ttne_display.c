@@ -59,7 +59,7 @@ void ttne_display(void)
 
 	app_state_get_snapshot(&snapshot);
 	uint8_t rotation = snapshot.visual_config.valid ?
-			snapshot.visual_config.rotation : 2;
+			snapshot.visual_config.rotation : 3;
 	screen_set_rotation(rotation);
 
 	menu = lv_menu_create(lv_scr_act());

@@ -41,7 +41,7 @@ void screen_set_rotation(int rotation)
 bool screen_is_landscape()
 {
 	app_state_snapshot_t snapshot;
-	int rotation = 2;
+	int rotation = 3;
 
 	app_state_get_snapshot(&snapshot);
 	if (snapshot.visual_config.valid) {

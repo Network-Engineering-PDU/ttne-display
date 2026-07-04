@@ -37,13 +37,13 @@ static app_state_system_info_t sim_system_info = {
 };
 static app_state_pdu_info_t sim_pdu_info = {
 	.n_outlets = 8,
-	.rated_current = 32,
+	.rated_current = 16,
 	.controller = "sim",
 	.type = "PDU",
 	.valid = true,
 };
 static app_state_visual_config_t sim_visual_config = {
-	.rotation = 2,
+	.rotation = 3,
 	.inactivity_time = 5,
 	.pdu_company = "Network Engineering",
 	.pdu_rack = "Rack A",

@@ -21,8 +21,8 @@ void controller_get_pdu_info_async(controller_callback_t callback, void* userdat
 void controller_get_nw_if_async(controller_callback_t callback, void* userdata);
 
 void controller_put_pdu_info(const models_pdu_info_t* pdu_info);
-int controller_get_in_sw(void);
-int controller_get_in_data(int line_id);
+void controller_get_in_sw();
+void controller_get_in_data(int line_id);
 void controller_get_out_sw();
 void controller_put_out_sw(const models_out_sw_t* out_sw, int line_id);
 void controller_get_out_data(int line_id);

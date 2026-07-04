@@ -42,7 +42,7 @@ void controller_init()
 
 	models_pdu_info_t pdu_info;
 	pdu_info.n_outlets = 0;
-	pdu_info.rated_current = 32;
+	pdu_info.rated_current = 0;
 	pdu_info.controller = "N/A";
 	pdu_info.type = "N/A";
 	models_set_pdu_info(&pdu_info);
@@ -137,29 +137,23 @@ void controller_put_pdu_info(const models_pdu_info_t* pdu_info)
 	http_helper_free(&req);
 }
 
-int controller_get_in_sw(void)
+void controller_get_in_sw()
 {
 	http_get_req_t req;
 	char* url = BASE_URL "inputs/switches/";
-	int err = http_helper_get(&req, url);
-	if (err == 0) {
-		err = json_helper_update_in_sw(req.buffer);
-	}
+	http_helper_get(&req, url);
+	json_helper_update_in_sw(req.buffer);
 	http_helper_free(&req);
-	return err;
 }
 
-int controller_get_in_data(int line_id)
+void controller_get_in_data(int line_id)
 {
 	http_get_req_t req;
 	char url[100];
-	snprintf(url, sizeof(url), BASE_URL "inputs/%d/data", line_id);
-	int err = http_helper_get(&req, url);
-	if (err == 0) {
-		err = json_helper_update_in_data(req.buffer);
-	}
+	sprintf(url, BASE_URL "inputs/%d/data", line_id);
+	http_helper_get(&req, url);
+	json_helper_update_in_data(req.buffer);
 	http_helper_free(&req);
-	return err;
 }
 
 void controller_get_out_sw()

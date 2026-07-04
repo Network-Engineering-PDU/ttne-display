@@ -396,7 +396,6 @@ static void publish_pdu_info_from_models(void)
 	app_state_pdu_info_t pdu_info;
 
 	memset(&pdu_info, 0, sizeof(pdu_info));
-	pdu_info.rated_current = 32;
 	if (model != NULL) {
 		pdu_info.n_outlets = model->n_outlets;
 		pdu_info.rated_current = model->rated_current;
@@ -490,32 +489,20 @@ static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
 	model->nw_mode = nw_if->nw_mode;
 }
 
-static int run_power_refresh(void)
+static void run_power_refresh(void)
 {
 	app_state_power_t power;
-	int phase_count;
-	int branch_count;
 	memset(&power, 0, sizeof(power));
 
-	if (controller_get_in_sw() != 0) {
-		return 1;
-	}
+	controller_get_in_sw();
 	const models_in_sw_t* in_sw = models_get_in_sw();
 	power.branch = in_sw->branch;
 	power.sys_type = in_sw->sys_type;
 	power.curr_type = in_sw->curr_type;
-	branch_count = power.branch == 1 ? 2 : 1;
-	phase_count = power.sys_type == 0 ? 1 :
-			(power.sys_type == 1 ? 2 : 3);
-	power.input_count = branch_count * phase_count;
-	if (power.input_count > APP_STATE_MAX_POWER_INPUTS) {
-		power.input_count = APP_STATE_MAX_POWER_INPUTS;
-	}
+	power.input_count = APP_STATE_MAX_POWER_INPUTS;
 
-	for (int i = 0; i < power.input_count; i++) {
-		if (controller_get_in_data(i) != 0) {
-			return 1;
-		}
+	for (int i = 0; i < APP_STATE_MAX_POWER_INPUTS; i++) {
+		controller_get_in_data(i);
 		const models_in_data_t* in_data = models_get_in_data();
 		power.inputs[i].voltage = in_data->voltage;
 		power.inputs[i].current = in_data->current;
@@ -529,7 +516,6 @@ static int run_power_refresh(void)
 	}
 
 	app_state_set_power(&power);
-	return 0;
 }
 
 static void publish_sensor_data_from_live(int sensor_index,
@@ -853,7 +839,7 @@ static void* backend_worker(void* arg)
 			publish_license_from_models();
 			break;
 		case BACKEND_CMD_POWER_REFRESH:
-			err = run_power_refresh();
+			run_power_refresh();
 			break;
 		case BACKEND_CMD_SENSOR_DATA_REFRESH:
 			err = run_sensor_data_refresh(cmd.line_id);
