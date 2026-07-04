@@ -937,6 +937,10 @@ static void lv_label_refr_text(lv_obj_t * obj)
             end = lv_area_get_width(&txt_coords) - size.x;
 #endif
 
+            if(label->offset.x != 0) {
+                start = label->offset.x;
+            }
+
             lv_anim_set_values(&a, start, end);
             lv_anim_set_exec_cb(&a, set_ofs_x_anim);
 
@@ -976,7 +980,10 @@ static void lv_label_refr_text(lv_obj_t * obj)
         }
 
         if(size.y > lv_area_get_height(&txt_coords) && hor_anim == false) {
-            lv_anim_set_values(&a, 0, lv_area_get_height(&txt_coords) - size.y - (lv_font_get_line_height(font)));
+            int32_t start = label->offset.y;
+            int32_t end = lv_area_get_height(&txt_coords) - size.y - (lv_font_get_line_height(font));
+            if(start == 0) start = 0;
+            lv_anim_set_values(&a, start, end);
             lv_anim_set_exec_cb(&a, set_ofs_y_anim);
 
             lv_anim_t * anim_cur = lv_anim_get(obj, set_ofs_y_anim);
@@ -1041,9 +1048,15 @@ static void lv_label_refr_text(lv_obj_t * obj)
                 end = -size.x - lv_font_get_glyph_width(font, ' ', ' ') * LV_LABEL_WAIT_CHAR_COUNT;
             }
 
+            if(label->offset.x != 0) {
+                start = label->offset.x;
+            }
+
             lv_anim_set_values(&a, start, end);
 #else
-            lv_anim_set_values(&a, 0, -size.x - lv_font_get_glyph_width(font, ' ', ' ') * LV_LABEL_WAIT_CHAR_COUNT);
+            int32_t start = label->offset.x;
+            if(start == 0) start = 0;
+            lv_anim_set_values(&a, start, -size.x - lv_font_get_glyph_width(font, ' ', ' ') * LV_LABEL_WAIT_CHAR_COUNT);
 #endif
             lv_anim_set_exec_cb(&a, set_ofs_x_anim);
             lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
@@ -1070,7 +1083,8 @@ static void lv_label_refr_text(lv_obj_t * obj)
         }
 
         if(size.y > lv_area_get_height(&txt_coords) && hor_anim == false) {
-            lv_anim_set_values(&a, 0, -size.y - (lv_font_get_line_height(font)));
+            int32_t start = label->offset.y;
+            lv_anim_set_values(&a, start, -size.y - (lv_font_get_line_height(font)));
             lv_anim_set_exec_cb(&a, set_ofs_y_anim);
             lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
 
