@@ -5,7 +5,6 @@ typedef int make_iso_compilers_happy; // Avoid Wpedantic warning
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/time.h>
 
 #include "lvgl/lvgl.h"
 
@@ -15,19 +14,17 @@ typedef int make_iso_compilers_happy; // Avoid Wpedantic warning
 uint32_t custom_tick_get(void)
 {
 	static uint64_t start_ms = 0;
-	if(start_ms == 0) {
-		struct timeval tv_start;
-		gettimeofday(&tv_start, NULL);
-		start_ms = (tv_start.tv_sec * 1000000 + tv_start.tv_usec) / 1000;
+	struct timespec now;
+	uint64_t now_ms;
+
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	now_ms = (uint64_t)now.tv_sec * 1000U +
+			(uint64_t)now.tv_nsec / 1000000U;
+	if (start_ms == 0) {
+		start_ms = now_ms;
 	}
 
-	struct timeval tv_now;
-	gettimeofday(&tv_now, NULL);
-	uint64_t now_ms;
-	now_ms = (tv_now.tv_sec * 1000000 + tv_now.tv_usec) / 1000;
-
-	uint32_t time_ms = now_ms - start_ms;
-	return time_ms;
+	return (uint32_t)(now_ms - start_ms);
 }
 
 #endif // SIMULATOR_ENABLED
