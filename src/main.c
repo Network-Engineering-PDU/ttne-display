@@ -56,7 +56,7 @@ static void hal_init(void)
 
 	lv_disp_t* disp = lv_disp_drv_register(&disp_drv);
 	lv_disp_set_default(disp);
-	lv_disp_set_rotation(disp, LV_DISP_ROT_270); 
+	lv_disp_set_rotation(disp, LV_DISP_ROT_180);
 
 	lv_theme_t* th = lv_theme_default_init(disp,
 			lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),

@@ -15,7 +15,8 @@ void app_state_init(void)
 	snprintf(state.update_status.update_server,
 			sizeof(state.update_status.update_server), "%s", "N/A");
 	state.update_status.check_interval_hours = 168;
-	state.pdu_info.rated_current = 16;
+	state.pdu_info.rated_current = 32;
+	state.visual_config.rotation = 2;
 	state.nw_if.type = 1;
 	state.nw_if.dhcp = true;
 	state.nw_if.nw_mode = -1;

@@ -96,7 +96,7 @@ void scr_current_create(lv_obj_t* l_menu, lv_obj_t* btn)
     app_state_snapshot_t snapshot;
     app_state_get_snapshot(&snapshot);
     int selected_current = snapshot.pdu_info.valid ?
-            snapshot.pdu_info.rated_current : 16;
+            snapshot.pdu_info.rated_current : 32;
 
     /* Create 2x3 grid buttons with fixed 31% width to force 3 columns */
     for (int i = 0; i < 6; ++i) {
