@@ -1002,6 +1002,7 @@ static void* backend_worker(void* arg)
 					*current : (models_pdu_info_t){0};
 			pdu_info.rated_current = cmd.value;
 			controller_put_pdu_info(&pdu_info);
+			controller_get_pdu_info();
 			publish_pdu_info_from_models();
 			break;
 		}
