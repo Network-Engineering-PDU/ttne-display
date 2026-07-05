@@ -17,6 +17,7 @@
 #include "../../misc/lv_bidi.h"
 #include "../../misc/lv_txt_ap.h"
 #include "../../misc/lv_printf.h"
+#include <string.h>
 
 /*********************
  *      DEFINES
@@ -93,10 +94,13 @@ void lv_label_set_text(lv_obj_t * obj, const char * text)
     LV_ASSERT_OBJ(obj, MY_CLASS);
     lv_label_t * label = (lv_label_t *)obj;
 
-    lv_obj_invalidate(obj);
-
     /*If text is NULL then just refresh with the current text*/
     if(text == NULL) text = label->text;
+    else if(label->text != NULL && strcmp(label->text, text) == 0) {
+        return;
+    }
+
+    lv_obj_invalidate(obj);
 
     const size_t text_len = get_text_length(text);
 
@@ -136,24 +140,33 @@ void lv_label_set_text_fmt(lv_obj_t * obj, const char * fmt, ...)
     LV_ASSERT_OBJ(obj, MY_CLASS);
     LV_ASSERT_NULL(fmt);
 
-    lv_obj_invalidate(obj);
     lv_label_t * label = (lv_label_t *)obj;
 
     /*If text is NULL then refresh*/
     if(fmt == NULL) {
+        lv_obj_invalidate(obj);
         lv_label_refr_text(obj);
         return;
     }
+
+    va_list args;
+    va_start(args, fmt);
+    char * new_text = _lv_txt_set_text_vfmt(fmt, args);
+    va_end(args);
+
+    if(label->text != NULL && new_text != NULL && strcmp(label->text, new_text) == 0) {
+        lv_free(new_text);
+        return;
+    }
+
+    lv_obj_invalidate(obj);
 
     if(label->text != NULL && label->static_txt == 0) {
         lv_free(label->text);
         label->text = NULL;
     }
 
-    va_list args;
-    va_start(args, fmt);
-    label->text = _lv_txt_set_text_vfmt(fmt, args);
-    va_end(args);
+    label->text = new_text;
     label->static_txt = 0; /*Now the text is dynamically allocated*/
 
     lv_label_refr_text(obj);
@@ -163,6 +176,12 @@ void lv_label_set_text_static(lv_obj_t * obj, const char * text)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
     lv_label_t * label = (lv_label_t *)obj;
+
+    if(text != NULL && label->text != NULL && strcmp(label->text, text) == 0) {
+        return;
+    }
+
+    lv_obj_invalidate(obj);
 
     if(label->static_txt == 0 && label->text != NULL) {
         lv_free(label->text);
@@ -939,6 +958,8 @@ static void lv_label_refr_text(lv_obj_t * obj)
 
             lv_anim_set_values(&a, start, end);
             lv_anim_set_exec_cb(&a, set_ofs_x_anim);
+            lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
+            lv_anim_set_playback_time(&a, a.time);
 
             lv_anim_t * anim_cur = lv_anim_get(obj, set_ofs_x_anim);
             int32_t act_time = 0;
@@ -960,9 +981,6 @@ static void lv_label_refr_text(lv_obj_t * obj)
                 }
             }
 
-            lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
-            lv_anim_set_playback_time(&a, a.time);
-
             /*If a template animation exists, overwrite some property*/
             if(anim_template)
                 overwrite_anim_property(&a, anim_template, label->long_mode);
@@ -978,6 +996,8 @@ static void lv_label_refr_text(lv_obj_t * obj)
         if(size.y > lv_area_get_height(&txt_coords) && hor_anim == false) {
             lv_anim_set_values(&a, 0, lv_area_get_height(&txt_coords) - size.y - (lv_font_get_line_height(font)));
             lv_anim_set_exec_cb(&a, set_ofs_y_anim);
+            lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
+            lv_anim_set_playback_time(&a, a.time);
 
             lv_anim_t * anim_cur = lv_anim_get(obj, set_ofs_y_anim);
             int32_t act_time = 0;
@@ -998,9 +1018,6 @@ static void lv_label_refr_text(lv_obj_t * obj)
                     a.end_value   = tmp;
                 }
             }
-
-            lv_anim_set_time(&a, lv_anim_speed_to_time(anim_speed, a.start_value, a.end_value));
-            lv_anim_set_playback_time(&a, a.time);
 
             /*If a template animation exists, overwrite some property*/
             if(anim_template)
