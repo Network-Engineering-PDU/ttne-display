@@ -60,7 +60,7 @@ static void update_config_file()
 
 void config_init()
 {
-	config.rotation = 3; // 270 degrees
+	config.rotation = 2; // 180 degrees (default vertical orientation)
 	config.inactivity_time = 5; // 5 min
 	config.skip_login = 0;
 	memset(config.pdu_company, 0, sizeof(config.pdu_company));
