@@ -77,7 +77,8 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     /* 2. Remote update server Label */
     lbl_server = tt_obj_label_create(main,
             "Remote server update file location I.P / DNS");
-    lv_label_set_long_mode(lbl_server, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(lbl_server, LV_LABEL_LONG_SCROLL);
+    lv_obj_set_style_text_align(lbl_server, LV_TEXT_ALIGN_LEFT, 0);
     lv_obj_set_width(lbl_server, LV_PCT(100));
     lv_obj_set_scrollbar_mode(lbl_server, LV_SCROLLBAR_MODE_OFF);
 
@@ -102,7 +103,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* lbl_auto = lv_label_create(auto_row);
     lv_label_set_text(lbl_auto, "Automatic Updates");
-    lv_label_set_long_mode(lbl_auto, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(lbl_auto, LV_LABEL_LONG_SCROLL);
     lv_obj_set_width(lbl_auto, LV_PCT(60));
     lv_obj_set_scrollbar_mode(lbl_auto, LV_SCROLLBAR_MODE_OFF);
 
@@ -131,7 +132,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* lbl_period = lv_label_create(period_row);
     lv_label_set_text(lbl_period, "OTA Periodic Checks");
-    lv_label_set_long_mode(lbl_period, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(lbl_period, LV_LABEL_LONG_SCROLL);
     lv_obj_set_width(lbl_period, LV_PCT(50));
     lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
 

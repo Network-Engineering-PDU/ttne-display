@@ -647,7 +647,7 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
 	lv_obj_t* lbl_conn = tt_obj_label_create(nw_cont2, "Connection type");
-	lv_label_set_long_mode(lbl_conn, LV_LABEL_LONG_SCROLL_CIRCULAR);
+	lv_label_set_long_mode(lbl_conn, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_scrollbar_mode(lbl_conn, LV_SCROLLBAR_MODE_OFF);
 
 	lv_obj_t* controls_cont = lv_obj_create(nw_cont2);

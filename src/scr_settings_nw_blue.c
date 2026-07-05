@@ -321,7 +321,7 @@ void scr_settings_nw_blue_create(lv_obj_t* menu_param, lv_obj_t* btn)
 		lv_obj_set_scroll_dir(btn_device[i], LV_DIR_NONE);
 
 		lbl_device_name[i] = lv_label_create(btn_device[i]);
-		lv_label_set_long_mode(lbl_device_name[i], LV_LABEL_LONG_SCROLL_CIRCULAR);
+		lv_label_set_long_mode(lbl_device_name[i], LV_LABEL_LONG_SCROLL);
 		lv_obj_set_width(lbl_device_name[i], LV_PCT(55));
 		lv_obj_align(lbl_device_name[i], LV_ALIGN_TOP_LEFT, 10, 6);
 

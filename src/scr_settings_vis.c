@@ -242,7 +242,7 @@ static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text)
 
     lv_obj_t* lbl = tt_obj_label_create(row, label_text);
     lv_obj_set_width(lbl, LV_PCT(50));
-    lv_label_set_long_mode(lbl, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(lbl, LV_LABEL_LONG_SCROLL);
     lv_obj_set_scrollbar_mode(lbl, LV_SCROLLBAR_MODE_OFF);
 
     return row;
