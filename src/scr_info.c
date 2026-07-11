@@ -8,6 +8,10 @@
 #include "app/app_state.h"
 #include "backend/backend.h"
 
+#ifndef GIT_VERSION
+#define GIT_VERSION "Unknown"
+#endif
+
 /* Global variables ***********************************************************/
 
 static lv_obj_t* lbl_name;
@@ -29,8 +33,22 @@ static lv_obj_t* lbl_uptime;
 static void menu_cb(lv_event_t* e);
 static void refresh_info_display(void);
 static void info_refresh_cb(int err, void* userdata);
+static void configure_info_value_label(lv_obj_t* label);
+static const char* display_version(void);
 
 /* Callbacks ******************************************************************/
+
+static void configure_info_value_label(lv_obj_t* label)
+{
+	lv_obj_set_width(label, LV_PCT(100));
+	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
+	lv_obj_set_scrollbar_mode(label, LV_SCROLLBAR_MODE_OFF);
+}
+
+static const char* display_version(void)
+{
+	return GIT_VERSION[0] != '\0' ? GIT_VERSION : "Unknown";
+}
 
 static void refresh_info_display(void)
 {
@@ -64,7 +82,7 @@ static void refresh_info_display(void)
 	lv_label_set_text(lbl_om_version, str);
 	snprintf(str, sizeof(str), "  %s: #%06X %s", "PMB version", TT_COLOR_GREEN_NE, info->pmb_version);
 	lv_label_set_text(lbl_pmb_version, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, GIT_VERSION);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, display_version());
 	lv_label_set_text(lbl_display_version, str);
 	snprintf(str, sizeof(str), "  %s: #%06X %s", "Uptime (HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
 	lv_label_set_text(lbl_uptime, str);
@@ -115,7 +133,12 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	lbl_om_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pmb_version = tt_obj_label_color_create(info_product_cont, "");
 	lbl_display_version = tt_obj_label_color_create(info_product_cont, "");
-	lv_label_set_long_mode(lbl_display_version, LV_LABEL_LONG_SCROLL);
-	lv_obj_set_width(lbl_display_version, LV_PCT(100));
 	lbl_uptime = tt_obj_label_color_create(info_product_cont, "");
+
+	configure_info_value_label(lbl_version);
+	configure_info_value_label(lbl_om_version);
+	configure_info_value_label(lbl_pmb_version);
+	configure_info_value_label(lbl_display_version);
+
+	refresh_info_display();
 }
