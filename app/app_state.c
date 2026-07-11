@@ -14,6 +14,7 @@ void app_state_init(void)
 	snprintf(state.license_type, sizeof(state.license_type), "%s", "N/A");
 	snprintf(state.update_status.update_server,
 			sizeof(state.update_status.update_server), "%s", "N/A");
+	state.update_status.ota_enabled = false;
 	state.update_status.check_interval_hours = 168;
 	state.nw_if.type = 1;
 	state.nw_if.dhcp = true;

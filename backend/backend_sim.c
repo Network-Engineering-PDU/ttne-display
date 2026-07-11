@@ -96,6 +96,7 @@ static app_state_nw_if_t sim_nw_if = {
 static app_state_update_status_t sim_update_status = {
 	.is_pending = false,
 	.auto_update = false,
+	.ota_enabled = false,
 	.update_server = "https://github.com/Network-Engineering-PDU/firmware-update",
 	.check_interval_hours = 168,
 	.valid = true,
