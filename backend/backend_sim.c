@@ -32,7 +32,7 @@ static app_state_system_info_t sim_system_info = {
 	.sw_version = "sim",
 	.om_version = "sim",
 	.pmb_version = "sim",
-	.uptime = "00:01",
+	.uptime = "000:00:01",
 	.valid = true,
 };
 static app_state_pdu_info_t sim_pdu_info = {

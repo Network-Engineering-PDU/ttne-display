@@ -84,7 +84,7 @@ static void refresh_info_display(void)
 	lv_label_set_text(lbl_pmb_version, str);
 	snprintf(str, sizeof(str), "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, display_version());
 	lv_label_set_text(lbl_display_version, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "Uptime (HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
+	snprintf(str, sizeof(str), "  %s: #%06X %s", "Uptime (DDD:HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
 	lv_label_set_text(lbl_uptime, str);
 }
 
@@ -139,6 +139,7 @@ void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 	configure_info_value_label(lbl_om_version);
 	configure_info_value_label(lbl_pmb_version);
 	configure_info_value_label(lbl_display_version);
+	configure_info_value_label(lbl_uptime);
 
 	refresh_info_display();
 }
