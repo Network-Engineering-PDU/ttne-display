@@ -490,7 +490,8 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			}
 		}
 		
-		if (selected_mode == NW_SINGLE_LAN || selected_mode == NW_DUAL_LAN || selected_mode == NW_LAN_WIFI) {
+		if (selected_mode == NW_SINGLE_LAN || selected_mode == NW_WIFI_ONLY ||
+				selected_mode == NW_DUAL_LAN || selected_mode == NW_LAN_WIFI) {
 			if (selected_mode == NW_DUAL_LAN) {
 				len += sprintf(msg + len, "LAN1 IP: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN1 Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
@@ -612,8 +613,11 @@ static void update_data()
 			break;
 
 		case NW_WIFI_ONLY:
-			/* WiFi only: show WiFi container */
+			/* WiFi only: show WiFi fields, plus IP fields for static mode */
 			lv_obj_clear_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
+			if (!dhcp_enabled) {
+				lv_obj_clear_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
+			}
 			break;
 
 		case NW_DUAL_LAN:
