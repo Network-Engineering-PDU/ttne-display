@@ -201,14 +201,25 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 		lv_obj_clear_state(btn_dhcp, LV_STATE_CHECKED);
 	}
 
+	if (strlen(nw_if->lan1_ip) > 0) {
+		lv_textarea_set_text(txt_lan1_ip, nw_if->lan1_ip);
+	} else {
+		lv_textarea_set_text(txt_lan1_ip, "192.168.1.100");
+	}
+	if (strlen(nw_if->lan2_ip) > 0) {
+		lv_textarea_set_text(txt_lan2_ip, nw_if->lan2_ip);
+	} else {
+		lv_textarea_set_text(txt_lan2_ip, "192.168.1.101");
+	}
+	if (strlen(nw_if->mask) > 0) {
+		lv_textarea_set_text(txt_lan1_mask, nw_if->mask);
+		lv_textarea_set_text(txt_lan2_mask, nw_if->mask);
+	}
+
 	switch (saved_mode) {
 	case NW_SINGLE_LAN:
 		lv_textarea_set_text(txt_ip,
 				strlen(nw_if->lan1_ip) > 0 ? nw_if->lan1_ip : nw_if->ip);
-		break;
-	case NW_DUAL_LAN:
-		lv_textarea_set_text(txt_lan1_ip, nw_if->lan1_ip);
-		lv_textarea_set_text(txt_lan2_ip, nw_if->lan2_ip);
 		break;
 	case NW_LAN_WIFI:
 		if (strlen(nw_if->lan1_ip) > 0) {
@@ -225,12 +236,6 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 	lv_textarea_set_text(txt_dns, sanitize_dns(nw_if->dns));
 	lv_textarea_set_text(txt_wifi_ssid, nw_if->ssid);
 	lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
-
-	if ((saved_mode == NW_DUAL_LAN || saved_mode == NW_LAN_WIFI) &&
-			!nw_if->dhcp && strlen(nw_if->mask) > 0) {
-		lv_textarea_set_text(txt_lan1_mask, nw_if->mask);
-		lv_textarea_set_text(txt_lan2_mask, nw_if->mask);
-	}
 
 	update_data();
 }
@@ -726,4 +731,13 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	txt_lan2_mask = tt_obj_txt_create(cont_dual_lan, "LAN2 Subnet Mask", txt_num_cb);
 
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
+
+	load_network_form(nw_if);
+	if (!nw_if->valid) {
+		update_data();
+	}
+	if (!nw_if->valid && !nw_if_refresh_pending &&
+			backend_network_if_refresh(network_if_refresh_cb, NULL) == 0) {
+		nw_if_refresh_pending = true;
+	}
 }

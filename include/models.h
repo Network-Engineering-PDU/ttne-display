@@ -214,6 +214,7 @@ typedef struct models_modbus_t {
 typedef struct models_update_status_t {
 	bool is_pending;
 	bool auto_update;
+	bool ota_enabled;
 	const char* update_server;
 	int check_interval_hours;
 } models_update_status_t;

@@ -801,6 +801,7 @@ int json_helper_update_update_status(const char* json_str)
 	models_update_status_t update_status = {
 		.is_pending = false,
 		.auto_update = false,
+		.ota_enabled = false,
 		.update_server = "",
 		.check_interval_hours = 168
 	};
@@ -815,8 +816,14 @@ int json_helper_update_update_status(const char* json_str)
 	cJSON* auto_update = cJSON_GetObjectItemCaseSensitive(json, "auto_update");
 	if (cJSON_IsBool(auto_update)) {
 		update_status.auto_update = auto_update->valueint;
+		update_status.ota_enabled = update_status.auto_update;
 	} else {
 		return 1;
+	}
+
+	cJSON* ota_enabled = cJSON_GetObjectItemCaseSensitive(json, "ota_enabled");
+	if (cJSON_IsBool(ota_enabled)) {
+		update_status.ota_enabled = ota_enabled->valueint;
 	}
 
 	const char* server_str = json_get_string(json, "update_server");
