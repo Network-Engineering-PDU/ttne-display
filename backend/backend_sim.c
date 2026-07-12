@@ -32,7 +32,7 @@ static app_state_system_info_t sim_system_info = {
 	.sw_version = "sim",
 	.om_version = "sim",
 	.pmb_version = "sim",
-	.uptime = "000:00:01",
+	.uptime = "00:01",
 	.valid = true,
 };
 static app_state_pdu_info_t sim_pdu_info = {
@@ -96,7 +96,6 @@ static app_state_nw_if_t sim_nw_if = {
 static app_state_update_status_t sim_update_status = {
 	.is_pending = false,
 	.auto_update = false,
-	.ota_enabled = false,
 	.update_server = "https://github.com/Network-Engineering-PDU/firmware-update",
 	.check_interval_hours = 168,
 	.valid = true,

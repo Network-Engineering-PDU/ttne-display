@@ -76,7 +76,6 @@ typedef struct {
 typedef struct {
 	bool is_pending;
 	bool auto_update;
-	bool ota_enabled;
 	char update_server[128];
 	int check_interval_hours;
 	bool valid;

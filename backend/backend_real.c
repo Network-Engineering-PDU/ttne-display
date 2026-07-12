@@ -165,14 +165,12 @@ static void publish_update_status_from_models(void)
 	if (model_status != NULL) {
 		update_status.is_pending = model_status->is_pending;
 		update_status.auto_update = model_status->auto_update;
-		update_status.ota_enabled = model_status->ota_enabled;
 		update_status.check_interval_hours = model_status->check_interval_hours;
 		snprintf(update_status.update_server,
 				sizeof(update_status.update_server), "%s",
 				model_status->update_server != NULL
 						? model_status->update_server : "N/A");
 	} else {
-		update_status.ota_enabled = false;
 		update_status.check_interval_hours = 168;
 		snprintf(update_status.update_server,
 				sizeof(update_status.update_server), "%s", "N/A");

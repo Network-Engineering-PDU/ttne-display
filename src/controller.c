@@ -710,7 +710,6 @@ void controller_put_update_settings(bool auto_update, const char* update_server,
 	char* url = BASE_URL "settings/update-settings";
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddBoolToObject(json, "auto_update", auto_update);
-	cJSON_AddBoolToObject(json, "ota_enabled", auto_update);
 	cJSON_AddStringToObject(json, "update_server", update_server ? update_server : "");
 	cJSON_AddNumberToObject(json, "check_interval_hours", check_interval_hours);
 	char* put_data = cJSON_PrintUnformatted(json);
@@ -734,7 +733,6 @@ static void update_local_update_settings(bool auto_update,
 	models_update_status_t update_status = {
 		.is_pending = current->is_pending,
 		.auto_update = auto_update,
-		.ota_enabled = auto_update,
 		.update_server = server,
 		.check_interval_hours = check_interval_hours
 	};
