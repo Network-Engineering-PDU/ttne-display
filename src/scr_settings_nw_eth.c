@@ -371,7 +371,7 @@ static void network_if_save_cb(int err, void* userdata)
 			loader_scr = NULL;
 		}
 		msg_box_conn = tt_obj_info_box_create("INFO",
-				"     Configuration Applied\n     Please wait a moment...", 0);
+				"  Configuration Applied\n  Please wait a moment...", 0);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
 	}
