@@ -23,6 +23,12 @@
 #define NW_TYPE_WIFI_DHCP 4
 #define NW_TYPE_WIFI_STATIC 5
 
+#define DEFAULT_LAN1_IP "192.168.1.100"
+#define DEFAULT_LAN2_IP "192.168.1.200"
+#define DEFAULT_SUBNET_MASK "255.255.255.0"
+#define DEFAULT_GATEWAY "192.168.1.1"
+#define DEFAULT_DNS "8.8.8.8"
+
 typedef enum {
     NW_SINGLE_LAN  = 0,  // Single ethernet (eth0 or eth1)
     NW_WIFI_ONLY   = 1,  // WiFi only
@@ -100,6 +106,7 @@ static void network_info_refresh_cb(int err, void* userdata);
 static void load_network_form(const app_state_nw_if_t* nw_if);
 static uint16_t determine_network_mode(const app_state_nw_if_t* nw_if);
 static const char* sanitize_dns(const char* dns);
+static const char* default_if_empty(const char* value, const char* default_value);
 
 /* Callbacks ******************************************************************/
 
@@ -149,6 +156,11 @@ static const char* sanitize_dns(const char* dns)
 	return sanitized;
 }
 
+static const char* default_if_empty(const char* value, const char* default_value)
+{
+	return value != NULL && value[0] != '\0' ? value : default_value;
+}
+
 static void menu_cb(lv_event_t* e)
 {
 	lv_event_code_t code = lv_event_get_code(e);
@@ -183,13 +195,15 @@ static void msg_box_timer_cb(lv_timer_t* timer)
 
 static void load_network_form(const app_state_nw_if_t* nw_if)
 {
-	if (nw_if == NULL || !nw_if->valid) {
+	if (nw_if == NULL) {
 		return;
 	}
 
 	uint16_t saved_mode;
 	if (nw_if->nw_mode >= 0) {
 		saved_mode = nw_if->nw_mode;
+	} else if (!nw_if->valid) {
+		saved_mode = NW_SINGLE_LAN;
 	} else {
 		saved_mode = determine_network_mode(nw_if);
 	}
@@ -201,25 +215,20 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 		lv_obj_clear_state(btn_dhcp, LV_STATE_CHECKED);
 	}
 
-	if (strlen(nw_if->lan1_ip) > 0) {
-		lv_textarea_set_text(txt_lan1_ip, nw_if->lan1_ip);
-	} else {
-		lv_textarea_set_text(txt_lan1_ip, "192.168.1.100");
-	}
-	if (strlen(nw_if->lan2_ip) > 0) {
-		lv_textarea_set_text(txt_lan2_ip, nw_if->lan2_ip);
-	} else {
-		lv_textarea_set_text(txt_lan2_ip, "192.168.1.101");
-	}
-	if (strlen(nw_if->mask) > 0) {
-		lv_textarea_set_text(txt_lan1_mask, nw_if->mask);
-		lv_textarea_set_text(txt_lan2_mask, nw_if->mask);
-	}
+	lv_textarea_set_text(txt_lan1_ip,
+			default_if_empty(nw_if->lan1_ip, DEFAULT_LAN1_IP));
+	lv_textarea_set_text(txt_lan2_ip,
+			default_if_empty(nw_if->lan2_ip, DEFAULT_LAN2_IP));
+	lv_textarea_set_text(txt_lan1_mask,
+			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lan2_mask,
+			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
 
 	switch (saved_mode) {
 	case NW_SINGLE_LAN:
 		lv_textarea_set_text(txt_ip,
-				strlen(nw_if->lan1_ip) > 0 ? nw_if->lan1_ip : nw_if->ip);
+				default_if_empty(default_if_empty(nw_if->lan1_ip, nw_if->ip),
+						DEFAULT_LAN1_IP));
 		break;
 	case NW_LAN_WIFI:
 		if (strlen(nw_if->lan1_ip) > 0) {
@@ -227,13 +236,17 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 		}
 		break;
 	default:
-		lv_textarea_set_text(txt_ip, nw_if->ip);
+		lv_textarea_set_text(txt_ip,
+				default_if_empty(nw_if->ip, DEFAULT_LAN1_IP));
 		break;
 	}
 
-	lv_textarea_set_text(txt_mask, nw_if->mask);
-	lv_textarea_set_text(txt_gw, nw_if->gw);
-	lv_textarea_set_text(txt_dns, sanitize_dns(nw_if->dns));
+	lv_textarea_set_text(txt_mask,
+			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_gw,
+			default_if_empty(nw_if->gw, DEFAULT_GATEWAY));
+	lv_textarea_set_text(txt_dns,
+			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
 	lv_textarea_set_text(txt_wifi_ssid, nw_if->ssid);
 	lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
 
@@ -445,6 +458,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			case NW_SINGLE_LAN:
 				snprintf(nw_ifaces.lan1_ip, sizeof(nw_ifaces.lan1_ip), "%s",
 						lv_textarea_get_text(txt_ip));
+				nw_ifaces.eth_interface[0] = '\0';
 				nw_ifaces.lan2_ip[0] = '\0';
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
@@ -459,6 +473,13 @@ static void btn_nw_settings_cb(lv_event_t* e)
 						lv_textarea_get_text(txt_lan1_ip));
 				snprintf(nw_ifaces.lan2_ip, sizeof(nw_ifaces.lan2_ip), "%s",
 						lv_textarea_get_text(txt_lan2_ip));
+				if (strcmp(nw_ifaces.lan1_ip, nw_ifaces.lan2_ip) == 0) {
+					lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
+							"LAN1 and LAN2 IP must be different", 1);
+					lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD,
+							msg_box);
+					return;
+				}
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
 			case NW_LAN_WIFI:
@@ -683,20 +704,24 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	/* Single LAN fields */
 	lbl_ip = tt_obj_label_create(cont_single_lan, "IP Address");
 	txt_ip = tt_obj_txt_create(cont_single_lan, "IP Address", txt_num_cb);
-	lv_textarea_set_text(txt_ip, nw_if->ip);
+	lv_textarea_set_text(txt_ip,
+			default_if_empty(nw_if->ip, DEFAULT_LAN1_IP));
 
 	lbl_mask = tt_obj_label_create(cont_single_lan, "Subnet Mask");
 	txt_mask = tt_obj_txt_create(cont_single_lan, "Subnet Mask", txt_num_cb);
-	lv_textarea_set_text(txt_mask, nw_if->mask);
+	lv_textarea_set_text(txt_mask,
+			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
 
 	lbl_gw = tt_obj_label_create(cont_single_lan, "Gateway IP");
 	txt_gw = tt_obj_txt_create(cont_single_lan, "Gateway IP", txt_num_cb);
-	lv_textarea_set_text(txt_gw, nw_if->gw);
+	lv_textarea_set_text(txt_gw,
+			default_if_empty(nw_if->gw, DEFAULT_GATEWAY));
 
 	lbl_dns = tt_obj_label_create(cont_single_lan, "DNS");
 	txt_dns = tt_obj_txt_create(cont_single_lan, "DNS", txt_num_cb);
 	lv_textarea_set_accepted_chars(txt_dns, "0123456789.");
-	lv_textarea_set_text(txt_dns, sanitize_dns(nw_if->dns));
+	lv_textarea_set_text(txt_dns,
+			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
 
 	/* WiFi only mode container */
 	cont_wifi_only = tt_obj_cont_create(nw_cont2);
