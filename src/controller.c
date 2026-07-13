@@ -49,7 +49,7 @@ void controller_init()
 
 	models_nw_if_t nw_if;
 	nw_if.type = UNCONF;
-	nw_if.dhcp = true;
+	nw_if.dhcp = false;
 	nw_if.eth_interface = "";
 	nw_if.params.ip = "";
 	nw_if.params.mask = "";

@@ -78,8 +78,8 @@ static app_state_discovered_sensor_t sim_discovered[2] = {
 };
 static app_state_bt_status_t sim_bt_status;
 static app_state_nw_if_t sim_nw_if = {
-	.type = 2,
-	.dhcp = true,
+	.type = 3,
+	.dhcp = false,
 	.eth_interface = "eth0",
 	.ip = "192.168.1.100",
 	.mask = "255.255.255.0",

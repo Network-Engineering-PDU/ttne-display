@@ -17,7 +17,7 @@ void app_state_init(void)
 	state.update_status.ota_enabled = false;
 	state.update_status.check_interval_hours = 168;
 	state.nw_if.type = 1;
-	state.nw_if.dhcp = true;
+	state.nw_if.dhcp = false;
 	state.nw_if.nw_mode = -1;
 	snprintf(state.nw_if.ip, sizeof(state.nw_if.ip), "%s", "192.168.1.100");
 	snprintf(state.nw_if.mask, sizeof(state.nw_if.mask), "%s", "255.255.255.0");

@@ -241,7 +241,7 @@ static void publish_network_if_from_models(void)
 	memset(&nw_if, 0, sizeof(nw_if));
 	if (model == NULL) {
 		nw_if.type = UNCONF;
-		nw_if.dhcp = true;
+		nw_if.dhcp = false;
 		nw_if.nw_mode = -1;
 		app_state_set_nw_if(&nw_if);
 		return;
