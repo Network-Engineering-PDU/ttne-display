@@ -11,6 +11,8 @@
 
 #define NTP_OFFSET_MIN (-12)
 #define NTP_OFFSET_MAX 12
+#define NTP_LABEL_WIDTH 38
+#define NTP_CONTROL_WIDTH 58
 
 static const char* OFFSET_OPTIONS =
 		"UTC-12\nUTC-11\nUTC-10\nUTC-09\nUTC-08\nUTC-07\nUTC-06\n"
@@ -29,7 +31,8 @@ static bool save_pending;
 static void refresh_cb(int err, void* userdata);
 static void save_cb(int err, void* userdata);
 
-static lv_obj_t* create_row(lv_obj_t* parent, const char* label_text)
+static lv_obj_t* create_row(lv_obj_t* parent, const char* label_text,
+		int label_width)
 {
 	lv_obj_t* row = lv_obj_create(parent);
 	lv_obj_set_size(row, LV_PCT(100), 38);
@@ -41,8 +44,8 @@ static lv_obj_t* create_row(lv_obj_t* parent, const char* label_text)
 
 	lv_obj_t* label = lv_label_create(row);
 	lv_label_set_text(label, label_text);
-	lv_obj_set_width(label, LV_PCT(50));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_RIGHT, 0);
+	lv_obj_set_width(label, LV_PCT(label_width));
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	return row;
 }
 
@@ -171,19 +174,19 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_pad_all(main, 4, 0);
 	lv_obj_set_style_pad_row(main, 2, 0);
 
-	lv_obj_t* enabled_row = create_row(main, "NTP / SNTP enable");
+	lv_obj_t* enabled_row = create_row(main, "NTP / SNTP enable", 70);
 	cbx_enabled = tt_obj_checkbox_create(enabled_row, "", NULL);
 	lv_obj_set_size(cbx_enabled, 34, 34);
 	lv_obj_set_style_border_width(cbx_enabled, 2, LV_PART_INDICATOR);
 
-	lv_obj_t* offset_row = create_row(main, "Time offset");
+	lv_obj_t* offset_row = create_row(main, "Time offset", NTP_LABEL_WIDTH);
 	dd_offset = tt_obj_dropdown_create(offset_row, (char*)OFFSET_OPTIONS, NULL);
-	lv_obj_set_size(dd_offset, LV_PCT(44), 34);
+	lv_obj_set_size(dd_offset, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_dropdown_set_selected(dd_offset, 12);
 
-	lv_obj_t* server_row = create_row(main, "Server");
+	lv_obj_t* server_row = create_row(main, "Server", NTP_LABEL_WIDTH);
 	txt_server = tt_obj_txt_create(server_row, "IP / DNS", server_cb);
-	lv_obj_set_size(txt_server, LV_PCT(44), 34);
+	lv_obj_set_size(txt_server, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_textarea_set_max_length(txt_server, APP_STATE_NW_TEXT_LEN - 1);
 	lv_textarea_set_accepted_chars(txt_server,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-:");
