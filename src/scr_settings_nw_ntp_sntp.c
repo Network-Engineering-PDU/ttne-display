@@ -180,6 +180,9 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_border_width(cbx_enabled, 2, LV_PART_INDICATOR);
 
 	lv_obj_t* offset_row = create_row(main, "Time offset", NTP_LABEL_WIDTH);
+	lv_obj_t* offset_label = lv_obj_get_child(offset_row, 0);
+	lv_label_set_long_mode(offset_label, LV_LABEL_LONG_SCROLL);
+	lv_obj_set_height(offset_label, LV_SIZE_CONTENT);
 	dd_offset = tt_obj_dropdown_create(offset_row, (char*)OFFSET_OPTIONS, NULL);
 	lv_obj_set_size(dd_offset, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_dropdown_set_selected(dd_offset, 12);
