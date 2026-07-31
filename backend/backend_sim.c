@@ -23,6 +23,14 @@ static app_state_modbus_t sim_modbus = {
 	.addr = 1,
 	.valid = true,
 };
+static app_state_ntp_t sim_ntp = {
+	.enabled = true,
+	.time_offset = 0,
+	.server = "0.openembedded.pool.ntp.org",
+	.running = true,
+	.synchronized = false,
+	.valid = true,
+};
 static app_state_system_info_t sim_system_info = {
 	.product_name = "PowerIT Easy",
 	.product_pn = "SIM-PDU",
@@ -582,6 +590,35 @@ int backend_modbus_refresh(backend_callback_t callback, void* userdata)
 		callback(0, userdata);
 	}
 	return 0;
+}
+
+int backend_ntp_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_set_ntp(&sim_ntp);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_ntp_save(bool enabled, int time_offset, const char* server,
+		backend_callback_t callback, void* userdata)
+{
+	int err = 0;
+	if (server == NULL || server[0] == '\0' ||
+			time_offset < -12 || time_offset > 12) {
+		err = 1;
+	} else {
+		sim_ntp.enabled = enabled;
+		sim_ntp.time_offset = time_offset;
+		snprintf(sim_ntp.server, sizeof(sim_ntp.server), "%s", server);
+		sim_ntp.running = enabled;
+		app_state_set_ntp(&sim_ntp);
+	}
+	if (callback != NULL) {
+		callback(err, userdata);
+	}
+	return err == 0 ? 0 : -1;
 }
 
 int backend_modbus_set_addr(int addr, backend_callback_t callback,

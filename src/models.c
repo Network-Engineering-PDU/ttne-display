@@ -24,6 +24,7 @@ static models_nw_info_t nw_info;
 static models_nw_if_t nw_if;
 static models_license_t license;
 static models_modbus_t modbus;
+static models_ntp_t ntp;
 static models_update_status_t update_status;
 
 /* Function prototypes ********************************************************/
@@ -308,6 +309,24 @@ void models_set_nw_services(const models_nw_services_t* l_nw_services)
 	nw_services.snmp = l_nw_services->snmp;
 	nw_services.modbus = l_nw_services->modbus;
 	nw_services.bluetooth = l_nw_services->bluetooth;
+}
+
+const models_ntp_t* models_get_ntp()
+{
+	return &ntp;
+}
+
+void models_set_ntp(const models_ntp_t* l_ntp)
+{
+	if (l_ntp == NULL) {
+		return;
+	}
+	free((void*)ntp.server);
+	ntp.enabled = l_ntp->enabled;
+	ntp.time_offset = l_ntp->time_offset;
+	ntp.server = stralloc(l_ntp->server);
+	ntp.running = l_ntp->running;
+	ntp.synchronized = l_ntp->synchronized;
 }
 
 const models_bt_status_t* models_get_bt_status()

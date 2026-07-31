@@ -552,6 +552,37 @@ int json_helper_update_nw_services(const char* json_str)
 	return 0;
 }
 
+int json_helper_update_ntp(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_ntp_t ntp;
+	bool enabled;
+	bool running;
+	bool synchronized;
+	int offset;
+	const char* server = json_get_string(json, "server");
+	if (json_get_bool(&enabled, json, "enabled") != 0 ||
+			json_get_int(&offset, json, "time_offset") != 0 ||
+			server == NULL || offset < -12 || offset > 12) {
+		cJSON_Delete(json);
+		return 1;
+	}
+	ntp.enabled = enabled;
+	ntp.time_offset = offset;
+	ntp.server = server;
+	ntp.running = json_get_bool(&running, json, "running") == 0 ?
+			running : false;
+	ntp.synchronized = json_get_bool(&synchronized, json, "synchronized") == 0 ?
+			synchronized : false;
+	models_set_ntp(&ntp);
+	cJSON_Delete(json);
+	return 0;
+}
+
 int json_helper_update_bt_status(const char* json_str)
 {
 	cJSON* json = cJSON_Parse(json_str);

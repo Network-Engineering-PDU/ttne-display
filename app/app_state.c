@@ -19,6 +19,10 @@ void app_state_init(void)
 	state.nw_if.type = 1;
 	state.nw_if.dhcp = false;
 	state.nw_if.nw_mode = -1;
+	state.ntp.enabled = true;
+	state.ntp.time_offset = 0;
+	snprintf(state.ntp.server, sizeof(state.ntp.server), "%s",
+			"0.openembedded.pool.ntp.org");
 	snprintf(state.nw_if.ip, sizeof(state.nw_if.ip), "%s", "192.168.1.100");
 	snprintf(state.nw_if.mask, sizeof(state.nw_if.mask), "%s", "255.255.255.0");
 	snprintf(state.nw_if.gw, sizeof(state.nw_if.gw), "%s", "192.168.1.1");
@@ -242,6 +246,20 @@ void app_state_set_modbus(const app_state_modbus_t* modbus)
 	state.modbus = *modbus;
 	state.modbus.valid = true;
 	state.modbus_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_ntp(const app_state_ntp_t* ntp)
+{
+	if (ntp == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.ntp = *ntp;
+	state.ntp.server[sizeof(state.ntp.server) - 1] = '\0';
+	state.ntp.valid = true;
+	state.ntp_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

@@ -327,6 +327,40 @@ void controller_get_nw_services()
 	http_helper_free(&req);
 }
 
+int controller_get_ntp()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/ntp";
+	int err = http_helper_get(&req, url);
+	if (err == 0) {
+		err = json_helper_update_ntp(req.buffer);
+	}
+	http_helper_free(&req);
+	return err;
+}
+
+int controller_put_ntp(const models_ntp_t* ntp)
+{
+	if (ntp == NULL || ntp->server == NULL) {
+		return 1;
+	}
+	http_get_req_t req;
+	char* url = BASE_URL "settings/ntp";
+	cJSON* json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "enabled", ntp->enabled);
+	cJSON_AddNumberToObject(json, "time_offset", ntp->time_offset);
+	cJSON_AddStringToObject(json, "server", ntp->server);
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err == 0) {
+		err = json_helper_update_ntp(req.buffer);
+	}
+	cJSON_free(put_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+	return err;
+}
+
 void controller_get_nw_info()
 {
 	http_get_req_t req;

@@ -54,6 +54,8 @@ typedef enum {
 	BACKEND_CMD_NETWORK_SERVICE_SET,
 	BACKEND_CMD_MODBUS_REFRESH,
 	BACKEND_CMD_MODBUS_SET_ADDR,
+	BACKEND_CMD_NTP_REFRESH,
+	BACKEND_CMD_NTP_SAVE,
 	BACKEND_CMD_SENSORS_REFRESH,
 	BACKEND_CMD_BLE_SCAN_START,
 	BACKEND_CMD_BLE_SCAN_STOP,
@@ -305,6 +307,22 @@ static void publish_modbus_from_models(void)
 		.valid = true,
 	};
 	app_state_set_modbus(&modbus);
+}
+
+static void publish_ntp_from_models(void)
+{
+	const models_ntp_t* model = models_get_ntp();
+	app_state_ntp_t ntp;
+	memset(&ntp, 0, sizeof(ntp));
+	if (model != NULL) {
+		ntp.enabled = model->enabled;
+		ntp.time_offset = model->time_offset;
+		ntp.running = model->running;
+		ntp.synchronized = model->synchronized;
+		snprintf(ntp.server, sizeof(ntp.server), "%s",
+				model->server != NULL ? model->server : "");
+	}
+	app_state_set_ntp(&ntp);
 }
 
 static void publish_sensors_from_models(void)
@@ -966,6 +984,24 @@ static void* backend_worker(void* arg)
 			publish_modbus_from_models();
 			break;
 		}
+		case BACKEND_CMD_NTP_REFRESH:
+			err = controller_get_ntp();
+			if (err == 0) {
+				publish_ntp_from_models();
+			}
+			break;
+		case BACKEND_CMD_NTP_SAVE: {
+			models_ntp_t ntp = {
+				.enabled = cmd.status,
+				.time_offset = cmd.value,
+				.server = cmd.text,
+			};
+			err = controller_put_ntp(&ntp);
+			if (err == 0) {
+				publish_ntp_from_models();
+			}
+			break;
+		}
 		case BACKEND_CMD_SENSORS_REFRESH:
 			controller_get_sensors();
 			publish_sensors_from_models();
@@ -1413,6 +1449,34 @@ int backend_modbus_refresh(backend_callback_t callback, void* userdata)
 		.callback = callback,
 		.userdata = userdata,
 	};
+	return backend_submit(&cmd);
+}
+
+int backend_ntp_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NTP_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_ntp_save(bool enabled, int time_offset, const char* server,
+		backend_callback_t callback, void* userdata)
+{
+	if (server == NULL || server[0] == '\0' ||
+			time_offset < -12 || time_offset > 12) {
+		return -1;
+	}
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_NTP_SAVE,
+		.status = enabled,
+		.value = time_offset,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", server);
 	return backend_submit(&cmd);
 }
 

@@ -22,6 +22,7 @@ int json_helper_update_bt_status(const char* json_str);
 int json_helper_update_license(const char* json_str);
 int json_helper_update_modbus(const char* json_str);
 int json_helper_update_update_status(const char* json_str);
+int json_helper_update_ntp(const char* json_str);
 
 #ifdef __cplusplus
 } /* extern "C" */
