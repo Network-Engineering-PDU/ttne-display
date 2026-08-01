@@ -598,11 +598,14 @@ int json_helper_update_snmp(const char* json_str)
 			json_get_bool(&snmp.set_enabled, json, "set_enabled") != 0 ||
 			json_get_bool(&snmp.traps_enabled, json, "traps_enabled") != 0 ||
 			community == NULL || version == NULL ||
-			strcmp(version, "V1/V2c") != 0) {
+			(strcmp(version, "V1") != 0 && strcmp(version, "V2c") != 0 &&
+			strcmp(version, "V1/V2c") != 0 && strcmp(version, "V3") != 0)) {
 		cJSON_Delete(json);
 		return 1;
 	}
 	snprintf(snmp.community, sizeof(snmp.community), "%s", community);
+	snmp.version = strcmp(version, "V1") == 0 ? 0 :
+			strcmp(version, "V3") == 0 ? 2 : 1;
 	for (int i = 0; i < 4; i++) {
 		char key[16];
 		snprintf(key, sizeof(key), "manager_%d", i + 1);
@@ -610,6 +613,29 @@ int json_helper_update_snmp(const char* json_str)
 		snprintf(snmp.managers[i], sizeof(snmp.managers[i]), "%s",
 				manager != NULL ? manager : "");
 	}
+	const char* v3_user = json_get_string(json, "v3_user");
+	const char* security = json_get_string(json, "v3_security_level");
+	const char* auth_algorithm = json_get_string(json, "v3_auth_algorithm");
+	const char* auth_password = json_get_string(json, "v3_auth_password");
+	const char* privacy_algorithm = json_get_string(
+			json, "v3_privacy_algorithm");
+	const char* privacy_password = json_get_string(
+			json, "v3_privacy_password");
+	snprintf(snmp.v3_user, sizeof(snmp.v3_user), "%s",
+			v3_user != NULL ? v3_user : "");
+	snmp.v3_security_level = security != NULL &&
+			strcmp(security, "noAuthNoPriv") == 0 ? 0 :
+			security != NULL && strcmp(security, "authNoPriv") == 0 ? 1 : 2;
+	snmp.v3_auth_algorithm = auth_algorithm != NULL &&
+			strcmp(auth_algorithm, "MD5") == 0 ? 0 : 1;
+	snprintf(snmp.v3_auth_password, sizeof(snmp.v3_auth_password), "%s",
+			auth_password != NULL ? auth_password : "");
+	snmp.v3_privacy_algorithm = privacy_algorithm != NULL &&
+			strcmp(privacy_algorithm, "DES") == 0 ? 0 : 1;
+	snprintf(snmp.v3_privacy_password,
+			sizeof(snmp.v3_privacy_password), "%s",
+			privacy_password != NULL ? privacy_password : "");
+	json_get_bool(&snmp.v3_configured, json, "v3_configured");
 	models_set_snmp(&snmp);
 	cJSON_Delete(json);
 	return 0;

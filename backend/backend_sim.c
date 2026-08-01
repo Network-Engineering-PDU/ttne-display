@@ -33,10 +33,16 @@ static app_state_ntp_t sim_ntp = {
 };
 static app_state_snmp_t sim_snmp = {
 	.enabled = true,
+	.version = 1,
 	.set_enabled = true,
 	.traps_enabled = true,
 	.community = "public",
 	.managers = {"192.168.1.40", "", "", ""},
+	.v3_user = "operator",
+	.v3_security_level = 2,
+	.v3_auth_algorithm = 1,
+	.v3_privacy_algorithm = 1,
+	.v3_configured = false,
 	.valid = true,
 };
 static app_state_system_info_t sim_system_info = {
@@ -644,7 +650,9 @@ int backend_snmp_refresh(backend_callback_t callback, void* userdata)
 int backend_snmp_save(const app_state_snmp_t* snmp,
 		backend_callback_t callback, void* userdata)
 {
-	if (snmp == NULL || snmp->community[0] == '\0') {
+	if (snmp == NULL ||
+			(snmp->version != 2 && snmp->community[0] == '\0') ||
+			(snmp->version == 2 && snmp->v3_user[0] == '\0')) {
 		if (callback != NULL) {
 			callback(1, userdata);
 		}

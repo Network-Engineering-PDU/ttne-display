@@ -223,10 +223,18 @@ typedef struct models_ntp_t {
 
 typedef struct models_snmp_t {
 	bool enabled;
+	int version;
 	bool set_enabled;
 	bool traps_enabled;
 	char community[65];
 	char managers[4][128];
+	char v3_user[33];
+	int v3_security_level;
+	int v3_auth_algorithm;
+	char v3_auth_password[65];
+	int v3_privacy_algorithm;
+	char v3_privacy_password[65];
+	bool v3_configured;
 } models_snmp_t;
 
 typedef struct models_update_status_t {

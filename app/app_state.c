@@ -24,10 +24,14 @@ void app_state_init(void)
 	snprintf(state.ntp.server, sizeof(state.ntp.server), "%s",
 			"0.openembedded.pool.ntp.org");
 	state.snmp.enabled = false;
+	state.snmp.version = 0;
 	state.snmp.set_enabled = true;
 	state.snmp.traps_enabled = true;
 	snprintf(state.snmp.community, sizeof(state.snmp.community), "%s",
 			"Public");
+	state.snmp.v3_security_level = 2;
+	state.snmp.v3_auth_algorithm = 1;
+	state.snmp.v3_privacy_algorithm = 1;
 	snprintf(state.nw_if.ip, sizeof(state.nw_if.ip), "%s", "192.168.1.100");
 	snprintf(state.nw_if.mask, sizeof(state.nw_if.mask), "%s", "255.255.255.0");
 	snprintf(state.nw_if.gw, sizeof(state.nw_if.gw), "%s", "192.168.1.1");
@@ -279,6 +283,11 @@ void app_state_set_snmp(const app_state_snmp_t* snmp)
 	pthread_mutex_lock(&state_mutex);
 	state.snmp = *snmp;
 	state.snmp.community[sizeof(state.snmp.community) - 1] = '\0';
+	state.snmp.v3_user[sizeof(state.snmp.v3_user) - 1] = '\0';
+	state.snmp.v3_auth_password[
+			sizeof(state.snmp.v3_auth_password) - 1] = '\0';
+	state.snmp.v3_privacy_password[
+			sizeof(state.snmp.v3_privacy_password) - 1] = '\0';
 	for (int i = 0; i < 4; i++) {
 		state.snmp.managers[i][sizeof(state.snmp.managers[i]) - 1] = '\0';
 	}

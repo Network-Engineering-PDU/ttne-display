@@ -170,10 +170,21 @@ static void publish_snmp_from_models(void)
 	app_state_snmp_t snmp;
 	memset(&snmp, 0, sizeof(snmp));
 	snmp.enabled = model->enabled;
+	snmp.version = model->version;
 	snmp.set_enabled = model->set_enabled;
 	snmp.traps_enabled = model->traps_enabled;
 	snprintf(snmp.community, sizeof(snmp.community), "%s",
 			model->community);
+	snprintf(snmp.v3_user, sizeof(snmp.v3_user), "%s", model->v3_user);
+	snmp.v3_security_level = model->v3_security_level;
+	snmp.v3_auth_algorithm = model->v3_auth_algorithm;
+	snprintf(snmp.v3_auth_password, sizeof(snmp.v3_auth_password), "%s",
+			model->v3_auth_password);
+	snmp.v3_privacy_algorithm = model->v3_privacy_algorithm;
+	snprintf(snmp.v3_privacy_password,
+			sizeof(snmp.v3_privacy_password), "%s",
+			model->v3_privacy_password);
+	snmp.v3_configured = model->v3_configured;
 	for (int i = 0; i < 4; i++) {
 		snprintf(snmp.managers[i], sizeof(snmp.managers[i]), "%s",
 				model->managers[i]);
@@ -1042,10 +1053,23 @@ static void* backend_worker(void* arg)
 			models_snmp_t snmp;
 			memset(&snmp, 0, sizeof(snmp));
 			snmp.enabled = cmd.snmp.enabled;
+			snmp.version = cmd.snmp.version;
 			snmp.set_enabled = cmd.snmp.set_enabled;
 			snmp.traps_enabled = cmd.snmp.traps_enabled;
 			snprintf(snmp.community, sizeof(snmp.community), "%s",
 					cmd.snmp.community);
+			snprintf(snmp.v3_user, sizeof(snmp.v3_user), "%s",
+					cmd.snmp.v3_user);
+			snmp.v3_security_level = cmd.snmp.v3_security_level;
+			snmp.v3_auth_algorithm = cmd.snmp.v3_auth_algorithm;
+			snprintf(snmp.v3_auth_password,
+					sizeof(snmp.v3_auth_password), "%s",
+					cmd.snmp.v3_auth_password);
+			snmp.v3_privacy_algorithm = cmd.snmp.v3_privacy_algorithm;
+			snprintf(snmp.v3_privacy_password,
+					sizeof(snmp.v3_privacy_password), "%s",
+					cmd.snmp.v3_privacy_password);
+			snmp.v3_configured = cmd.snmp.v3_configured;
 			for (int i = 0; i < 4; i++) {
 				snprintf(snmp.managers[i], sizeof(snmp.managers[i]),
 						"%s", cmd.snmp.managers[i]);
@@ -1547,7 +1571,9 @@ int backend_snmp_refresh(backend_callback_t callback, void* userdata)
 int backend_snmp_save(const app_state_snmp_t* snmp,
 		backend_callback_t callback, void* userdata)
 {
-	if (snmp == NULL || snmp->community[0] == '\0') {
+	if (snmp == NULL ||
+			(snmp->version != 2 && snmp->community[0] == '\0') ||
+			(snmp->version == 2 && snmp->v3_user[0] == '\0')) {
 		return -1;
 	}
 	backend_cmd_t cmd = {

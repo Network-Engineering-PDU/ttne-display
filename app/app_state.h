@@ -165,10 +165,18 @@ typedef struct {
 
 typedef struct {
 	bool enabled;
+	int version;
 	bool set_enabled;
 	bool traps_enabled;
 	char community[65];
 	char managers[4][APP_STATE_NW_TEXT_LEN];
+	char v3_user[33];
+	int v3_security_level;
+	int v3_auth_algorithm;
+	char v3_auth_password[65];
+	int v3_privacy_algorithm;
+	char v3_privacy_password[65];
+	bool v3_configured;
 	bool valid;
 } app_state_snmp_t;
 

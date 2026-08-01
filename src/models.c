@@ -342,6 +342,9 @@ void models_set_snmp(const models_snmp_t* l_snmp)
 	}
 	snmp = *l_snmp;
 	snmp.community[sizeof(snmp.community) - 1] = '\0';
+	snmp.v3_user[sizeof(snmp.v3_user) - 1] = '\0';
+	snmp.v3_auth_password[sizeof(snmp.v3_auth_password) - 1] = '\0';
+	snmp.v3_privacy_password[sizeof(snmp.v3_privacy_password) - 1] = '\0';
 	for (int i = 0; i < 4; i++) {
 		snmp.managers[i][sizeof(snmp.managers[i]) - 1] = '\0';
 	}

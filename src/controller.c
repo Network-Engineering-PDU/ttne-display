@@ -377,17 +377,50 @@ int controller_get_snmp()
 
 int controller_put_snmp(const models_snmp_t* snmp)
 {
-	if (snmp == NULL || snmp->community[0] == '\0') {
+	if (snmp == NULL ||
+			(snmp->version != 2 && snmp->community[0] == '\0') ||
+			(snmp->version == 2 && snmp->v3_user[0] == '\0')) {
 		return 1;
 	}
 	http_get_req_t req;
 	char* url = BASE_URL "network/snmp/display-settings";
 	cJSON* json = cJSON_CreateObject();
 	cJSON_AddBoolToObject(json, "enabled", snmp->enabled);
-	cJSON_AddStringToObject(json, "version", "V1/V2c");
+	const char* versions[] = {"V1", "V2c", "V3"};
+	int version = snmp->version;
+	if (version < 0 || version > 2) {
+		version = 1;
+	}
+	cJSON_AddStringToObject(json, "version", versions[version]);
 	cJSON_AddBoolToObject(json, "set_enabled", snmp->set_enabled);
 	cJSON_AddStringToObject(json, "community", snmp->community);
 	cJSON_AddBoolToObject(json, "traps_enabled", snmp->traps_enabled);
+	cJSON_AddStringToObject(json, "v3_user", snmp->v3_user);
+	const char* security_levels[] = {
+		"noAuthNoPriv", "authNoPriv", "authPriv"
+	};
+	int security = snmp->v3_security_level;
+	if (security < 0 || security > 2) {
+		security = 2;
+	}
+	cJSON_AddStringToObject(json, "v3_security_level",
+			security_levels[security]);
+	cJSON_AddStringToObject(json, "v3_auth_algorithm",
+			snmp->v3_auth_algorithm == 0 ? "MD5" : "SHA");
+	if (snmp->v3_auth_password[0] != '\0') {
+		cJSON_AddStringToObject(json, "v3_auth_password",
+				snmp->v3_auth_password);
+	} else {
+		cJSON_AddNullToObject(json, "v3_auth_password");
+	}
+	cJSON_AddStringToObject(json, "v3_privacy_algorithm",
+			snmp->v3_privacy_algorithm == 0 ? "DES" : "AES");
+	if (snmp->v3_privacy_password[0] != '\0') {
+		cJSON_AddStringToObject(json, "v3_privacy_password",
+				snmp->v3_privacy_password);
+	} else {
+		cJSON_AddNullToObject(json, "v3_privacy_password");
+	}
 	for (int i = 0; i < 4; i++) {
 		char key[16];
 		snprintf(key, sizeof(key), "manager_%d", i + 1);

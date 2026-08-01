@@ -13,19 +13,42 @@
 
 #define SNMP_ROW_HEIGHT 36
 #define SNMP_COMMUNITY_MAX 64
+#define SNMP_V3_USER_MAX 32
+#define SNMP_V3_PASSWORD_MAX 64
 
 static lv_obj_t* menu_handle;
 static lv_obj_t* cbx_enabled;
 static lv_obj_t* cbx_set_enabled;
 static lv_obj_t* cbx_traps_enabled;
 static lv_obj_t* dd_version;
+static lv_obj_t* lbl_community;
 static lv_obj_t* txt_community;
 static lv_obj_t* txt_managers[4];
+static lv_obj_t* row_v3_security;
+static lv_obj_t* row_v3_auth;
+static lv_obj_t* row_v3_privacy;
+static lv_obj_t* dd_v3_security;
+static lv_obj_t* dd_v3_auth;
+static lv_obj_t* txt_v3_auth_password;
+static lv_obj_t* dd_v3_privacy;
+static lv_obj_t* txt_v3_privacy_password;
+static char v1_community_draft[65];
+static char v3_user_draft[33];
+static int displayed_version;
 static bool refresh_pending;
 static bool save_pending;
 
 static void refresh_cb(int err, void* userdata);
 static void save_cb(int err, void* userdata);
+
+static void set_hidden(lv_obj_t* object, bool hidden)
+{
+	if (hidden) {
+		lv_obj_add_flag(object, LV_OBJ_FLAG_HIDDEN);
+	} else {
+		lv_obj_clear_flag(object, LV_OBJ_FLAG_HIDDEN);
+	}
+}
 
 static lv_obj_t* create_row(lv_obj_t* parent, int height)
 {
@@ -83,6 +106,44 @@ static bool is_checked(lv_obj_t* checkbox)
 	return (lv_obj_get_state(checkbox) & LV_STATE_CHECKED) != 0;
 }
 
+static void update_security_rows(void)
+{
+	bool v3 = displayed_version == 2;
+	int security = (int)lv_dropdown_get_selected(dd_v3_security);
+	set_hidden(row_v3_security, !v3);
+	set_hidden(row_v3_auth, !v3 || security == 0);
+	set_hidden(row_v3_privacy, !v3 || security != 2);
+}
+
+static void version_cb(lv_event_t* e)
+{
+	if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) {
+		return;
+	}
+	const char* current = lv_textarea_get_text(txt_community);
+	if (displayed_version == 2) {
+		snprintf(v3_user_draft, sizeof(v3_user_draft), "%s", current);
+	} else {
+		snprintf(v1_community_draft, sizeof(v1_community_draft), "%s",
+				current);
+	}
+	displayed_version = (int)lv_dropdown_get_selected(dd_version);
+	lv_label_set_text(lbl_community,
+			displayed_version == 2 ? "V3 user" : "Community");
+	lv_textarea_set_text(txt_community,
+			displayed_version == 2 ? v3_user_draft : v1_community_draft);
+	lv_textarea_set_max_length(txt_community,
+			displayed_version == 2 ? SNMP_V3_USER_MAX : SNMP_COMMUNITY_MAX);
+	update_security_rows();
+}
+
+static void security_cb(lv_event_t* e)
+{
+	if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
+		update_security_rows();
+	}
+}
+
 static void apply_snapshot(void)
 {
 	app_state_snapshot_t snapshot;
@@ -93,8 +154,28 @@ static void apply_snapshot(void)
 	set_checked(cbx_enabled, snapshot.snmp.enabled);
 	set_checked(cbx_set_enabled, snapshot.snmp.set_enabled);
 	set_checked(cbx_traps_enabled, snapshot.snmp.traps_enabled);
-	lv_dropdown_set_selected(dd_version, 0);
-	lv_textarea_set_text(txt_community, snapshot.snmp.community);
+	snprintf(v1_community_draft, sizeof(v1_community_draft), "%s",
+			snapshot.snmp.community);
+	snprintf(v3_user_draft, sizeof(v3_user_draft), "%s",
+			snapshot.snmp.v3_user);
+	displayed_version = snapshot.snmp.version >= 0 &&
+			snapshot.snmp.version <= 2 ? snapshot.snmp.version : 1;
+	lv_dropdown_set_selected(dd_version, (uint16_t)displayed_version);
+	lv_label_set_text(lbl_community,
+			displayed_version == 2 ? "V3 user" : "Community");
+	lv_textarea_set_text(txt_community,
+			displayed_version == 2 ? v3_user_draft : v1_community_draft);
+	lv_textarea_set_max_length(txt_community,
+			displayed_version == 2 ? SNMP_V3_USER_MAX : SNMP_COMMUNITY_MAX);
+	lv_dropdown_set_selected(dd_v3_security,
+			(uint16_t)snapshot.snmp.v3_security_level);
+	lv_dropdown_set_selected(dd_v3_auth,
+			(uint16_t)snapshot.snmp.v3_auth_algorithm);
+	lv_dropdown_set_selected(dd_v3_privacy,
+			(uint16_t)snapshot.snmp.v3_privacy_algorithm);
+	lv_textarea_set_text(txt_v3_auth_password, "");
+	lv_textarea_set_text(txt_v3_privacy_password, "");
+	update_security_rows();
 	for (int i = 0; i < 4; i++) {
 		lv_textarea_set_text(txt_managers[i], snapshot.snmp.managers[i]);
 	}
@@ -156,6 +237,24 @@ static bool valid_community(const char* value)
 	return true;
 }
 
+static bool valid_password(const char* value)
+{
+	if (value == NULL || value[0] == '\0') {
+		return true;
+	}
+	size_t length = strlen(value);
+	if (length < 8 || length > SNMP_V3_PASSWORD_MAX) {
+		return false;
+	}
+	for (const char* ptr = value; *ptr != '\0'; ptr++) {
+		if (!isalnum((unsigned char)*ptr) &&
+				strchr("_.@#%+=:-", *ptr) == NULL) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static bool valid_manager(const char* value)
 {
 	if (value == NULL || value[0] == '\0') {
@@ -198,9 +297,13 @@ static void ok_cb(lv_event_t* e)
 	if (lv_event_get_code(e) != LV_EVENT_CLICKED || save_pending) {
 		return;
 	}
-	const char* community = lv_textarea_get_text(txt_community);
-	if (!valid_community(community)) {
+	int version = (int)lv_dropdown_get_selected(dd_version);
+	const char* identity = lv_textarea_get_text(txt_community);
+	if (!valid_community(identity) ||
+			(version == 2 && strlen(identity) > SNMP_V3_USER_MAX)) {
 		tt_obj_info_box_create("SNMP",
+				version == 2 ?
+				"V3 user must use 1-32 letters, numbers, '.', '-' or '_'" :
 				"Community must use 1-64 letters, numbers, '.', '-' or '_'", 1);
 		return;
 	}
@@ -208,9 +311,53 @@ static void ok_cb(lv_event_t* e)
 	app_state_snmp_t snmp;
 	memset(&snmp, 0, sizeof(snmp));
 	snmp.enabled = is_checked(cbx_enabled);
+	snmp.version = version;
 	snmp.set_enabled = is_checked(cbx_set_enabled);
 	snmp.traps_enabled = is_checked(cbx_traps_enabled);
-	snprintf(snmp.community, sizeof(snmp.community), "%s", community);
+	if (version == 2) {
+		snprintf(v3_user_draft, sizeof(v3_user_draft), "%s", identity);
+	} else {
+		snprintf(v1_community_draft, sizeof(v1_community_draft), "%s",
+				identity);
+	}
+	snprintf(snmp.community, sizeof(snmp.community), "%s",
+			v1_community_draft);
+	snprintf(snmp.v3_user, sizeof(snmp.v3_user), "%s", v3_user_draft);
+	snmp.v3_security_level = (int)lv_dropdown_get_selected(dd_v3_security);
+	snmp.v3_auth_algorithm = (int)lv_dropdown_get_selected(dd_v3_auth);
+	snmp.v3_privacy_algorithm = (int)lv_dropdown_get_selected(dd_v3_privacy);
+	const char* auth_password = lv_textarea_get_text(txt_v3_auth_password);
+	const char* privacy_password = lv_textarea_get_text(
+			txt_v3_privacy_password);
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	bool new_v3_user = !snapshot.snmp.v3_configured ||
+			strcmp(snmp.v3_user, snapshot.snmp.v3_user) != 0;
+	bool new_auth_credentials = new_v3_user ||
+			snapshot.snmp.v3_security_level == 0 ||
+			snmp.v3_auth_algorithm != snapshot.snmp.v3_auth_algorithm;
+	bool new_privacy_credentials = new_v3_user ||
+			snapshot.snmp.v3_security_level != 2 ||
+			snmp.v3_privacy_algorithm != snapshot.snmp.v3_privacy_algorithm;
+	if (version == 2 && snmp.v3_security_level >= 1 &&
+			((new_auth_credentials && auth_password[0] == '\0') ||
+			!valid_password(auth_password))) {
+		tt_obj_info_box_create("SNMP",
+				"V3 authentication password must be at least 8 characters", 1);
+		return;
+	}
+	if (version == 2 && snmp.v3_security_level == 2 &&
+			((new_privacy_credentials && privacy_password[0] == '\0') ||
+			!valid_password(privacy_password))) {
+		tt_obj_info_box_create("SNMP",
+				"V3 privacy password must be at least 8 characters", 1);
+		return;
+	}
+	snprintf(snmp.v3_auth_password, sizeof(snmp.v3_auth_password), "%s",
+			auth_password);
+	snprintf(snmp.v3_privacy_password,
+			sizeof(snmp.v3_privacy_password), "%s", privacy_password);
+	snmp.v3_configured = snapshot.snmp.v3_configured;
 	bool has_manager = false;
 	for (int i = 0; i < 4; i++) {
 		const char* manager = lv_textarea_get_text(txt_managers[i]);
@@ -276,7 +423,8 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_width(main, LV_PCT(100));
 	lv_obj_set_height(main, 0);
 	lv_obj_set_flex_grow(main, 1);
-	lv_obj_clear_flag(main, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_add_flag(main, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_scrollbar_mode(main, LV_SCROLLBAR_MODE_AUTO);
 	lv_obj_set_flex_flow(main, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(main, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -287,18 +435,54 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* group = create_field_group(row, "SNMP enable", 45, 58);
 	cbx_enabled = create_checkbox(group);
 	group = create_field_group(row, "Version", 53, 38);
-	dd_version = tt_obj_dropdown_create(group, "V1 / V2c", NULL);
+	dd_version = tt_obj_dropdown_create(group, "V1\nV2c\nV3", version_cb);
 	lv_obj_set_size(dd_version, LV_PCT(60), 32);
 
 	row = create_row(main, SNMP_ROW_HEIGHT);
 	group = create_field_group(row, "SET enable", 45, 58);
 	cbx_set_enabled = create_checkbox(group);
 	group = create_field_group(row, "Community", 53, 38);
+	lbl_community = lv_obj_get_child(group, 0);
 	txt_community = tt_obj_txt_create(group, "Community", text_cb);
 	lv_obj_set_size(txt_community, LV_PCT(60), 32);
 	lv_textarea_set_max_length(txt_community, SNMP_COMMUNITY_MAX);
 	lv_textarea_set_accepted_chars(txt_community,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-");
+
+	row_v3_security = create_row(main, SNMP_ROW_HEIGHT);
+	group = create_field_group(row_v3_security, "Security level", 100, 38);
+	dd_v3_security = tt_obj_dropdown_create(group,
+			"noAuthNoPriv\nauthNoPriv\nauthPriv", security_cb);
+	lv_obj_set_size(dd_v3_security, LV_PCT(60), 32);
+	lv_dropdown_set_selected(dd_v3_security, 2);
+
+	row_v3_auth = create_row(main, SNMP_ROW_HEIGHT);
+	group = create_field_group(row_v3_auth, "Auth", 43, 38);
+	dd_v3_auth = tt_obj_dropdown_create(group, "MD5\nSHA", NULL);
+	lv_obj_set_size(dd_v3_auth, LV_PCT(60), 32);
+	lv_dropdown_set_selected(dd_v3_auth, 1);
+	group = create_field_group(row_v3_auth, "Password", 55, 38);
+	txt_v3_auth_password = tt_obj_txt_create(group, "New password", text_cb);
+	lv_obj_set_size(txt_v3_auth_password, LV_PCT(60), 32);
+	lv_textarea_set_password_mode(txt_v3_auth_password, true);
+	lv_textarea_set_max_length(txt_v3_auth_password, SNMP_V3_PASSWORD_MAX);
+	lv_textarea_set_accepted_chars(txt_v3_auth_password,
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.@#%+=:-");
+
+	row_v3_privacy = create_row(main, SNMP_ROW_HEIGHT);
+	group = create_field_group(row_v3_privacy, "Privacy", 43, 38);
+	dd_v3_privacy = tt_obj_dropdown_create(group, "DES\nAES", NULL);
+	lv_obj_set_size(dd_v3_privacy, LV_PCT(60), 32);
+	lv_dropdown_set_selected(dd_v3_privacy, 1);
+	group = create_field_group(row_v3_privacy, "Password", 55, 38);
+	txt_v3_privacy_password = tt_obj_txt_create(
+			group, "New password", text_cb);
+	lv_obj_set_size(txt_v3_privacy_password, LV_PCT(60), 32);
+	lv_textarea_set_password_mode(txt_v3_privacy_password, true);
+	lv_textarea_set_max_length(txt_v3_privacy_password,
+			SNMP_V3_PASSWORD_MAX);
+	lv_textarea_set_accepted_chars(txt_v3_privacy_password,
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.@#%+=:-");
 
 	row = create_row(main, 34);
 	group = create_field_group(row, "Traps available", 62, 68);
