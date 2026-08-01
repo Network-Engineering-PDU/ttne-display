@@ -708,7 +708,9 @@ int json_helper_update_nw_if(const char* json_str)
 	nw_if.params.ssid = "";
 	nw_if.params.pass = "";
 	nw_if.lan1_ip = "";
+	nw_if.lan1_gateway = "";
 	nw_if.lan2_ip = "";
+	nw_if.lan2_gateway = "";
 	nw_if.wifi_ip = "";
 
 	cJSON* params = cJSON_GetObjectItem(json, "params");
@@ -760,10 +762,18 @@ int json_helper_update_nw_if(const char* json_str)
 	if (str != NULL) {
 		nw_if.lan1_ip = str;
 	}
+	str = json_get_string(json, "lan1_gateway");
+	if (str != NULL) {
+		nw_if.lan1_gateway = str;
+	}
 	
 	str = json_get_string(json, "lan2_ip");
 	if (str != NULL) {
 		nw_if.lan2_ip = str;
+	}
+	str = json_get_string(json, "lan2_gateway");
+	if (str != NULL) {
+		nw_if.lan2_gateway = str;
 	}
 	
 	str = json_get_string(json, "wifi_ip");

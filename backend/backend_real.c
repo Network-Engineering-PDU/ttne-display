@@ -268,8 +268,12 @@ static void publish_network_if_from_models(void)
 			model->params.pass != NULL ? model->params.pass : "");
 	snprintf(nw_if.lan1_ip, sizeof(nw_if.lan1_ip), "%s",
 			model->lan1_ip != NULL ? model->lan1_ip : "");
+	snprintf(nw_if.lan1_gateway, sizeof(nw_if.lan1_gateway), "%s",
+			model->lan1_gateway != NULL ? model->lan1_gateway : "");
 	snprintf(nw_if.lan2_ip, sizeof(nw_if.lan2_ip), "%s",
 			model->lan2_ip != NULL ? model->lan2_ip : "");
+	snprintf(nw_if.lan2_gateway, sizeof(nw_if.lan2_gateway), "%s",
+			model->lan2_gateway != NULL ? model->lan2_gateway : "");
 	snprintf(nw_if.wifi_ip, sizeof(nw_if.wifi_ip), "%s",
 			model->wifi_ip != NULL ? model->wifi_ip : "");
 
@@ -504,7 +508,9 @@ static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
 	model->params.ssid = nw_if->ssid;
 	model->params.pass = nw_if->pass;
 	model->lan1_ip = nw_if->lan1_ip;
+	model->lan1_gateway = nw_if->lan1_gateway;
 	model->lan2_ip = nw_if->lan2_ip;
+	model->lan2_gateway = nw_if->lan2_gateway;
 	model->wifi_ip = nw_if->wifi_ip;
 	model->nw_mode = nw_if->nw_mode;
 }

@@ -396,7 +396,9 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	free((void*)nw_if.params.pass);
 	free((void*)nw_if.eth_interface);
 	free((void*)nw_if.lan1_ip);
+	free((void*)nw_if.lan1_gateway);
 	free((void*)nw_if.lan2_ip);
+	free((void*)nw_if.lan2_gateway);
 	free((void*)nw_if.wifi_ip);
 
 	nw_if.type = l_nw_if->type;
@@ -410,7 +412,9 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	nw_if.params.ssid = stralloc(l_nw_if->params.ssid);
 	nw_if.params.pass = stralloc(l_nw_if->params.pass);
 	nw_if.lan1_ip = stralloc(l_nw_if->lan1_ip);
+	nw_if.lan1_gateway = stralloc(l_nw_if->lan1_gateway);
 	nw_if.lan2_ip = stralloc(l_nw_if->lan2_ip);
+	nw_if.lan2_gateway = stralloc(l_nw_if->lan2_gateway);
 	nw_if.wifi_ip = stralloc(l_nw_if->wifi_ip);
 }
 

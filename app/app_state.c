@@ -203,7 +203,9 @@ void app_state_set_nw_if(const app_state_nw_if_t* nw_if)
 	state.nw_if.ssid[sizeof(state.nw_if.ssid) - 1] = '\0';
 	state.nw_if.pass[sizeof(state.nw_if.pass) - 1] = '\0';
 	state.nw_if.lan1_ip[sizeof(state.nw_if.lan1_ip) - 1] = '\0';
+	state.nw_if.lan1_gateway[sizeof(state.nw_if.lan1_gateway) - 1] = '\0';
 	state.nw_if.lan2_ip[sizeof(state.nw_if.lan2_ip) - 1] = '\0';
+	state.nw_if.lan2_gateway[sizeof(state.nw_if.lan2_gateway) - 1] = '\0';
 	state.nw_if.wifi_ip[sizeof(state.nw_if.wifi_ip) - 1] = '\0';
 	state.nw_if.valid = true;
 	state.nw_if_revision++;

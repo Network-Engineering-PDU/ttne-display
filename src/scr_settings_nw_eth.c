@@ -79,11 +79,15 @@ static lv_obj_t* lbl_lan1_ip;
 static lv_obj_t* txt_lan1_ip;
 static lv_obj_t* lbl_lan1_mask;
 static lv_obj_t* txt_lan1_mask;
+static lv_obj_t* lbl_lan1_gateway;
+static lv_obj_t* txt_lan1_gateway;
 static lv_obj_t* lbl_lan2;
 static lv_obj_t* lbl_lan2_ip;
 static lv_obj_t* txt_lan2_ip;
 static lv_obj_t* lbl_lan2_mask;
 static lv_obj_t* txt_lan2_mask;
+static lv_obj_t* lbl_lan2_gateway;
+static lv_obj_t* txt_lan2_gateway;
 
 /* Function prototypes ********************************************************/
 
@@ -221,8 +225,13 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 			default_if_empty(nw_if->lan2_ip, DEFAULT_LAN2_IP));
 	lv_textarea_set_text(txt_lan1_mask,
 			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lan1_gateway,
+			default_if_empty(default_if_empty(nw_if->lan1_gateway, nw_if->gw),
+					DEFAULT_GATEWAY));
 	lv_textarea_set_text(txt_lan2_mask,
 			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lan2_gateway,
+			default_if_empty(nw_if->lan2_gateway, DEFAULT_GATEWAY));
 
 	switch (saved_mode) {
 	case NW_SINGLE_LAN:
@@ -460,11 +469,15 @@ static void btn_nw_settings_cb(lv_event_t* e)
 						lv_textarea_get_text(txt_ip));
 				nw_ifaces.eth_interface[0] = '\0';
 				nw_ifaces.lan2_ip[0] = '\0';
+				nw_ifaces.lan1_gateway[0] = '\0';
+				nw_ifaces.lan2_gateway[0] = '\0';
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
 			case NW_WIFI_ONLY:
 				nw_ifaces.lan1_ip[0] = '\0';
 				nw_ifaces.lan2_ip[0] = '\0';
+				nw_ifaces.lan1_gateway[0] = '\0';
+				nw_ifaces.lan2_gateway[0] = '\0';
 				snprintf(nw_ifaces.wifi_ip, sizeof(nw_ifaces.wifi_ip), "%s",
 						"wifi");
 				break;
@@ -473,6 +486,12 @@ static void btn_nw_settings_cb(lv_event_t* e)
 						lv_textarea_get_text(txt_lan1_ip));
 				snprintf(nw_ifaces.lan2_ip, sizeof(nw_ifaces.lan2_ip), "%s",
 						lv_textarea_get_text(txt_lan2_ip));
+				snprintf(nw_ifaces.lan1_gateway,
+						sizeof(nw_ifaces.lan1_gateway), "%s",
+						lv_textarea_get_text(txt_lan1_gateway));
+				snprintf(nw_ifaces.lan2_gateway,
+						sizeof(nw_ifaces.lan2_gateway), "%s",
+						lv_textarea_get_text(txt_lan2_gateway));
 				if (strcmp(nw_ifaces.lan1_ip, nw_ifaces.lan2_ip) == 0) {
 					lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
 							"LAN1 and LAN2 IP must be different", 1);
@@ -480,18 +499,33 @@ static void btn_nw_settings_cb(lv_event_t* e)
 							msg_box);
 					return;
 				}
+				if (!dhcp && (nw_ifaces.lan1_gateway[0] == '\0' ||
+						nw_ifaces.lan2_gateway[0] == '\0')) {
+					lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
+							"LAN1 and LAN2 gateways are required", 1);
+					lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD,
+							msg_box);
+					return;
+				}
+				snprintf(nw_ifaces.gw, sizeof(nw_ifaces.gw), "%s",
+						strcmp(nw_ifaces.eth_interface, "eth0") == 0 ?
+						nw_ifaces.lan2_gateway : nw_ifaces.lan1_gateway);
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
 			case NW_LAN_WIFI:
 				snprintf(nw_ifaces.lan1_ip, sizeof(nw_ifaces.lan1_ip), "%s",
 						lv_textarea_get_text(txt_lan1_ip));
 				nw_ifaces.lan2_ip[0] = '\0';
+				nw_ifaces.lan1_gateway[0] = '\0';
+				nw_ifaces.lan2_gateway[0] = '\0';
 				snprintf(nw_ifaces.wifi_ip, sizeof(nw_ifaces.wifi_ip), "%s",
 						"wifi");
 				break;
 			default:
 				nw_ifaces.lan1_ip[0] = '\0';
 				nw_ifaces.lan2_ip[0] = '\0';
+				nw_ifaces.lan1_gateway[0] = '\0';
+				nw_ifaces.lan2_gateway[0] = '\0';
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
 		}
@@ -515,12 +549,16 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			if (selected_mode == NW_DUAL_LAN) {
 				len += sprintf(msg + len, "LAN1 IP: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN1 Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
+					"LAN1 Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN2 IP: " TT_COLOR_GREEN_NE_STR " %s\n"
-					"LAN2 Mask: " TT_COLOR_GREEN_NE_STR " %s\n",
+					"LAN2 Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
+					"LAN2 Gateway: " TT_COLOR_GREEN_NE_STR " %s\n",
 					lv_textarea_get_text(txt_lan1_ip),
 					lv_textarea_get_text(txt_lan1_mask),
+					lv_textarea_get_text(txt_lan1_gateway),
 					lv_textarea_get_text(txt_lan2_ip),
-					lv_textarea_get_text(txt_lan2_mask));
+					lv_textarea_get_text(txt_lan2_mask),
+					lv_textarea_get_text(txt_lan2_gateway));
 			}
 			
 			if (!lv_obj_has_flag(txt_ip, LV_OBJ_FLAG_HIDDEN)) {
@@ -747,6 +785,8 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	lbl_lan1_mask = tt_obj_label_create(cont_dual_lan, "LAN1 Subnet Mask");
 	txt_lan1_mask = tt_obj_txt_create(cont_dual_lan, "LAN1 Subnet Mask", txt_num_cb);
+	lbl_lan1_gateway = tt_obj_label_create(cont_dual_lan, "LAN1 Gateway");
+	txt_lan1_gateway = tt_obj_txt_create(cont_dual_lan, "LAN1 Gateway", txt_num_cb);
 
 	lbl_lan2 = tt_obj_label_create(cont_dual_lan, "LAN2 Interface");
 	lbl_lan2_ip = tt_obj_label_create(cont_dual_lan, "LAN2 IP Address");
@@ -754,6 +794,8 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	lbl_lan2_mask = tt_obj_label_create(cont_dual_lan, "LAN2 Subnet Mask");
 	txt_lan2_mask = tt_obj_txt_create(cont_dual_lan, "LAN2 Subnet Mask", txt_num_cb);
+	lbl_lan2_gateway = tt_obj_label_create(cont_dual_lan, "LAN2 Gateway");
+	txt_lan2_gateway = tt_obj_txt_create(cont_dual_lan, "LAN2 Gateway", txt_num_cb);
 
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
 

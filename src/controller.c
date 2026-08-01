@@ -58,7 +58,9 @@ void controller_init()
 	nw_if.params.ssid = "";
 	nw_if.params.pass = "";
 	nw_if.lan1_ip = "";
+	nw_if.lan1_gateway = "";
 	nw_if.lan2_ip = "";
+	nw_if.lan2_gateway = "";
 	nw_if.wifi_ip = "";
 	nw_if.nw_mode = -1;  /* -1 = not set, will auto-detect on load */
 	models_set_nw_if(&nw_if);
@@ -394,9 +396,13 @@ void controller_put_nw_if(const models_nw_if_t* nw_if)
 	if (nw_if->lan1_ip != NULL && strlen(nw_if->lan1_ip) > 0) {
 		cJSON_AddStringToObject(json, "lan1_ip", nw_if->lan1_ip);
 	}
+	cJSON_AddStringToObject(json, "lan1_gateway",
+			nw_if->lan1_gateway != NULL ? nw_if->lan1_gateway : "");
 	if (nw_if->lan2_ip != NULL && strlen(nw_if->lan2_ip) > 0) {
 		cJSON_AddStringToObject(json, "lan2_ip", nw_if->lan2_ip);
 	}
+	cJSON_AddStringToObject(json, "lan2_gateway",
+			nw_if->lan2_gateway != NULL ? nw_if->lan2_gateway : "");
 	if (nw_if->wifi_ip != NULL && strlen(nw_if->wifi_ip) > 0) {
 		cJSON_AddStringToObject(json, "wifi_ip", nw_if->wifi_ip);
 	}
