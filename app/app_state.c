@@ -23,6 +23,11 @@ void app_state_init(void)
 	state.ntp.time_offset = 0;
 	snprintf(state.ntp.server, sizeof(state.ntp.server), "%s",
 			"0.openembedded.pool.ntp.org");
+	state.snmp.enabled = false;
+	state.snmp.set_enabled = true;
+	state.snmp.traps_enabled = true;
+	snprintf(state.snmp.community, sizeof(state.snmp.community), "%s",
+			"Public");
 	snprintf(state.nw_if.ip, sizeof(state.nw_if.ip), "%s", "192.168.1.100");
 	snprintf(state.nw_if.mask, sizeof(state.nw_if.mask), "%s", "255.255.255.0");
 	snprintf(state.nw_if.gw, sizeof(state.nw_if.gw), "%s", "192.168.1.1");
@@ -262,6 +267,23 @@ void app_state_set_ntp(const app_state_ntp_t* ntp)
 	state.ntp.server[sizeof(state.ntp.server) - 1] = '\0';
 	state.ntp.valid = true;
 	state.ntp_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_snmp(const app_state_snmp_t* snmp)
+{
+	if (snmp == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.snmp = *snmp;
+	state.snmp.community[sizeof(state.snmp.community) - 1] = '\0';
+	for (int i = 0; i < 4; i++) {
+		state.snmp.managers[i][sizeof(state.snmp.managers[i]) - 1] = '\0';
+	}
+	state.snmp.valid = true;
+	state.snmp_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

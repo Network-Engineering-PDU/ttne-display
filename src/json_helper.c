@@ -583,6 +583,38 @@ int json_helper_update_ntp(const char* json_str)
 	return 0;
 }
 
+int json_helper_update_snmp(const char* json_str)
+{
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	models_snmp_t snmp;
+	memset(&snmp, 0, sizeof(snmp));
+	const char* community = json_get_string(json, "community");
+	const char* version = json_get_string(json, "version");
+	if (json_get_bool(&snmp.enabled, json, "enabled") != 0 ||
+			json_get_bool(&snmp.set_enabled, json, "set_enabled") != 0 ||
+			json_get_bool(&snmp.traps_enabled, json, "traps_enabled") != 0 ||
+			community == NULL || version == NULL ||
+			strcmp(version, "V1/V2c") != 0) {
+		cJSON_Delete(json);
+		return 1;
+	}
+	snprintf(snmp.community, sizeof(snmp.community), "%s", community);
+	for (int i = 0; i < 4; i++) {
+		char key[16];
+		snprintf(key, sizeof(key), "manager_%d", i + 1);
+		const char* manager = json_get_string(json, key);
+		snprintf(snmp.managers[i], sizeof(snmp.managers[i]), "%s",
+				manager != NULL ? manager : "");
+	}
+	models_set_snmp(&snmp);
+	cJSON_Delete(json);
+	return 0;
+}
+
 int json_helper_update_bt_status(const char* json_str)
 {
 	cJSON* json = cJSON_Parse(json_str);

@@ -221,6 +221,14 @@ typedef struct models_ntp_t {
 	bool synchronized;
 } models_ntp_t;
 
+typedef struct models_snmp_t {
+	bool enabled;
+	bool set_enabled;
+	bool traps_enabled;
+	char community[65];
+	char managers[4][128];
+} models_snmp_t;
+
 typedef struct models_update_status_t {
 	bool is_pending;
 	bool auto_update;
@@ -278,6 +286,8 @@ void models_set_modbus(const models_modbus_t* modbus);
 
 const models_ntp_t* models_get_ntp();
 void models_set_ntp(const models_ntp_t* ntp);
+const models_snmp_t* models_get_snmp();
+void models_set_snmp(const models_snmp_t* snmp);
 
 const models_update_status_t* models_get_update_status();
 void models_set_update_status(const models_update_status_t* update_status);

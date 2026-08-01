@@ -31,6 +31,14 @@ static app_state_ntp_t sim_ntp = {
 	.synchronized = false,
 	.valid = true,
 };
+static app_state_snmp_t sim_snmp = {
+	.enabled = true,
+	.set_enabled = true,
+	.traps_enabled = true,
+	.community = "public",
+	.managers = {"192.168.1.40", "", "", ""},
+	.valid = true,
+};
 static app_state_system_info_t sim_system_info = {
 	.product_name = "PowerIT Easy",
 	.product_pn = "SIM-PDU",
@@ -152,6 +160,7 @@ static void ensure_sim_outlets(void)
 	app_state_set_bt_status(&sim_bt_status);
 	app_state_set_nw_if(&sim_nw_if);
 	app_state_set_nw_services(&sim_nw_services);
+	app_state_set_snmp(&sim_snmp);
 	app_state_set_modbus(&sim_modbus);
 	app_state_set_system_info(&sim_system_info);
 	app_state_set_pdu_info(&sim_pdu_info);
@@ -621,6 +630,35 @@ int backend_ntp_save(bool enabled, int time_offset, const char* server,
 		callback(err, userdata);
 	}
 	return err == 0 ? 0 : -1;
+}
+
+int backend_snmp_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_set_snmp(&sim_snmp);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_snmp_save(const app_state_snmp_t* snmp,
+		backend_callback_t callback, void* userdata)
+{
+	if (snmp == NULL || snmp->community[0] == '\0') {
+		if (callback != NULL) {
+			callback(1, userdata);
+		}
+		return -1;
+	}
+	sim_snmp = *snmp;
+	sim_snmp.valid = true;
+	sim_nw_services.snmp = snmp->enabled;
+	app_state_set_snmp(&sim_snmp);
+	app_state_set_nw_services(&sim_nw_services);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
 }
 
 int backend_modbus_set_addr(int addr, backend_callback_t callback,

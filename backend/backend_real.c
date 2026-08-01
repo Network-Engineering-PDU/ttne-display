@@ -56,6 +56,8 @@ typedef enum {
 	BACKEND_CMD_MODBUS_SET_ADDR,
 	BACKEND_CMD_NTP_REFRESH,
 	BACKEND_CMD_NTP_SAVE,
+	BACKEND_CMD_SNMP_REFRESH,
+	BACKEND_CMD_SNMP_SAVE,
 	BACKEND_CMD_SENSORS_REFRESH,
 	BACKEND_CMD_BLE_SCAN_START,
 	BACKEND_CMD_BLE_SCAN_STOP,
@@ -83,6 +85,7 @@ typedef struct {
 	char text[128];
 	char action[32];
 	app_state_nw_if_t nw_if;
+	app_state_snmp_t snmp;
 	backend_callback_t callback;
 	void* userdata;
 } backend_cmd_t;
@@ -156,6 +159,27 @@ static void publish_license_from_models(void)
 {
 	const models_license_t* license = models_get_license();
 	app_state_set_license_type(license != NULL ? license->type_id : "N/A");
+}
+
+static void publish_snmp_from_models(void)
+{
+	const models_snmp_t* model = models_get_snmp();
+	if (model == NULL) {
+		return;
+	}
+	app_state_snmp_t snmp;
+	memset(&snmp, 0, sizeof(snmp));
+	snmp.enabled = model->enabled;
+	snmp.set_enabled = model->set_enabled;
+	snmp.traps_enabled = model->traps_enabled;
+	snprintf(snmp.community, sizeof(snmp.community), "%s",
+			model->community);
+	for (int i = 0; i < 4; i++) {
+		snprintf(snmp.managers[i], sizeof(snmp.managers[i]), "%s",
+				model->managers[i]);
+	}
+	snmp.valid = true;
+	app_state_set_snmp(&snmp);
 }
 
 static void publish_update_status_from_models(void)
@@ -1008,6 +1032,30 @@ static void* backend_worker(void* arg)
 			}
 			break;
 		}
+		case BACKEND_CMD_SNMP_REFRESH:
+			err = controller_get_snmp();
+			if (err == 0) {
+				publish_snmp_from_models();
+			}
+			break;
+		case BACKEND_CMD_SNMP_SAVE: {
+			models_snmp_t snmp;
+			memset(&snmp, 0, sizeof(snmp));
+			snmp.enabled = cmd.snmp.enabled;
+			snmp.set_enabled = cmd.snmp.set_enabled;
+			snmp.traps_enabled = cmd.snmp.traps_enabled;
+			snprintf(snmp.community, sizeof(snmp.community), "%s",
+					cmd.snmp.community);
+			for (int i = 0; i < 4; i++) {
+				snprintf(snmp.managers[i], sizeof(snmp.managers[i]),
+						"%s", cmd.snmp.managers[i]);
+			}
+			err = controller_put_snmp(&snmp);
+			if (err == 0) {
+				publish_snmp_from_models();
+			}
+			break;
+		}
 		case BACKEND_CMD_SENSORS_REFRESH:
 			controller_get_sensors();
 			publish_sensors_from_models();
@@ -1483,6 +1531,31 @@ int backend_ntp_save(bool enabled, int time_offset, const char* server,
 		.userdata = userdata,
 	};
 	snprintf(cmd.text, sizeof(cmd.text), "%s", server);
+	return backend_submit(&cmd);
+}
+
+int backend_snmp_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SNMP_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_snmp_save(const app_state_snmp_t* snmp,
+		backend_callback_t callback, void* userdata)
+{
+	if (snmp == NULL || snmp->community[0] == '\0') {
+		return -1;
+	}
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_SNMP_SAVE,
+		.snmp = *snmp,
+		.callback = callback,
+		.userdata = userdata,
+	};
 	return backend_submit(&cmd);
 }
 

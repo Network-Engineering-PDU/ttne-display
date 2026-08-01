@@ -63,6 +63,9 @@ int backend_modbus_set_addr(int addr, backend_callback_t callback,
 int backend_ntp_refresh(backend_callback_t callback, void* userdata);
 int backend_ntp_save(bool enabled, int time_offset, const char* server,
 		backend_callback_t callback, void* userdata);
+int backend_snmp_refresh(backend_callback_t callback, void* userdata);
+int backend_snmp_save(const app_state_snmp_t* snmp,
+		backend_callback_t callback, void* userdata);
 int backend_sensors_refresh(backend_callback_t callback, void* userdata);
 int backend_ble_scan_start(backend_callback_t callback, void* userdata);
 int backend_ble_scan_stop(backend_callback_t callback, void* userdata);

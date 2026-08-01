@@ -164,6 +164,15 @@ typedef struct {
 } app_state_ntp_t;
 
 typedef struct {
+	bool enabled;
+	bool set_enabled;
+	bool traps_enabled;
+	char community[65];
+	char managers[4][APP_STATE_NW_TEXT_LEN];
+	bool valid;
+} app_state_snmp_t;
+
+typedef struct {
 	int id;
 	char mac[APP_STATE_SENSOR_TEXT_LEN];
 	char name[APP_STATE_SENSOR_TEXT_LEN];
@@ -230,6 +239,7 @@ typedef struct {
 	app_state_nw_services_t nw_services;
 	app_state_modbus_t modbus;
 	app_state_ntp_t ntp;
+	app_state_snmp_t snmp;
 	app_state_sensor_t sensors[APP_STATE_MAX_SENSORS];
 	app_state_discovered_sensor_t discovered_sensors[
 		APP_STATE_MAX_DISCOVERED_SENSORS];
@@ -253,6 +263,7 @@ typedef struct {
 	uint32_t nw_services_revision;
 	uint32_t modbus_revision;
 	uint32_t ntp_revision;
+	uint32_t snmp_revision;
 	uint32_t sensors_revision;
 	uint32_t discovered_sensors_revision;
 	uint32_t system_info_revision;
@@ -278,6 +289,7 @@ void app_state_set_nw_info(const app_state_nw_info_t* nw_info);
 void app_state_set_nw_services(const app_state_nw_services_t* nw_services);
 void app_state_set_modbus(const app_state_modbus_t* modbus);
 void app_state_set_ntp(const app_state_ntp_t* ntp);
+void app_state_set_snmp(const app_state_snmp_t* snmp);
 void app_state_set_sensors(const app_state_sensor_t* sensors, int count);
 void app_state_set_discovered_sensors(
 		const app_state_discovered_sensor_t* sensors, int count);

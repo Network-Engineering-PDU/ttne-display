@@ -363,6 +363,51 @@ int controller_put_ntp(const models_ntp_t* ntp)
 	return err;
 }
 
+int controller_get_snmp()
+{
+	http_get_req_t req;
+	char* url = BASE_URL "network/snmp/display-settings";
+	int err = http_helper_get(&req, url);
+	if (err == 0) {
+		err = json_helper_update_snmp(req.buffer);
+	}
+	http_helper_free(&req);
+	return err;
+}
+
+int controller_put_snmp(const models_snmp_t* snmp)
+{
+	if (snmp == NULL || snmp->community[0] == '\0') {
+		return 1;
+	}
+	http_get_req_t req;
+	char* url = BASE_URL "network/snmp/display-settings";
+	cJSON* json = cJSON_CreateObject();
+	cJSON_AddBoolToObject(json, "enabled", snmp->enabled);
+	cJSON_AddStringToObject(json, "version", "V1/V2c");
+	cJSON_AddBoolToObject(json, "set_enabled", snmp->set_enabled);
+	cJSON_AddStringToObject(json, "community", snmp->community);
+	cJSON_AddBoolToObject(json, "traps_enabled", snmp->traps_enabled);
+	for (int i = 0; i < 4; i++) {
+		char key[16];
+		snprintf(key, sizeof(key), "manager_%d", i + 1);
+		if (snmp->managers[i][0] != '\0') {
+			cJSON_AddStringToObject(json, key, snmp->managers[i]);
+		} else {
+			cJSON_AddNullToObject(json, key);
+		}
+	}
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err == 0) {
+		err = json_helper_update_snmp(req.buffer);
+	}
+	cJSON_free(put_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+	return err;
+}
+
 void controller_get_nw_info()
 {
 	http_get_req_t req;

@@ -54,6 +54,8 @@ void controller_put_modbus(const models_modbus_t* modbus);
 void controller_get_modbus();
 int controller_get_ntp();
 int controller_put_ntp(const models_ntp_t* ntp);
+int controller_get_snmp();
+int controller_put_snmp(const models_snmp_t* snmp);
 void controller_post_start_bluetooth();
 void controller_post_stop_bluetooth();
 void controller_get_bluetooth();

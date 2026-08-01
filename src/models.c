@@ -25,6 +25,7 @@ static models_nw_if_t nw_if;
 static models_license_t license;
 static models_modbus_t modbus;
 static models_ntp_t ntp;
+static models_snmp_t snmp;
 static models_update_status_t update_status;
 
 /* Function prototypes ********************************************************/
@@ -327,6 +328,23 @@ void models_set_ntp(const models_ntp_t* l_ntp)
 	ntp.server = stralloc(l_ntp->server);
 	ntp.running = l_ntp->running;
 	ntp.synchronized = l_ntp->synchronized;
+}
+
+const models_snmp_t* models_get_snmp()
+{
+	return &snmp;
+}
+
+void models_set_snmp(const models_snmp_t* l_snmp)
+{
+	if (l_snmp == NULL) {
+		return;
+	}
+	snmp = *l_snmp;
+	snmp.community[sizeof(snmp.community) - 1] = '\0';
+	for (int i = 0; i < 4; i++) {
+		snmp.managers[i][sizeof(snmp.managers[i]) - 1] = '\0';
+	}
 }
 
 const models_bt_status_t* models_get_bt_status()
