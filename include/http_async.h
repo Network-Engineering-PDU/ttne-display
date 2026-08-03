@@ -30,6 +30,9 @@ void http_async_init(void);
  */
 int http_async_get(const char* url, http_async_callback_t callback, void* userdata);
 
+int http_async_put(const char* url, const char* json,
+		http_async_callback_t callback, void* userdata);
+
 /**
  * Cleanup async HTTP module
  * Call before exit

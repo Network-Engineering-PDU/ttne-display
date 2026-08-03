@@ -37,6 +37,8 @@ typedef struct {
 typedef struct {
 	int req_id;
 	char* url;
+	char* method;
+	char* body;
 	void* buffer;
 	size_t len;
 	size_t buflen;
@@ -117,9 +119,13 @@ static void* worker_thread(void* arg)
 		if (curl) {
 			struct curl_slist* headers = NULL;
 			headers = curl_slist_append(headers, "accept: application/json");
+			headers = curl_slist_append(headers, "content-type: application/json");
 
 			curl_easy_setopt(curl, CURLOPT_URL, req->url);
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, req->method);
+			if (req->body != NULL) {
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, req->body);
+			}
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 			curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 1000L);
@@ -156,11 +162,10 @@ static void* worker_thread(void* arg)
 			req->buffer = NULL;
 		} else {
 			free(req->buffer);
-			req->buffer = NULL;
 			free(req->url);
-			req->url = NULL;
-			req->req_id = 0;
-			req->status = ASYNC_REQ_EMPTY;
+			free(req->method);
+			free(req->body);
+			memset(req, 0, sizeof(*req));
 		}
 
 		pthread_mutex_unlock(&mutex);
@@ -181,8 +186,12 @@ void http_async_init(void)
 	}
 }
 
-int http_async_get(const char* url, http_async_callback_t callback, void* userdata)
+static int enqueue_request(const char* method, const char* url,
+		const char* body, http_async_callback_t callback, void* userdata)
 {
+	if (method == NULL || url == NULL) {
+		return -1;
+	}
 	pthread_mutex_lock(&mutex);
 
 	/* Find an available request slot */
@@ -206,15 +215,27 @@ int http_async_get(const char* url, http_async_callback_t callback, void* userda
 	async_req_state_t* req = &requests[req_idx];
 	req->req_id = req_id;
 	req->url = malloc(strlen(url) + 1);
-	if (req->url == NULL) {
+	req->method = malloc(strlen(method) + 1);
+	req->body = body != NULL ? malloc(strlen(body) + 1) : NULL;
+	if (req->url == NULL || req->method == NULL ||
+			(body != NULL && req->body == NULL)) {
+		free(req->url);
+		free(req->method);
+		free(req->body);
 		memset(req, 0, sizeof(*req));
 		pthread_mutex_unlock(&mutex);
 		return -1;
 	}
 	strcpy(req->url, url);
+	strcpy(req->method, method);
+	if (body != NULL) {
+		strcpy(req->body, body);
+	}
 	req->buffer = malloc(4096);
 	if (req->buffer == NULL) {
 		free(req->url);
+		free(req->method);
+		free(req->body);
 		memset(req, 0, sizeof(*req));
 		pthread_mutex_unlock(&mutex);
 		return -1;
@@ -231,6 +252,20 @@ int http_async_get(const char* url, http_async_callback_t callback, void* userda
 	pthread_mutex_unlock(&mutex);
 
 	return req_id;
+}
+
+int http_async_get(const char* url, http_async_callback_t callback, void* userdata)
+{
+	return enqueue_request("GET", url, NULL, callback, userdata);
+}
+
+int http_async_put(const char* url, const char* json,
+		http_async_callback_t callback, void* userdata)
+{
+	if (json == NULL) {
+		return -1;
+	}
+	return enqueue_request("PUT", url, json, callback, userdata);
 }
 
 void http_async_process_callbacks(void)
@@ -252,6 +287,8 @@ void http_async_process_callbacks(void)
 		for (int j = 0; j < MAX_ASYNC_REQUESTS; j++) {
 			if (requests[j].req_id == result->req_id) {
 				free(requests[j].url);
+				free(requests[j].method);
+				free(requests[j].body);
 				memset(&requests[j], 0, sizeof(requests[j]));
 				break;
 			}
@@ -286,6 +323,8 @@ void http_async_cleanup(void)
 	for (int i = 0; i < MAX_ASYNC_REQUESTS; i++) {
 		if (requests[i].req_id > 0) {
 			if (requests[i].url) free(requests[i].url);
+			if (requests[i].method) free(requests[i].method);
+			if (requests[i].body) free(requests[i].body);
 			if (requests[i].buffer) free(requests[i].buffer);
 		}
 	}

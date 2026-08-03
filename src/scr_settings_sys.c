@@ -19,6 +19,7 @@
 #include "screen.h"
 #include "ttne_display.h"
 #include "scr_support.h"
+#include "scr_settings_sys_users.h"
 
 static lv_obj_t* l_menu;
 
@@ -43,9 +44,12 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     lv_obj_t* btn_support = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Support", ASSET("support.png"));
 
+    lv_obj_t* btn_users = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Users", ASSET("sys_setup.png"));
+
     /* Navigation links remain the same */
     scr_current_create(l_menu, btn_current);
     scr_settings_sys_info_create(l_menu, btn_info);
     scr_support_create(l_menu, btn_support);
+    scr_settings_sys_users_create(l_menu, btn_users);
 
 }
