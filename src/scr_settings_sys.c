@@ -50,6 +50,6 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     scr_current_create(l_menu, btn_current);
     scr_settings_sys_info_create(l_menu, btn_info);
     scr_support_create(l_menu, btn_support);
-    scr_settings_sys_users_create(l_menu, btn_users);
+    //scr_settings_sys_users_create(l_menu, btn_users);
 
 }
