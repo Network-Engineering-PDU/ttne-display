@@ -12,6 +12,7 @@
 #define MAX_BRANCHES 2
 #define MAX_PHASES 3
 #define TIMER_REFRESH_RATE 2000 // ms
+#define POWER_PARAM_WIDTH 62
 
 /* Global variables ***********************************************************/
 
@@ -46,11 +47,11 @@ static uint8_t n_phases = 0;
 
 static void menu_cb(lv_event_t* e);
 static lv_obj_t* power_branch_column_create(lv_obj_t* parent);
+static lv_obj_t* power_reading_create(lv_obj_t* parent, const char* param);
 static void power_timer_cb(lv_timer_t* timer);
 static void power_refresh_cb(int err, void* userdata);
 static void apply_power_snapshot(void);
-static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
-		float data2, float data3);
+static void set_line_label(lv_obj_t* lbl, float data1, float data2, float data3);
 
 static const app_state_power_input_t* get_power_input(
 		const app_state_power_t* power, int index)
@@ -111,23 +112,42 @@ static lv_obj_t* power_branch_column_create(lv_obj_t* parent)
 	return col;
 }
 
-static void set_line_label(lv_obj_t* lbl, const char* param, float data1,
-		float data2, float data3)
+static lv_obj_t* power_reading_create(lv_obj_t* parent, const char* param)
+{
+	lv_obj_t* row = lv_obj_create(parent);
+	lv_obj_set_size(row, LV_PCT(100), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START,
+			LV_FLEX_ALIGN_START);
+	lv_obj_set_scrollbar_mode(row, LV_SCROLLBAR_MODE_OFF);
+	lv_obj_set_style_bg_opa(row, LV_OPA_0, 0);
+	lv_obj_set_style_border_width(row, 0, 0);
+	lv_obj_set_style_pad_all(row, 0, 0);
+	lv_obj_set_style_pad_column(row, 2, 0);
+
+	lv_obj_t* name = tt_obj_label_create(row, param);
+	lv_obj_set_width(name, POWER_PARAM_WIDTH);
+
+	lv_obj_t* value = tt_obj_label_color_create(row, "");
+	lv_obj_set_flex_grow(value, 1);
+
+	return value;
+}
+
+static void set_line_label(lv_obj_t* lbl, float data1, float data2, float data3)
 {
 	char str[100];
 	if (n_phases == 1) {
-		snprintf(str, sizeof(str), "%s: #%06X %.1f#", param,
-				TT_COLOR_GREEN_NE, data1);
+		snprintf(str, sizeof(str), "#%06X %.1f#", TT_COLOR_GREEN_NE, data1);
 	} else if (n_phases == 2) {
-		snprintf(str, sizeof(str), "%s: #%06X %.1f# / #%06X %.1f#", param,
+		snprintf(str, sizeof(str), "#%06X %.1f# / #%06X %.1f#",
 				TT_COLOR_GREEN_NE, data1, TT_COLOR_GREEN_NE, data2);
 	} else if (n_phases == 3) {
-		snprintf(str, sizeof(str), "%s: #%06X %.1f# / #%06X %.1f# / #%06X %.1f#", param,
+		snprintf(str, sizeof(str), "#%06X %.1f# / #%06X %.1f# / #%06X %.1f#",
 				TT_COLOR_GREEN_NE, data1, TT_COLOR_GREEN_NE, data2,
 				TT_COLOR_GREEN_NE, data3);
 	} else {
-		snprintf(str, sizeof(str), "%s: #%06X ERROR#", param,
-				TT_COLOR_GREEN_NE);
+		snprintf(str, sizeof(str), "#%06X ERROR#", TT_COLOR_GREEN_NE);
 	}
 	lv_label_set_text(lbl, str);
 }
@@ -256,31 +276,31 @@ static void apply_power_snapshot(void)
 			continue;
 		}
 
-		set_line_label(lbl_line_v[i], "V (V)", phase1->voltage,
+		set_line_label(lbl_line_v[i], phase1->voltage,
 			phase2 != NULL ? phase2->voltage : 0.0f,
 			phase3 != NULL ? phase3->voltage : 0.0f);
-		set_line_label(lbl_line_c[i], "I (A)", phase1->current,
+		set_line_label(lbl_line_c[i], phase1->current,
 			phase2 != NULL ? phase2->current : 0.0f,
 			phase3 != NULL ? phase3->current : 0.0f);
-		set_line_label(lbl_line_p[i], "P (W)", phase1->active_power,
+		set_line_label(lbl_line_p[i], phase1->active_power,
 			phase2 != NULL ? phase2->active_power : 0.0f,
 			phase3 != NULL ? phase3->active_power : 0.0f);
-		set_line_label(lbl_line_q[i], "Q (VAr)", phase1->reactive_power,
+		set_line_label(lbl_line_q[i], phase1->reactive_power,
 			phase2 != NULL ? phase2->reactive_power : 0.0f,
 			phase3 != NULL ? phase3->reactive_power : 0.0f);
-		set_line_label(lbl_line_s[i], "S (VA)", phase1->apparent_power,
+		set_line_label(lbl_line_s[i], phase1->apparent_power,
 			phase2 != NULL ? phase2->apparent_power : 0.0f,
 			phase3 != NULL ? phase3->apparent_power : 0.0f);
-		set_line_label(lbl_line_pf[i], "PF", phase1->power_factor,
+		set_line_label(lbl_line_pf[i], phase1->power_factor,
 			phase2 != NULL ? phase2->power_factor : 0.0f,
 			phase3 != NULL ? phase3->power_factor : 0.0f);
-		set_line_label(lbl_line_ph[i], "PH (deg)", phase1->phase,
+		set_line_label(lbl_line_ph[i], phase1->phase,
 			phase2 != NULL ? phase2->phase : 0.0f,
 			phase3 != NULL ? phase3->phase : 0.0f);
-		set_line_label(lbl_line_f[i], "f (Hz)", phase1->frequency,
+		set_line_label(lbl_line_f[i], phase1->frequency,
 			phase2 != NULL ? phase2->frequency : 0.0f,
 			phase3 != NULL ? phase3->frequency : 0.0f);
-		set_line_label(lbl_line_e[i], "E (Wh)", positive_energy(phase1->energy),
+		set_line_label(lbl_line_e[i], positive_energy(phase1->energy),
 			phase2 != NULL ? positive_energy(phase2->energy) : 0.0f,
 			phase3 != NULL ? positive_energy(phase3->energy) : 0.0f);
 	}
@@ -323,15 +343,15 @@ void scr_power_create(lv_obj_t* menu, lv_obj_t* btn)
 		lv_obj_t* left_col = power_branch_column_create(branch_cols);
 		lv_obj_t* right_col = power_branch_column_create(branch_cols);
 
-		lbl_line_v[i] = tt_obj_label_color_create(left_col, "");
-		lbl_line_c[i] = tt_obj_label_color_create(left_col, "");
-		lbl_line_s[i] = tt_obj_label_color_create(left_col, "");
-		lbl_line_ph[i] = tt_obj_label_color_create(left_col, "");
-		lbl_line_e[i] = tt_obj_label_color_create(left_col, "");
+		lbl_line_v[i] = power_reading_create(left_col, "V (V):");
+		lbl_line_c[i] = power_reading_create(left_col, "I (A):");
+		lbl_line_s[i] = power_reading_create(left_col, "S (VA):");
+		lbl_line_ph[i] = power_reading_create(left_col, "PH (deg):");
+		lbl_line_e[i] = power_reading_create(left_col, "E (Wh):");
 
-		lbl_line_p[i] = tt_obj_label_color_create(right_col, "");
-		lbl_line_q[i] = tt_obj_label_color_create(right_col, "");
-		lbl_line_pf[i] = tt_obj_label_color_create(right_col, "");
-		lbl_line_f[i] = tt_obj_label_color_create(right_col, "");
+		lbl_line_p[i] = power_reading_create(right_col, "P (W):");
+		lbl_line_q[i] = power_reading_create(right_col, "Q (VAr):");
+		lbl_line_pf[i] = power_reading_create(right_col, "PF:");
+		lbl_line_f[i] = power_reading_create(right_col, "f (Hz):");
 	}
 }
