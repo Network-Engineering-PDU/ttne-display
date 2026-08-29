@@ -34,8 +34,6 @@ void scr_settings_sys_info_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_style_pad_left(model_label, 10, 0);
     lv_obj_set_style_pad_top(model_label, 10, 0);
 
-    //lv_obj_t* btn_email_web = tt_obj_btn_mtx_create(settings_sys_info_page,
-            NULL, "Email /\nWeb", ASSET("sys_setup.png"));
-    //scr_settings_sys_email_web_create(menu, btn_email_web);
+    /* Email/Web settings are intentionally disabled. */
     
 }
