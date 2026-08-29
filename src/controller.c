@@ -395,7 +395,11 @@ int controller_put_snmp(const models_snmp_t* snmp)
 	cJSON_AddBoolToObject(json, "set_enabled", snmp->set_enabled);
 	cJSON_AddStringToObject(json, "community", snmp->community);
 	cJSON_AddBoolToObject(json, "traps_enabled", snmp->traps_enabled);
-	cJSON_AddStringToObject(json, "v3_user", snmp->v3_user);
+	if (snmp->v3_user[0] != '\0') {
+		cJSON_AddStringToObject(json, "v3_user", snmp->v3_user);
+	} else {
+		cJSON_AddNullToObject(json, "v3_user");
+	}
 	const char* security_levels[] = {
 		"noAuthNoPriv", "authNoPriv", "authPriv"
 	};
