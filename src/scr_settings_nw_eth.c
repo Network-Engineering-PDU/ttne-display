@@ -15,6 +15,7 @@
 
 #define TIMER_NW_CHECK_PERIOD 2000 // ms
 #define TIMER_MSG_BOX_PERIOD 10000 // ms
+#define NW_SUCCESS_MSG_MS 2000 // ms
 #define MAX_NW_CONN_RETRIES 5
 
 #define NW_TYPE_UNCONF 1
@@ -42,8 +43,7 @@ typedef enum {
 
 static app_state_nw_if_t nw_ifaces;
 
-static lv_obj_t* loader_scr;
-static lv_obj_t* pending_prev_scr;
+static lv_obj_t* save_msgbox;
 static int nw_conn_retries;
 static bool nw_info_refresh_pending;
 static bool nw_if_refresh_pending;
@@ -95,7 +95,6 @@ static void menu_cb(lv_event_t* e);
 static void update_cb(lv_event_t* e);
 static void msg_box_timer_cb(lv_timer_t* timer);
 static void nw_if_timer_cb(lv_timer_t* timer);
-static void loader_cb(lv_event_t* e);
 static void msg_box_nw_if_cb(lv_event_t* e);
 static void btn_nw_settings_cb(lv_event_t* e);
 static void txt_cb(lv_event_t* e);
@@ -111,6 +110,42 @@ static void load_network_form(const app_state_nw_if_t* nw_if);
 static uint16_t determine_network_mode(const app_state_nw_if_t* nw_if);
 static const char* sanitize_dns(const char* dns);
 static const char* default_if_empty(const char* value, const char* default_value);
+
+static void close_save_msgbox(void)
+{
+	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
+		lv_msgbox_close(save_msgbox);
+	}
+	save_msgbox = NULL;
+}
+
+static void save_msgbox_timer_cb(lv_timer_t* timer)
+{
+	(void)timer;
+	close_save_msgbox();
+}
+
+static void show_save_wait_msgbox(void)
+{
+	close_save_msgbox();
+	save_msgbox = tt_obj_info_box_create("Network settings",
+			"Applying network settings...\nPlease wait a moment.", 0);
+	lv_obj_t* close_btn = lv_msgbox_get_close_btn(save_msgbox);
+	if (close_btn != NULL) {
+		lv_obj_add_flag(close_btn, LV_OBJ_FLAG_HIDDEN);
+	}
+}
+
+static void show_save_success(const char* message)
+{
+	if (save_msgbox == NULL || !lv_obj_is_valid(save_msgbox)) {
+		return;
+	}
+	lv_label_set_text(lv_msgbox_get_text(save_msgbox), message);
+	lv_timer_t* timer = lv_timer_create(save_msgbox_timer_cb,
+			NW_SUCCESS_MSG_MS, NULL);
+	lv_timer_set_repeat_count(timer, 1);
+}
 
 /* Callbacks ******************************************************************/
 
@@ -289,7 +324,6 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 static void network_info_refresh_cb(int err, void* userdata)
 {
 	lv_timer_t* timer = userdata;
-	lv_obj_t* scr = timer != NULL ? timer->user_data : pending_prev_scr;
 	lv_obj_t* msg_box_conn;
 
 	nw_info_refresh_pending = false;
@@ -308,32 +342,16 @@ static void network_info_refresh_cb(int err, void* userdata)
 	if (connected) {
 		nw_conn_retries = 0;
 		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
-		msg_box_conn = tt_obj_info_box_create("INFO", "Connected to Internet", 0);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
+		show_save_success("Network settings applied\nConnected to Internet");
 		return;
 	}
 	if (nw_conn_retries > MAX_NW_CONN_RETRIES) {
 		nw_conn_retries = 0;
 		lv_timer_del(timer);
-		lv_scr_load(scr);
-		lv_obj_del(loader_scr);
+		close_save_msgbox();
 		msg_box_conn = tt_obj_info_box_create("ERROR", "Can not connect to Internet", 1);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
-	}
-}
-
-static void loader_cb(lv_event_t* e)
-{
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* obj = lv_event_get_current_target(e);
-	lv_obj_t* scr = lv_event_get_user_data(e);
-
-	if (code == LV_EVENT_CLICKED) {
-		lv_scr_load(scr);
-		lv_obj_del(obj);
 	}
 }
 
@@ -344,13 +362,15 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-			pending_prev_scr = lv_scr_act();
-			char* txt = lv_event_get_user_data(e);
-			loader_scr = tt_obj_loader_create(txt, NULL);
-			lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL,
-					pending_prev_scr);
-			lv_scr_load(loader_scr);
-			backend_network_if_save(&nw_ifaces, network_if_save_cb, NULL);
+			lv_msgbox_close(obj);
+			show_save_wait_msgbox();
+			if (backend_network_if_save(&nw_ifaces,
+					network_if_save_cb, NULL) != 0) {
+				close_save_msgbox();
+				tt_obj_info_box_create("ERROR",
+						"Can not apply network configuration", 1);
+			}
+			return;
 		}
 		lv_msgbox_close(obj);
 	}
@@ -362,11 +382,7 @@ static void network_if_save_cb(int err, void* userdata)
 	lv_obj_t* msg_box_conn;
 
 	if (err != 0) {
-		lv_scr_load(pending_prev_scr);
-		if (loader_scr != NULL) {
-			lv_obj_del(loader_scr);
-			loader_scr = NULL;
-		}
+		close_save_msgbox();
 		msg_box_conn = tt_obj_info_box_create("ERROR",
 				"Can not apply network configuration", 1);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
@@ -374,19 +390,16 @@ static void network_if_save_cb(int err, void* userdata)
 	}
 
 	if (is_static_network(&nw_ifaces)) {
-		lv_scr_load(pending_prev_scr);
-		if (loader_scr != NULL) {
-			lv_obj_del(loader_scr);
-			loader_scr = NULL;
-		}
-		msg_box_conn = tt_obj_info_box_create("INFO",
-				"  Configuration Applied\n  Please wait a moment...", 0);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
+		show_save_success("Network settings applied");
 		return;
 	}
 
 	nw_conn_retries = 0;
-	lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, pending_prev_scr);
+	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
+		lv_label_set_text(lv_msgbox_get_text(save_msgbox),
+				"Checking network connection...\nPlease wait a moment.");
+	}
+	lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, NULL);
 }
 
 static void btn_nw_settings_cb(lv_event_t* e)

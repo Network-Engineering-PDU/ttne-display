@@ -161,7 +161,8 @@ cleanup:
 	return err;
 }
 
-int http_helper_put(http_get_req_t* req, char* url, char* put_data)
+int http_helper_put_timeout(http_get_req_t* req, char* url, char* put_data,
+		long timeout_ms)
 {
 	int err = 0;
 
@@ -192,7 +193,7 @@ int http_helper_put(http_get_req_t* req, char* url, char* put_data)
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 1000L);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 3000L);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout_ms);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)req);
 
@@ -220,6 +221,11 @@ cleanup:
 	}
 
 	return err;
+}
+
+int http_helper_put(http_get_req_t* req, char* url, char* put_data)
+{
+	return http_helper_put_timeout(req, url, put_data, 3000L);
 }
 
 void http_helper_free(http_get_req_t* req)

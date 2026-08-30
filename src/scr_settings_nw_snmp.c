@@ -15,6 +15,7 @@
 #define SNMP_COMMUNITY_MAX 64
 #define SNMP_V3_USER_MAX 32
 #define SNMP_V3_PASSWORD_MAX 64
+#define SNMP_SUCCESS_MSG_MS 2000
 
 static lv_obj_t* menu_handle;
 static lv_obj_t* cbx_enabled;
@@ -37,9 +38,35 @@ static char v3_user_draft[33];
 static int displayed_version;
 static bool refresh_pending;
 static bool save_pending;
+static lv_obj_t* save_msgbox;
 
 static void refresh_cb(int err, void* userdata);
 static void save_cb(int err, void* userdata);
+
+static void close_save_msgbox(void)
+{
+	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
+		lv_msgbox_close(save_msgbox);
+	}
+	save_msgbox = NULL;
+}
+
+static void save_msgbox_timer_cb(lv_timer_t* timer)
+{
+	(void)timer;
+	close_save_msgbox();
+}
+
+static void show_save_wait_msgbox(void)
+{
+	close_save_msgbox();
+	save_msgbox = tt_obj_info_box_create("SNMP",
+			"Applying SNMP settings...\nPlease wait a moment.", 0);
+	lv_obj_t* close_btn = lv_msgbox_get_close_btn(save_msgbox);
+	if (close_btn != NULL) {
+		lv_obj_add_flag(close_btn, LV_OBJ_FLAG_HIDDEN);
+	}
+}
 
 static void set_hidden(lv_obj_t* object, bool hidden)
 {
@@ -376,8 +403,10 @@ static void ok_cb(lv_event_t* e)
 	}
 
 	save_pending = true;
+	show_save_wait_msgbox();
 	if (backend_snmp_save(&snmp, save_cb, NULL) != 0) {
 		save_pending = false;
+		close_save_msgbox();
 		tt_obj_info_box_create("SNMP", "Can not apply SNMP settings", 1);
 	}
 }
@@ -408,11 +437,18 @@ static void save_cb(int err, void* userdata)
 	(void)userdata;
 	save_pending = false;
 	if (err != 0) {
+		close_save_msgbox();
 		tt_obj_info_box_create("SNMP", "Can not apply SNMP settings", 1);
 		return;
 	}
 	apply_snapshot();
-	tt_obj_info_box_create("SNMP", "SNMP settings applied", 0);
+	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
+		lv_label_set_text(lv_msgbox_get_text(save_msgbox),
+				"SNMP settings applied");
+		lv_timer_t* timer = lv_timer_create(save_msgbox_timer_cb,
+				SNMP_SUCCESS_MSG_MS, NULL);
+		lv_timer_set_repeat_count(timer, 1);
+	}
 }
 
 void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)

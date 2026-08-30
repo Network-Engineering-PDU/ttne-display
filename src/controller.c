@@ -19,6 +19,7 @@
 
 #define BASE_URL "http://localhost:8001/"
 #define NE_BASE_URL "http://localhost:80/"
+#define SNMP_APPLY_TIMEOUT_MS 20000L
 
 /* Global variables ***********************************************************/
 /* Function prototypes ********************************************************/
@@ -435,7 +436,8 @@ int controller_put_snmp(const models_snmp_t* snmp)
 		}
 	}
 	char* put_data = cJSON_PrintUnformatted(json);
-	int err = http_helper_put(&req, url, put_data);
+	int err = http_helper_put_timeout(&req, url, put_data,
+			SNMP_APPLY_TIMEOUT_MS);
 	if (err == 0) {
 		err = json_helper_update_snmp(req.buffer);
 	}
