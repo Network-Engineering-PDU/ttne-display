@@ -29,6 +29,7 @@ static lv_obj_t* splash_scr;
 static lv_obj_t* next_scr;
 
 static lv_timer_t* timer_check;
+static bool nw_refresh_pending;
 
 static lv_obj_t* init_spinner;
 
@@ -42,6 +43,7 @@ static bool flag_init = false;
 
 static void splash_cb(lv_event_t* e);
 static void splash_fetch_cb(int err, void* userdata);
+static void splash_network_fetch_cb(int err, void* userdata);
 static void splash_update_display(void);
 static void splash_timer_cb(lv_timer_t* timer);
 
@@ -90,6 +92,12 @@ static void splash_fetch_cb(int err, void* userdata)
 	(void) userdata;
 
 	splash_update_display();
+}
+
+static void splash_network_fetch_cb(int err, void* userdata)
+{
+	nw_refresh_pending = false;
+	splash_fetch_cb(err, userdata);
 }
 
 static void splash_update_display(void)
@@ -154,7 +162,10 @@ static void splash_timer_cb(lv_timer_t* timer)
 	(void) timer;
 	
 	backend_system_info_refresh(splash_fetch_cb, NULL);
-	backend_network_if_refresh(splash_fetch_cb, NULL);
+	if (!nw_refresh_pending &&
+			backend_network_if_refresh(splash_network_fetch_cb, NULL) == 0) {
+		nw_refresh_pending = true;
+	}
 	
 	splash_update_display();
 }

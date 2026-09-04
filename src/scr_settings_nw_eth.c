@@ -209,6 +209,11 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* curr_page = lv_event_get_user_data(e);
 		lv_obj_t* page = lv_menu_get_cur_main_page(menu);
 		if (curr_page == page) {
+			app_state_snapshot_t snapshot;
+			app_state_get_snapshot(&snapshot);
+			if (snapshot.nw_if.valid) {
+				load_network_form(&snapshot.nw_if);
+			}
 			if (!nw_if_refresh_pending &&
 					backend_network_if_refresh(network_if_refresh_cb, NULL) == 0) {
 				nw_if_refresh_pending = true;
