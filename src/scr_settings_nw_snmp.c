@@ -25,6 +25,7 @@ static lv_obj_t* dd_version;
 static lv_obj_t* lbl_community;
 static lv_obj_t* txt_community;
 static lv_obj_t* txt_managers[4];
+static lv_obj_t* section_v3;
 static lv_obj_t* row_v3_security;
 static lv_obj_t* row_v3_auth;
 static lv_obj_t* row_v3_privacy;
@@ -42,6 +43,7 @@ static lv_obj_t* save_msgbox;
 
 static void refresh_cb(int err, void* userdata);
 static void save_cb(int err, void* userdata);
+static void text_cb(lv_event_t* e);
 
 static void close_save_msgbox(void)
 {
@@ -91,24 +93,49 @@ static lv_obj_t* create_row(lv_obj_t* parent, int height)
 	return row;
 }
 
-static lv_obj_t* create_field_group(lv_obj_t* parent, const char* label_text,
-		int width, int label_width)
+static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 {
-	lv_obj_t* group = lv_obj_create(parent);
-	lv_obj_set_size(group, LV_PCT(width), LV_PCT(100));
-	lv_obj_add_style(group, &invisible_cont_style, LV_STATE_DEFAULT);
-	lv_obj_clear_flag(group, LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_flex_flow(group, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(group, LV_FLEX_ALIGN_SPACE_BETWEEN,
+	lv_obj_t* section = tt_obj_cont_create(parent);
+	lv_obj_clear_flag(section, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_flex_flow(section, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(section, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_style_pad_all(group, 0, 0);
-	lv_obj_set_style_pad_column(group, 2, 0);
-	lv_obj_t* label = lv_label_create(group);
-	lv_label_set_text(label, label_text);
+	lv_obj_set_style_pad_all(section, 5, 0);
+	lv_obj_set_style_pad_row(section, 3, 0);
+	if (title != NULL && title[0] != '\0') {
+		lv_obj_t* label = lv_label_create(section);
+		lv_label_set_text(label, title);
+		lv_obj_set_width(label, LV_PCT(100));
+		lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	}
+	return section;
+}
+
+static lv_obj_t* create_row_label(lv_obj_t* row, const char* text)
+{
+	lv_obj_t* label = lv_label_create(row);
+	lv_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
-	lv_obj_set_width(label, LV_PCT(label_width));
+	lv_obj_set_flex_grow(label, 1);
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
-	return group;
+	return label;
+}
+
+static lv_obj_t* create_field_label(lv_obj_t* parent, const char* text)
+{
+	lv_obj_t* label = lv_label_create(parent);
+	lv_label_set_text(label, text);
+	lv_obj_set_width(label, LV_PCT(100));
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	return label;
+}
+
+static lv_obj_t* create_full_width_text(lv_obj_t* parent,
+		const char* placeholder)
+{
+	lv_obj_t* text = tt_obj_txt_create(parent, (char*)placeholder, text_cb);
+	lv_obj_set_size(text, LV_PCT(100), 32);
+	return text;
 }
 
 static lv_obj_t* create_checkbox(lv_obj_t* parent)
@@ -137,6 +164,7 @@ static void update_security_rows(void)
 {
 	bool v3 = displayed_version == 2;
 	int security = (int)lv_dropdown_get_selected(dd_v3_security);
+	set_hidden(section_v3, !v3);
 	set_hidden(row_v3_security, !v3);
 	set_hidden(row_v3_auth, !v3 || security == 0);
 	set_hidden(row_v3_privacy, !v3 || security != 2);
@@ -455,100 +483,116 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 {
 	menu_handle = menu;
 	lv_obj_t* page = tt_obj_menu_page_create(menu, btn, menu_cb, "SNMP");
-	lv_obj_t* main = tt_obj_cont_create(page);
+	lv_obj_set_height(page, LV_PCT(100));
+	lv_obj_set_flex_flow(page, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(page, LV_FLEX_ALIGN_START,
+			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_clear_flag(page, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_pad_row(page, 3, 0);
+
+	lv_obj_t* main = lv_obj_create(page);
 	lv_obj_set_width(main, LV_PCT(100));
 	lv_obj_set_height(main, 0);
 	lv_obj_set_flex_grow(main, 1);
 	lv_obj_add_flag(main, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_set_scrollbar_mode(main, LV_SCROLLBAR_MODE_AUTO);
+	lv_obj_set_scroll_dir(main, LV_DIR_VER);
 	lv_obj_set_flex_flow(main, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(main, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_add_style(main, &invisible_cont_style, LV_STATE_DEFAULT);
 	lv_obj_set_style_pad_all(main, 3, 0);
-	lv_obj_set_style_pad_row(main, 1, 0);
+	lv_obj_set_style_pad_row(main, 5, 0);
 
-	lv_obj_t* row = create_row(main, SNMP_ROW_HEIGHT);
-	lv_obj_t* group = create_field_group(row, "SNMP enable", 45, 58);
-	cbx_enabled = create_checkbox(group);
-	group = create_field_group(row, "Version", 53, 38);
-	dd_version = tt_obj_dropdown_create(group, "V1\nV2c\nV3", version_cb);
-	lv_obj_set_size(dd_version, LV_PCT(60), 32);
+	lv_obj_t* section_general = create_section(main, "GENERAL");
+	lv_obj_t* row = create_row(section_general, SNMP_ROW_HEIGHT);
+	create_row_label(row, "SNMP enabled");
+	cbx_enabled = create_checkbox(row);
 
-	row = create_row(main, SNMP_ROW_HEIGHT);
-	group = create_field_group(row, "SET enable", 45, 58);
-	cbx_set_enabled = create_checkbox(group);
-	group = create_field_group(row, "Community", 53, 38);
-	lbl_community = lv_obj_get_child(group, 0);
-	txt_community = tt_obj_txt_create(group, "Community", text_cb);
-	lv_obj_set_size(txt_community, LV_PCT(60), 32);
+	row = create_row(section_general, SNMP_ROW_HEIGHT);
+	create_row_label(row, "Version");
+	dd_version = tt_obj_dropdown_create(row, "V1\nV2c\nV3", version_cb);
+	lv_obj_set_size(dd_version, LV_PCT(52), 32);
+
+	row = create_row(section_general, SNMP_ROW_HEIGHT);
+	create_row_label(row, "SET commands");
+	cbx_set_enabled = create_checkbox(row);
+
+	lbl_community = create_field_label(section_general, "Community");
+	txt_community = create_full_width_text(section_general, "Community");
 	lv_textarea_set_max_length(txt_community, SNMP_COMMUNITY_MAX);
 	lv_textarea_set_accepted_chars(txt_community,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-");
 
-	row_v3_security = create_row(main, SNMP_ROW_HEIGHT);
-	group = create_field_group(row_v3_security, "Security level", 100, 38);
-	dd_v3_security = tt_obj_dropdown_create(group,
+	section_v3 = create_section(main, "SECURITY");
+	row_v3_security = create_row(section_v3, SNMP_ROW_HEIGHT);
+	create_row_label(row_v3_security, "Security level");
+	dd_v3_security = tt_obj_dropdown_create(row_v3_security,
 			"noAuthNoPriv\nauthNoPriv\nauthPriv", security_cb);
-	lv_obj_set_size(dd_v3_security, LV_PCT(60), 32);
+	lv_obj_set_size(dd_v3_security, LV_PCT(62), 32);
 	lv_dropdown_set_selected(dd_v3_security, 2);
 
-	row_v3_auth = create_row(main, SNMP_ROW_HEIGHT);
-	group = create_field_group(row_v3_auth, "Auth", 43, 38);
-	dd_v3_auth = tt_obj_dropdown_create(group, "MD5\nSHA", NULL);
-	lv_obj_set_size(dd_v3_auth, LV_PCT(60), 32);
+	row_v3_auth = lv_obj_create(section_v3);
+	lv_obj_set_size(row_v3_auth, LV_PCT(100), LV_SIZE_CONTENT);
+	lv_obj_add_style(row_v3_auth, &invisible_cont_style, LV_STATE_DEFAULT);
+	lv_obj_clear_flag(row_v3_auth, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_flex_flow(row_v3_auth, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_row(row_v3_auth, 3, 0);
+	create_field_label(row_v3_auth, "Authentication");
+	dd_v3_auth = tt_obj_dropdown_create(row_v3_auth, "MD5\nSHA", NULL);
+	lv_obj_set_size(dd_v3_auth, LV_PCT(100), 32);
 	lv_dropdown_set_selected(dd_v3_auth, 1);
-	group = create_field_group(row_v3_auth, "Password", 55, 38);
-	txt_v3_auth_password = tt_obj_txt_create(group, "New password", text_cb);
-	lv_obj_set_size(txt_v3_auth_password, LV_PCT(60), 32);
+	create_field_label(row_v3_auth, "Authentication password");
+	txt_v3_auth_password = create_full_width_text(
+			row_v3_auth, "New password");
 	lv_textarea_set_password_mode(txt_v3_auth_password, true);
 	lv_textarea_set_max_length(txt_v3_auth_password, SNMP_V3_PASSWORD_MAX);
 	lv_textarea_set_accepted_chars(txt_v3_auth_password,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.@#%+=:-");
 
-	row_v3_privacy = create_row(main, SNMP_ROW_HEIGHT);
-	group = create_field_group(row_v3_privacy, "Privacy", 43, 38);
-	dd_v3_privacy = tt_obj_dropdown_create(group, "DES\nAES", NULL);
-	lv_obj_set_size(dd_v3_privacy, LV_PCT(60), 32);
+	row_v3_privacy = lv_obj_create(section_v3);
+	lv_obj_set_size(row_v3_privacy, LV_PCT(100), LV_SIZE_CONTENT);
+	lv_obj_add_style(row_v3_privacy, &invisible_cont_style, LV_STATE_DEFAULT);
+	lv_obj_clear_flag(row_v3_privacy, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_flex_flow(row_v3_privacy, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_row(row_v3_privacy, 3, 0);
+	create_field_label(row_v3_privacy, "Privacy");
+	dd_v3_privacy = tt_obj_dropdown_create(row_v3_privacy, "DES\nAES", NULL);
+	lv_obj_set_size(dd_v3_privacy, LV_PCT(100), 32);
 	lv_dropdown_set_selected(dd_v3_privacy, 1);
-	group = create_field_group(row_v3_privacy, "Password", 55, 38);
-	txt_v3_privacy_password = tt_obj_txt_create(
-			group, "New password", text_cb);
-	lv_obj_set_size(txt_v3_privacy_password, LV_PCT(60), 32);
+	create_field_label(row_v3_privacy, "Privacy password");
+	txt_v3_privacy_password = create_full_width_text(
+			row_v3_privacy, "New password");
 	lv_textarea_set_password_mode(txt_v3_privacy_password, true);
 	lv_textarea_set_max_length(txt_v3_privacy_password,
 			SNMP_V3_PASSWORD_MAX);
 	lv_textarea_set_accepted_chars(txt_v3_privacy_password,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.@#%+=:-");
 
-	row = create_row(main, 34);
-	group = create_field_group(row, "Traps available", 62, 68);
-	cbx_traps_enabled = create_checkbox(group);
+	lv_obj_t* section_traps = create_section(main, "");
+	row = create_row(section_traps, 34);
+	create_row_label(row, "TRAPS");
 	tt_obj_btn_create(row, refresh_button_cb, LV_SYMBOL_REFRESH, NULL,
 			34, 32, LV_ALIGN_CENTER);
 
-	lv_obj_t* trap_label = lv_label_create(main);
-	lv_label_set_text(trap_label, "IP / DNS Traps");
-	lv_obj_set_width(trap_label, LV_PCT(100));
-	lv_obj_set_style_text_align(trap_label, LV_TEXT_ALIGN_LEFT, 0);
+	row = create_row(section_traps, 34);
+	create_row_label(row, "Enable traps");
+	cbx_traps_enabled = create_checkbox(row);
 
-	row = create_row(main, 36);
 	for (int i = 0; i < 4; i++) {
-		txt_managers[i] = tt_obj_txt_create(row, "IP / DNS", text_cb);
-		lv_obj_set_size(txt_managers[i], LV_PCT(24), 32);
+		char label[24];
+		snprintf(label, sizeof(label), "Destination %d", i + 1);
+		create_field_label(section_traps, label);
+		txt_managers[i] = create_full_width_text(section_traps, "IP / DNS");
 		lv_textarea_set_max_length(txt_managers[i],
 				APP_STATE_NW_TEXT_LEN - 1);
 		lv_textarea_set_accepted_chars(txt_managers[i],
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-");
 	}
 
-	lv_obj_t* spacer = lv_obj_create(main);
-	lv_obj_set_size(spacer, LV_PCT(100), 0);
-	lv_obj_set_flex_grow(spacer, 1);
-	lv_obj_add_style(spacer, &invisible_cont_style, LV_STATE_DEFAULT);
-
-	row = create_row(main, 52);
-	tt_obj_btn_perc_create(row, ok_cb, "OK", 47);
-	tt_obj_btn_perc_create(row, cancel_cb, "Cancel", 47);
+	lv_obj_t* footer = create_row(page, 52);
+	tt_obj_btn_perc_create(footer, cancel_cb, "Cancel", 47);
+	tt_obj_btn_perc_create(footer, ok_cb, "Save", 47);
 
 	apply_snapshot();
 }
