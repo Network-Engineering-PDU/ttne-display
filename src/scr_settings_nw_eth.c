@@ -297,7 +297,11 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 	lv_textarea_set_text(txt_dns,
 			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
 	lv_textarea_set_text(txt_wifi_ssid, nw_if->ssid);
-	lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
+	/* The API intentionally does not return the stored WiFi secret. Keep a
+	 * password already entered in this session when a refresh returns empty. */
+	if (nw_if->pass[0] != '\0') {
+		lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
+	}
 
 	update_data();
 }
@@ -394,7 +398,9 @@ static void network_if_save_cb(int err, void* userdata)
 		return;
 	}
 
-	if (is_static_network(&nw_ifaces)) {
+	bool wifi_mode = nw_ifaces.nw_mode == NW_WIFI_ONLY ||
+			nw_ifaces.nw_mode == NW_LAN_WIFI;
+	if (is_static_network(&nw_ifaces) && !wifi_mode) {
 		show_save_success("Network settings applied");
 		return;
 	}
@@ -496,8 +502,13 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				nw_ifaces.lan2_ip[0] = '\0';
 				nw_ifaces.lan1_gateway[0] = '\0';
 				nw_ifaces.lan2_gateway[0] = '\0';
-				snprintf(nw_ifaces.wifi_ip, sizeof(nw_ifaces.wifi_ip), "%s",
-						"wifi");
+				if (dhcp) {
+					nw_ifaces.wifi_ip[0] = '\0';
+				} else {
+					snprintf(nw_ifaces.wifi_ip,
+							sizeof(nw_ifaces.wifi_ip), "%s",
+							lv_textarea_get_text(txt_ip));
+				}
 				break;
 			case NW_DUAL_LAN:
 				snprintf(nw_ifaces.lan1_ip, sizeof(nw_ifaces.lan1_ip), "%s",
@@ -536,8 +547,8 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				nw_ifaces.lan2_ip[0] = '\0';
 				nw_ifaces.lan1_gateway[0] = '\0';
 				nw_ifaces.lan2_gateway[0] = '\0';
-				snprintf(nw_ifaces.wifi_ip, sizeof(nw_ifaces.wifi_ip), "%s",
-						"wifi");
+				/* WiFi uses DHCP in combined LAN + WiFi mode. */
+				nw_ifaces.wifi_ip[0] = '\0';
 				break;
 			default:
 				nw_ifaces.lan1_ip[0] = '\0';
@@ -689,8 +700,11 @@ static void update_data()
 			break;
 
 		case NW_WIFI_ONLY:
-			/* WiFi only: show WiFi container */
+			/* WiFi only: static addressing uses the common IP fields. */
 			lv_obj_clear_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
+			if (!dhcp_enabled) {
+				lv_obj_clear_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
+			}
 			break;
 
 		case NW_DUAL_LAN:
