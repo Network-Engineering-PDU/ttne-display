@@ -127,6 +127,7 @@ static lv_obj_t* power_reading_create(lv_obj_t* parent, const char* param)
 
 	lv_obj_t* name = tt_obj_label_create(row, param);
 	lv_obj_set_width(name, POWER_PARAM_WIDTH);
+	lv_label_set_long_mode(name, LV_LABEL_LONG_SCROLL_CIRCULAR);
 
 	lv_obj_t* value = tt_obj_label_color_create(row, "");
 	lv_obj_set_flex_grow(value, 1);

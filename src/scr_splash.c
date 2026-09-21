@@ -15,6 +15,7 @@
 
 #define DEFAULT_ETH_IP "192.168.1.100"
 #define DEFAULT_SECONDARY_IP "192.168.1.200"
+#define IP_COLUMN_WIDTH 15
 
 #define NW_MODE_SINGLE_LAN 0
 #define NW_MODE_WIFI_ONLY 1
@@ -137,16 +138,18 @@ static void splash_update_display(void)
 
 	switch (nw_mode) {
 	case NW_MODE_DUAL_LAN:
-		snprintf(str, sizeof(str), "IP: %s (ETH1)\nIP: %s (ETH2)",
-				eth_ip, first_ip(nw_if->lan2_ip, NULL,
+		snprintf(str, sizeof(str), "IP: %-*s (ETH1)\nIP: %-*s (ETH2)",
+				IP_COLUMN_WIDTH, eth_ip, IP_COLUMN_WIDTH,
+				first_ip(nw_if->lan2_ip, NULL,
 						DEFAULT_SECONDARY_IP));
 		break;
 	case NW_MODE_WIFI_ONLY:
 		snprintf(str, sizeof(str), "IP: %s (WiFi)", wifi_ip);
 		break;
 	case NW_MODE_LAN_WIFI:
-		snprintf(str, sizeof(str), "IP: %s (ETH)\nIP: %s (WiFi)",
-				eth_ip, first_ip(nw_if->wifi_ip, NULL,
+		snprintf(str, sizeof(str), "IP: %-*s (ETH)\nIP: %-*s (WiFi)",
+				IP_COLUMN_WIDTH, eth_ip, IP_COLUMN_WIDTH,
+				first_ip(nw_if->wifi_ip, NULL,
 						DEFAULT_SECONDARY_IP));
 		break;
 	case NW_MODE_SINGLE_LAN:
