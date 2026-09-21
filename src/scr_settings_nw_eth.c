@@ -26,6 +26,7 @@
 
 #define DEFAULT_LAN1_IP "192.168.1.100"
 #define DEFAULT_LAN2_IP "192.168.1.200"
+#define DEFAULT_WIFI_IP "192.168.1.150"
 #define DEFAULT_SUBNET_MASK "255.255.255.0"
 #define DEFAULT_GATEWAY "192.168.1.1"
 #define DEFAULT_DNS "8.8.8.8"
@@ -55,6 +56,8 @@ static lv_obj_t* btn_dhcp;
 static lv_obj_t* cont_single_lan;
 static lv_obj_t* cont_wifi_only;
 static lv_obj_t* cont_dual_lan;
+static lv_obj_t* cont_lan_wifi_eth;
+static lv_obj_t* cont_lan_wifi_wifi;
 
 /* Single LAN fields */
 static lv_obj_t* lbl_ip;
@@ -72,6 +75,29 @@ static lv_obj_t* txt_wifi_ssid;
 static lv_obj_t* lbl_wifi_pass;
 static lv_obj_t* txt_wifi_pass;
 static lv_obj_t* cbx_pass;
+
+/* LAN + WiFi Ethernet fields */
+static lv_obj_t* lbl_lw_eth_ip;
+static lv_obj_t* txt_lw_eth_ip;
+static lv_obj_t* lbl_lw_eth_mask;
+static lv_obj_t* txt_lw_eth_mask;
+static lv_obj_t* lbl_lw_eth_gw;
+static lv_obj_t* txt_lw_eth_gw;
+static lv_obj_t* lbl_lw_eth_dns;
+static lv_obj_t* txt_lw_eth_dns;
+
+/* LAN + WiFi WiFi fields */
+static lv_obj_t* lbl_lw_wifi_ip;
+static lv_obj_t* txt_lw_wifi_ip;
+static lv_obj_t* lbl_lw_wifi_mask;
+static lv_obj_t* txt_lw_wifi_mask;
+static lv_obj_t* lbl_lw_wifi_gw;
+static lv_obj_t* txt_lw_wifi_gw;
+static lv_obj_t* lbl_lw_wifi_dns;
+static lv_obj_t* txt_lw_wifi_dns;
+static lv_obj_t* txt_lw_wifi_ssid;
+static lv_obj_t* txt_lw_wifi_pass;
+static lv_obj_t* cbx_lw_wifi_pass;
 
 /* Dual LAN fields */
 static lv_obj_t* lbl_lan1;
@@ -102,6 +128,7 @@ static void txt_num_cb(lv_event_t* e);
 static void cbx_pass_cb(lv_event_t* e);
 
 static void update_data();
+static void set_lan_wifi_static_fields_hidden(bool hidden);
 static bool is_static_network(const app_state_nw_if_t* nw_if);
 static void network_if_refresh_cb(int err, void* userdata);
 static void network_if_save_cb(int err, void* userdata);
@@ -297,10 +324,29 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 	lv_textarea_set_text(txt_dns,
 			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
 	lv_textarea_set_text(txt_wifi_ssid, nw_if->ssid);
+	lv_textarea_set_text(txt_lw_eth_ip,
+			default_if_empty(default_if_empty(nw_if->lan1_ip, nw_if->ip),
+					DEFAULT_LAN1_IP));
+	lv_textarea_set_text(txt_lw_eth_mask,
+			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lw_eth_gw,
+			default_if_empty(nw_if->gw, DEFAULT_GATEWAY));
+	lv_textarea_set_text(txt_lw_eth_dns,
+			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
+	lv_textarea_set_text(txt_lw_wifi_ip,
+			default_if_empty(nw_if->wifi_ip, DEFAULT_WIFI_IP));
+	lv_textarea_set_text(txt_lw_wifi_mask,
+			default_if_empty(nw_if->wifi_mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lw_wifi_gw,
+			default_if_empty(nw_if->wifi_gateway, DEFAULT_GATEWAY));
+	lv_textarea_set_text(txt_lw_wifi_dns,
+			sanitize_dns(default_if_empty(nw_if->wifi_dns, DEFAULT_DNS)));
+	lv_textarea_set_text(txt_lw_wifi_ssid, nw_if->ssid);
 	/* The API intentionally does not return the stored WiFi secret. Keep a
 	 * password already entered in this session when a refresh returns empty. */
 	if (nw_if->pass[0] != '\0') {
 		lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
+		lv_textarea_set_text(txt_lw_wifi_pass, nw_if->pass);
 	}
 
 	update_data();
@@ -485,6 +531,9 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				lv_textarea_get_text(txt_wifi_ssid));
 		snprintf(nw_ifaces.pass, sizeof(nw_ifaces.pass), "%s",
 				lv_textarea_get_text(txt_wifi_pass));
+		nw_ifaces.wifi_mask[0] = '\0';
+		nw_ifaces.wifi_gateway[0] = '\0';
+		nw_ifaces.wifi_dns[0] = '\0';
 		
 		/* Populate multi-interface IP fields based on selected mode */
 		switch (selected_mode) {
@@ -542,13 +591,53 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
 			case NW_LAN_WIFI:
+				snprintf(nw_ifaces.ip, sizeof(nw_ifaces.ip), "%s",
+						lv_textarea_get_text(txt_lw_eth_ip));
+				snprintf(nw_ifaces.mask, sizeof(nw_ifaces.mask), "%s",
+						lv_textarea_get_text(txt_lw_eth_mask));
+				snprintf(nw_ifaces.gw, sizeof(nw_ifaces.gw), "%s",
+						lv_textarea_get_text(txt_lw_eth_gw));
+				snprintf(nw_ifaces.dns, sizeof(nw_ifaces.dns), "%s",
+						sanitize_dns(lv_textarea_get_text(txt_lw_eth_dns)));
+				snprintf(nw_ifaces.ssid, sizeof(nw_ifaces.ssid), "%s",
+						lv_textarea_get_text(txt_lw_wifi_ssid));
+				snprintf(nw_ifaces.pass, sizeof(nw_ifaces.pass), "%s",
+						lv_textarea_get_text(txt_lw_wifi_pass));
 				snprintf(nw_ifaces.lan1_ip, sizeof(nw_ifaces.lan1_ip), "%s",
-						lv_textarea_get_text(txt_lan1_ip));
+						nw_ifaces.ip);
 				nw_ifaces.lan2_ip[0] = '\0';
-				nw_ifaces.lan1_gateway[0] = '\0';
+				snprintf(nw_ifaces.lan1_gateway,
+						sizeof(nw_ifaces.lan1_gateway), "%s", nw_ifaces.gw);
 				nw_ifaces.lan2_gateway[0] = '\0';
-				/* WiFi uses DHCP in combined LAN + WiFi mode. */
-				nw_ifaces.wifi_ip[0] = '\0';
+				snprintf(nw_ifaces.wifi_mask, sizeof(nw_ifaces.wifi_mask), "%s",
+						lv_textarea_get_text(txt_lw_wifi_mask));
+				snprintf(nw_ifaces.wifi_gateway,
+						sizeof(nw_ifaces.wifi_gateway), "%s",
+						lv_textarea_get_text(txt_lw_wifi_gw));
+				snprintf(nw_ifaces.wifi_dns, sizeof(nw_ifaces.wifi_dns), "%s",
+						sanitize_dns(lv_textarea_get_text(txt_lw_wifi_dns)));
+				if (dhcp) {
+					nw_ifaces.wifi_ip[0] = '\0';
+				} else {
+					snprintf(nw_ifaces.wifi_ip,
+							sizeof(nw_ifaces.wifi_ip), "%s",
+							lv_textarea_get_text(txt_lw_wifi_ip));
+					if (nw_ifaces.wifi_ip[0] == '\0' ||
+							nw_ifaces.wifi_mask[0] == '\0') {
+						lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
+								"WiFi IP and subnet mask are required", 1);
+						lv_timer_create(msg_box_timer_cb,
+								TIMER_MSG_BOX_PERIOD, msg_box);
+						return;
+					}
+					if (strcmp(nw_ifaces.ip, nw_ifaces.wifi_ip) == 0) {
+						lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
+								"Ethernet and WiFi IP must be different", 1);
+						lv_timer_create(msg_box_timer_cb,
+								TIMER_MSG_BOX_PERIOD, msg_box);
+						return;
+					}
+				}
 				break;
 			default:
 				nw_ifaces.lan1_ip[0] = '\0';
@@ -567,11 +656,9 @@ static void btn_nw_settings_cb(lv_event_t* e)
 		
 		/* Add mode-specific information */
 		if (selected_mode == NW_WIFI_ONLY || selected_mode == NW_LAN_WIFI) {
-			if (!lv_obj_has_flag(txt_wifi_ssid, LV_OBJ_FLAG_HIDDEN)) {
-				len += sprintf(msg + len, "WiFi SSID: " TT_COLOR_GREEN_NE_STR " %s\n"
-					"WiFi Pass: " TT_COLOR_GREEN_NE_STR " *******\n",
-					nw_ifaces.ssid);
-			}
+			len += sprintf(msg + len, "WiFi SSID: " TT_COLOR_GREEN_NE_STR " %s\n"
+				"WiFi Pass: " TT_COLOR_GREEN_NE_STR " *******\n",
+				nw_ifaces.ssid);
 		}
 		
 		if (selected_mode == NW_SINGLE_LAN || selected_mode == NW_DUAL_LAN || selected_mode == NW_LAN_WIFI) {
@@ -590,7 +677,21 @@ static void btn_nw_settings_cb(lv_event_t* e)
 					lv_textarea_get_text(txt_lan2_gateway));
 			}
 			
-			if (!lv_obj_has_flag(txt_ip, LV_OBJ_FLAG_HIDDEN)) {
+			if (selected_mode == NW_LAN_WIFI && !dhcp) {
+				len += sprintf(msg + len,
+						"Ethernet IP: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"Ethernet Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"Ethernet Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"Ethernet DNS: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"WiFi IP: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"WiFi Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"WiFi Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
+						"WiFi DNS: " TT_COLOR_GREEN_NE_STR " %s",
+						nw_ifaces.ip, nw_ifaces.mask, nw_ifaces.gw,
+						nw_ifaces.dns, nw_ifaces.wifi_ip,
+						nw_ifaces.wifi_mask, nw_ifaces.wifi_gateway,
+						nw_ifaces.wifi_dns);
+			} else if (!lv_obj_has_flag(txt_ip, LV_OBJ_FLAG_HIDDEN)) {
 				len += sprintf(msg + len, "IP: " TT_COLOR_GREEN_NE_STR " %s\n" \
 					"Mask: " TT_COLOR_GREEN_NE_STR " %s\n" \
 					"Gateway: " TT_COLOR_GREEN_NE_STR " %s\n" \
@@ -631,9 +732,10 @@ static void txt_num_cb(lv_event_t* e)
 		lv_scr_load(kb_scr);
 	}
 	if (code == LV_EVENT_READY) {
-		if (obj == txt_dns) {
-			lv_textarea_set_text(txt_dns,
-					sanitize_dns(lv_textarea_get_text(txt_dns)));
+		if (obj == txt_dns || obj == txt_lw_eth_dns ||
+				obj == txt_lw_wifi_dns) {
+			lv_textarea_set_text(obj,
+					sanitize_dns(lv_textarea_get_text(obj)));
 		}
 	}
 }
@@ -644,11 +746,10 @@ static void cbx_pass_cb(lv_event_t* e)
 	lv_obj_t* obj = lv_event_get_target(e);
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
-		if (lv_obj_get_state(obj) & LV_STATE_CHECKED) {
-			lv_textarea_set_password_mode(txt_wifi_pass, false);
-		} else {
-			lv_textarea_set_password_mode(txt_wifi_pass, true);
-		}
+		lv_obj_t* password = obj == cbx_lw_wifi_pass ?
+				txt_lw_wifi_pass : txt_wifi_pass;
+		lv_textarea_set_password_mode(password,
+				!(lv_obj_get_state(obj) & LV_STATE_CHECKED));
 	}
 }
 
@@ -661,6 +762,27 @@ static bool is_static_network(const app_state_nw_if_t* nw_if)
 			 nw_if->type == NW_TYPE_ETH_STATIC);
 }
 
+static void set_lan_wifi_static_fields_hidden(bool hidden)
+{
+	lv_obj_t* fields[] = {
+		lbl_lw_eth_ip, txt_lw_eth_ip,
+		lbl_lw_eth_mask, txt_lw_eth_mask,
+		lbl_lw_eth_gw, txt_lw_eth_gw,
+		lbl_lw_eth_dns, txt_lw_eth_dns,
+		lbl_lw_wifi_ip, txt_lw_wifi_ip,
+		lbl_lw_wifi_mask, txt_lw_wifi_mask,
+		lbl_lw_wifi_gw, txt_lw_wifi_gw,
+		lbl_lw_wifi_dns, txt_lw_wifi_dns,
+	};
+	for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); i++) {
+		if (hidden) {
+			lv_obj_add_flag(fields[i], LV_OBJ_FLAG_HIDDEN);
+		} else {
+			lv_obj_clear_flag(fields[i], LV_OBJ_FLAG_HIDDEN);
+		}
+	}
+}
+
 static void update_data()
 {
 	uint16_t selected = lv_dropdown_get_selected(dd);
@@ -670,6 +792,8 @@ static void update_data()
 	lv_obj_add_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
 	lv_obj_add_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
 	lv_obj_add_flag(cont_dual_lan, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cont_lan_wifi_eth, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_flag(cont_lan_wifi_wifi, LV_OBJ_FLAG_HIDDEN);
 
 	/* Handle DHCP/Static IP fields visibility for containers that use them */
 	if (dhcp_enabled) {
@@ -720,9 +844,9 @@ static void update_data()
 			break;
 
 		case NW_LAN_WIFI:
-			/* LAN & WiFi: show single LAN container + WiFi container */
-			lv_obj_clear_flag(cont_single_lan, LV_OBJ_FLAG_HIDDEN);
-			lv_obj_clear_flag(cont_wifi_only, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(cont_lan_wifi_eth, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_clear_flag(cont_lan_wifi_wifi, LV_OBJ_FLAG_HIDDEN);
+			set_lan_wifi_static_fields_hidden(dhcp_enabled);
 			break;
 
 		default:
@@ -806,6 +930,71 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
 	cbx_pass = tt_obj_checkbox_create(cont_wifi_only, "Show WiFi password", cbx_pass_cb);
 	lv_textarea_set_password_mode(txt_wifi_pass, true);
+
+	/* LAN + WiFi Ethernet configuration */
+	cont_lan_wifi_eth = tt_obj_cont_create(nw_cont2);
+	tt_obj_label_create(cont_lan_wifi_eth, "Ethernet Configuration");
+
+	lbl_lw_eth_ip = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet IP Address");
+	txt_lw_eth_ip = tt_obj_txt_create(cont_lan_wifi_eth,
+			"Ethernet IP Address", txt_num_cb);
+	lbl_lw_eth_mask = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet Subnet Mask");
+	txt_lw_eth_mask = tt_obj_txt_create(cont_lan_wifi_eth,
+			"Ethernet Subnet Mask", txt_num_cb);
+	lbl_lw_eth_gw = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet Gateway");
+	txt_lw_eth_gw = tt_obj_txt_create(cont_lan_wifi_eth,
+			"Ethernet Gateway", txt_num_cb);
+	lbl_lw_eth_dns = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet DNS");
+	txt_lw_eth_dns = tt_obj_txt_create(cont_lan_wifi_eth,
+			"Ethernet DNS", txt_num_cb);
+	lv_textarea_set_accepted_chars(txt_lw_eth_dns, "0123456789.");
+
+	/* LAN + WiFi WiFi configuration */
+	cont_lan_wifi_wifi = tt_obj_cont_create(nw_cont2);
+	tt_obj_label_create(cont_lan_wifi_wifi, "WiFi Configuration");
+
+	lbl_lw_wifi_ip = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi IP Address");
+	txt_lw_wifi_ip = tt_obj_txt_create(cont_lan_wifi_wifi,
+			"WiFi IP Address", txt_num_cb);
+	lbl_lw_wifi_mask = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi Subnet Mask");
+	txt_lw_wifi_mask = tt_obj_txt_create(cont_lan_wifi_wifi,
+			"WiFi Subnet Mask", txt_num_cb);
+	lbl_lw_wifi_gw = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi Gateway");
+	txt_lw_wifi_gw = tt_obj_txt_create(cont_lan_wifi_wifi,
+			"WiFi Gateway", txt_num_cb);
+	lbl_lw_wifi_dns = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi DNS");
+	txt_lw_wifi_dns = tt_obj_txt_create(cont_lan_wifi_wifi,
+			"WiFi DNS", txt_num_cb);
+	lv_textarea_set_accepted_chars(txt_lw_wifi_dns, "0123456789.");
+	tt_obj_label_create(cont_lan_wifi_wifi, "WiFi SSID");
+	txt_lw_wifi_ssid = tt_obj_txt_create(cont_lan_wifi_wifi,
+			"WiFi SSID", txt_cb);
+	tt_obj_label_create(cont_lan_wifi_wifi, "WiFi password");
+	txt_lw_wifi_pass = tt_obj_txt_create(cont_lan_wifi_wifi,
+			"WiFi password", txt_cb);
+	cbx_lw_wifi_pass = tt_obj_checkbox_create(cont_lan_wifi_wifi,
+			"Show WiFi password", cbx_pass_cb);
+	lv_textarea_set_password_mode(txt_lw_wifi_pass, true);
+
+	lv_textarea_set_text(txt_lw_eth_ip,
+			default_if_empty(default_if_empty(nw_if->lan1_ip, nw_if->ip),
+					DEFAULT_LAN1_IP));
+	lv_textarea_set_text(txt_lw_eth_mask,
+			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lw_eth_gw,
+			default_if_empty(nw_if->gw, DEFAULT_GATEWAY));
+	lv_textarea_set_text(txt_lw_eth_dns,
+			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
+	lv_textarea_set_text(txt_lw_wifi_ip,
+			default_if_empty(nw_if->wifi_ip, DEFAULT_WIFI_IP));
+	lv_textarea_set_text(txt_lw_wifi_mask,
+			default_if_empty(nw_if->wifi_mask, DEFAULT_SUBNET_MASK));
+	lv_textarea_set_text(txt_lw_wifi_gw,
+			default_if_empty(nw_if->wifi_gateway, DEFAULT_GATEWAY));
+	lv_textarea_set_text(txt_lw_wifi_dns,
+			sanitize_dns(default_if_empty(nw_if->wifi_dns, DEFAULT_DNS)));
+	lv_textarea_set_text(txt_lw_wifi_ssid, nw_if->ssid);
+	lv_textarea_set_text(txt_lw_wifi_pass, nw_if->pass);
 
 	/* Dual LAN mode container */
 	cont_dual_lan = tt_obj_cont_create(nw_cont2);

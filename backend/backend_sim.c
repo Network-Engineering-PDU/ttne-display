@@ -113,7 +113,10 @@ static app_state_nw_if_t sim_nw_if = {
 	.lan1_gateway = "192.168.1.1",
 	.lan2_ip = "192.168.1.200",
 	.lan2_gateway = "192.168.1.1",
-	.wifi_ip = "",
+	.wifi_ip = "192.168.1.150",
+	.wifi_mask = "255.255.255.0",
+	.wifi_gateway = "192.168.1.1",
+	.wifi_dns = "8.8.8.8",
 	.nw_mode = 0,
 	.valid = true,
 };

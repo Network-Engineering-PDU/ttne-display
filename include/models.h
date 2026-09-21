@@ -171,6 +171,9 @@ typedef struct models_nw_if_t {
 	const char* lan2_ip;
 	const char* lan2_gateway;
 	const char* wifi_ip;
+	const char* wifi_mask;
+	const char* wifi_gateway;
+	const char* wifi_dns;
 	int nw_mode;  /* Persistent network mode: 0=Single LAN, 1=WiFi Only, 2=Dual LAN, 3=LAN+WiFi */
 } models_nw_if_t;
 

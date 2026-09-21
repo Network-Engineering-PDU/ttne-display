@@ -311,6 +311,12 @@ static void publish_network_if_from_models(void)
 			model->lan2_gateway != NULL ? model->lan2_gateway : "");
 	snprintf(nw_if.wifi_ip, sizeof(nw_if.wifi_ip), "%s",
 			model->wifi_ip != NULL ? model->wifi_ip : "");
+	snprintf(nw_if.wifi_mask, sizeof(nw_if.wifi_mask), "%s",
+			model->wifi_mask != NULL ? model->wifi_mask : "");
+	snprintf(nw_if.wifi_gateway, sizeof(nw_if.wifi_gateway), "%s",
+			model->wifi_gateway != NULL ? model->wifi_gateway : "");
+	snprintf(nw_if.wifi_dns, sizeof(nw_if.wifi_dns), "%s",
+			model->wifi_dns != NULL ? model->wifi_dns : "");
 
 	app_state_set_nw_if(&nw_if);
 }
@@ -547,6 +553,9 @@ static void model_from_app_network_if(const app_state_nw_if_t* nw_if,
 	model->lan2_ip = nw_if->lan2_ip;
 	model->lan2_gateway = nw_if->lan2_gateway;
 	model->wifi_ip = nw_if->wifi_ip;
+	model->wifi_mask = nw_if->wifi_mask;
+	model->wifi_gateway = nw_if->wifi_gateway;
+	model->wifi_dns = nw_if->wifi_dns;
 	model->nw_mode = nw_if->nw_mode;
 }
 

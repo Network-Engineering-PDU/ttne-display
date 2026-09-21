@@ -132,6 +132,9 @@ typedef struct {
 	char lan2_ip[APP_STATE_NW_TEXT_LEN];
 	char lan2_gateway[APP_STATE_NW_TEXT_LEN];
 	char wifi_ip[APP_STATE_NW_TEXT_LEN];
+	char wifi_mask[APP_STATE_NW_TEXT_LEN];
+	char wifi_gateway[APP_STATE_NW_TEXT_LEN];
+	char wifi_dns[APP_STATE_NW_TEXT_LEN];
 	int nw_mode;
 	bool valid;
 } app_state_nw_if_t;

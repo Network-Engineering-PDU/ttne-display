@@ -770,6 +770,9 @@ int json_helper_update_nw_if(const char* json_str)
 	nw_if.lan2_ip = "";
 	nw_if.lan2_gateway = "";
 	nw_if.wifi_ip = "";
+	nw_if.wifi_mask = "";
+	nw_if.wifi_gateway = "";
+	nw_if.wifi_dns = "";
 
 	cJSON* params = cJSON_GetObjectItem(json, "params");
 
@@ -837,6 +840,18 @@ int json_helper_update_nw_if(const char* json_str)
 	str = json_get_string(json, "wifi_ip");
 	if (str != NULL) {
 		nw_if.wifi_ip = str;
+	}
+	str = json_get_string(json, "wifi_subnet_mask");
+	if (str != NULL) {
+		nw_if.wifi_mask = str;
+	}
+	str = json_get_string(json, "wifi_gateway");
+	if (str != NULL) {
+		nw_if.wifi_gateway = str;
+	}
+	str = json_get_string(json, "wifi_dns");
+	if (str != NULL) {
+		nw_if.wifi_dns = str;
 	}
 	
 	models_set_nw_if(&nw_if);

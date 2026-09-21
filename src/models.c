@@ -421,6 +421,9 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	free((void*)nw_if.lan2_ip);
 	free((void*)nw_if.lan2_gateway);
 	free((void*)nw_if.wifi_ip);
+	free((void*)nw_if.wifi_mask);
+	free((void*)nw_if.wifi_gateway);
+	free((void*)nw_if.wifi_dns);
 
 	nw_if.type = l_nw_if->type;
 	nw_if.dhcp = l_nw_if->dhcp;
@@ -437,6 +440,9 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	nw_if.lan2_ip = stralloc(l_nw_if->lan2_ip);
 	nw_if.lan2_gateway = stralloc(l_nw_if->lan2_gateway);
 	nw_if.wifi_ip = stralloc(l_nw_if->wifi_ip);
+	nw_if.wifi_mask = stralloc(l_nw_if->wifi_mask);
+	nw_if.wifi_gateway = stralloc(l_nw_if->wifi_gateway);
+	nw_if.wifi_dns = stralloc(l_nw_if->wifi_dns);
 }
 
 const models_license_t* models_get_license()
