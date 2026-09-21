@@ -6,9 +6,8 @@
 #include "tt_obj.h"
 #include "tt_styles.h"
 
-#define MODBUS_PANEL_HEIGHT 96
-#define MODBUS_ROW_HEIGHT 29
-#define MODBUS_CONTROL_HEIGHT 27
+#define MODBUS_ROW_HEIGHT 36
+#define MODBUS_CONTROL_HEIGHT 32
 
 typedef struct {
 	bool ethernet_1;
@@ -63,29 +62,28 @@ static lv_obj_t* create_row(lv_obj_t* parent)
 	return row;
 }
 
-static lv_obj_t* create_panel(lv_obj_t* parent)
+static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 {
-	lv_obj_t* panel = lv_obj_create(parent);
-	lv_obj_set_size(panel, LV_PCT(100), MODBUS_PANEL_HEIGHT);
-	lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_flex_align(panel, LV_FLEX_ALIGN_START,
+	lv_obj_t* section = tt_obj_cont_create(parent);
+	lv_obj_clear_flag(section, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_flex_flow(section, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(section, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_style_bg_opa(panel, LV_OPA_TRANSP, 0);
-	lv_obj_set_style_border_width(panel, 2, 0);
-	lv_obj_set_style_border_color(panel, lv_color_white(), 0);
-	lv_obj_set_style_radius(panel, 16, 0);
-	lv_obj_set_style_pad_all(panel, 3, 0);
-	lv_obj_set_style_pad_row(panel, 0, 0);
-	return panel;
+	lv_obj_set_style_pad_all(section, 5, 0);
+	lv_obj_set_style_pad_row(section, 3, 0);
+	lv_obj_t* label = lv_label_create(section);
+	lv_label_set_text(label, title);
+	lv_obj_set_width(label, LV_PCT(100));
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	return section;
 }
 
-static lv_obj_t* create_label(lv_obj_t* parent, const char* text, int width)
+static lv_obj_t* create_row_label(lv_obj_t* parent, const char* text)
 {
 	lv_obj_t* label = lv_label_create(parent);
 	lv_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
-	lv_obj_set_width(label, LV_PCT(width));
+	lv_obj_set_flex_grow(label, 1);
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	return label;
 }
@@ -98,38 +96,21 @@ static lv_obj_t* create_checkbox(lv_obj_t* parent)
 	return checkbox;
 }
 
-static lv_obj_t* create_toggle_group(lv_obj_t* parent, const char* label,
+static void create_toggle_row(lv_obj_t* parent, const char* label,
 		lv_obj_t** checkbox)
 {
-	lv_obj_t* group = lv_obj_create(parent);
-	lv_obj_set_size(group, LV_PCT(38), LV_PCT(100));
-	lv_obj_add_style(group, &invisible_cont_style, LV_STATE_DEFAULT);
-	lv_obj_clear_flag(group, LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_flex_flow(group, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(group, LV_FLEX_ALIGN_SPACE_BETWEEN,
-			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_style_pad_all(group, 0, 0);
-	create_label(group, label, 68);
-	*checkbox = create_checkbox(group);
-	return group;
+	lv_obj_t* row = create_row(parent);
+	create_row_label(row, label);
+	*checkbox = create_checkbox(row);
 }
 
-static lv_obj_t* create_dropdown_group(lv_obj_t* parent, const char* label,
+static void create_dropdown_row(lv_obj_t* parent, const char* label,
 		const char* options, lv_obj_t** dropdown)
 {
-	lv_obj_t* group = lv_obj_create(parent);
-	lv_obj_set_size(group, LV_PCT(49), LV_PCT(100));
-	lv_obj_add_style(group, &invisible_cont_style, LV_STATE_DEFAULT);
-	lv_obj_clear_flag(group, LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_flex_flow(group, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(group, LV_FLEX_ALIGN_SPACE_BETWEEN,
-			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_style_pad_all(group, 0, 0);
-	lv_obj_set_style_pad_column(group, 2, 0);
-	create_label(group, label, 48);
-	*dropdown = tt_obj_dropdown_create(group, (char*)options, NULL);
-	lv_obj_set_size(*dropdown, LV_PCT(51), MODBUS_CONTROL_HEIGHT);
-	return group;
+	lv_obj_t* row = create_row(parent);
+	create_row_label(row, label);
+	*dropdown = tt_obj_dropdown_create(row, (char*)options, NULL);
+	lv_obj_set_size(*dropdown, LV_PCT(55), MODBUS_CONTROL_HEIGHT);
 }
 
 static void set_checked(lv_obj_t* checkbox, bool checked)
@@ -210,58 +191,56 @@ static void cancel_cb(lv_event_t* e)
 			LV_EVENT_CLICKED, NULL);
 }
 
-static void create_protocol_panel(lv_obj_t* main, const char* title,
+static void create_protocol_section(lv_obj_t* main, const char* title,
 		const char* port_1_label, const char* port_2_label,
 		lv_obj_t** port_1, lv_obj_t** port_2, lv_obj_t** baud_rate,
 		lv_obj_t** parity, lv_obj_t** stop_bits)
 {
-	lv_obj_t* panel = create_panel(main);
-	lv_obj_t* row = create_row(panel);
-	create_label(row, title, 20);
-	create_toggle_group(row, port_1_label, port_1);
-	create_toggle_group(row, port_2_label, port_2);
-
-	row = create_row(panel);
-	create_dropdown_group(row, "Baud rate",
+	lv_obj_t* section = create_section(main, title);
+	create_toggle_row(section, port_1_label, port_1);
+	create_toggle_row(section, port_2_label, port_2);
+	create_dropdown_row(section, "Baud rate",
 			"9600\n19200\n38400\n57600\n115200", baud_rate);
-	create_dropdown_group(row, "Parity", "None\nEven\nOdd", parity);
-
-	row = create_row(panel);
-	create_dropdown_group(row, "Stop bits", "1\n2", stop_bits);
+	create_dropdown_row(section, "Parity", "None\nEven\nOdd", parity);
+	create_dropdown_row(section, "Stop bits", "1\n2", stop_bits);
 }
 
 void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 {
 	menu_handle = menu;
 	lv_obj_t* page = tt_obj_menu_page_create(menu, btn, menu_cb, "Modbus");
-	lv_obj_t* main = tt_obj_cont_create(page);
+	lv_obj_set_height(page, LV_PCT(100));
+	lv_obj_set_flex_flow(page, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(page, LV_FLEX_ALIGN_START,
+			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_clear_flag(page, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_pad_row(page, 3, 0);
+
+	lv_obj_t* main = lv_obj_create(page);
 	lv_obj_set_width(main, LV_PCT(100));
 	lv_obj_set_height(main, 0);
 	lv_obj_set_flex_grow(main, 1);
 	lv_obj_add_flag(main, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_set_scrollbar_mode(main, LV_SCROLLBAR_MODE_AUTO);
+	lv_obj_set_scroll_dir(main, LV_DIR_VER);
 	lv_obj_set_flex_flow(main, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(main, LV_FLEX_ALIGN_START,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_add_style(main, &invisible_cont_style, LV_STATE_DEFAULT);
 	lv_obj_set_style_pad_all(main, 3, 0);
-	lv_obj_set_style_pad_row(main, 3, 0);
+	lv_obj_set_style_pad_row(main, 5, 0);
 
-	create_protocol_panel(main, "TCP /", "Ethernet 1", "Ethernet 2",
+	create_protocol_section(main, "MODBUS TCP", "Ethernet 1", "Ethernet 2",
 			&cbx_ethernet_1, &cbx_ethernet_2, &dd_tcp_baud_rate,
 			&dd_tcp_parity, &dd_tcp_stop_bits);
-	create_protocol_panel(main, "RT 485", "ACC-1", "ACC-2",
+	create_protocol_section(main, "MODBUS RTU (RS-485)", "ACC-1", "ACC-2",
 			&cbx_acc_1, &cbx_acc_2, &dd_rtu_baud_rate,
 			&dd_rtu_parity, &dd_rtu_stop_bits);
 
-	lv_obj_t* spacer = lv_obj_create(main);
-	lv_obj_set_size(spacer, LV_PCT(100), 0);
-	lv_obj_set_flex_grow(spacer, 1);
-	lv_obj_add_style(spacer, &invisible_cont_style, LV_STATE_DEFAULT);
-
-	lv_obj_t* button_row = create_row(main);
-	lv_obj_set_height(button_row, 48);
-	tt_obj_btn_perc_create(button_row, ok_cb, "OK", 47);
+	lv_obj_t* button_row = create_row(page);
+	lv_obj_set_height(button_row, 52);
 	tt_obj_btn_perc_create(button_row, cancel_cb, "Cancel", 47);
+	tt_obj_btn_perc_create(button_row, ok_cb, "Save", 47);
 
 	apply_saved_settings();
 }
