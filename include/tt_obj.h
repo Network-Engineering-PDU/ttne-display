@@ -2,7 +2,7 @@
 #define TT_OBJ_H
 
 #include "lvgl/lvgl.h"
-#include "alarms.h"
+#include "app/app_state.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,10 +154,11 @@ lv_obj_t* tt_obj_cont_create(lv_obj_t* parent);
  *
  * @param[in] parent    Pointer to the parent object.
  * @param[in] cb        Callback function to be call when pressed.
- * @param[in] alarm     Pointer to alarm description struct.
+ * @param[in] alarm     Alarm to show. The pointer is kept as the container's
+ *                      user data and must stay valid while it is displayed.
  */
 lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
-		alarm_desc_t* alarm);
+		const app_state_alarm_t* alarm);
 
 /**
  * @brief Creates a message box.

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "lvgl/lvgl.h"
 
@@ -215,11 +216,11 @@ lv_obj_t* tt_obj_cont_create(lv_obj_t* parent)
 }
 
 lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
-		alarm_desc_t* alarm)
+		const app_state_alarm_t* alarm)
 {
 
 	lv_obj_t* cont_parent = lv_obj_create(parent);
-	lv_obj_set_user_data(cont_parent, alarm);
+	lv_obj_set_user_data(cont_parent, (void*)alarm);
 	lv_obj_set_size(cont_parent, LV_PCT(100), LV_SIZE_CONTENT);
 	lv_obj_align(cont_parent, LV_ALIGN_OUT_TOP_MID, 5, 50);
 	lv_obj_add_style(cont_parent, &invisible_cont_style, LV_STATE_DEFAULT);
@@ -244,19 +245,25 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 	lv_obj_add_flag(img, LV_OBJ_FLAG_CLICKABLE);
 	lv_obj_add_event_cb(img, cb, LV_EVENT_ALL, cont_parent);
 
-	tt_obj_label_create(cont, alarm->time);
-	char alarm_type[100];
-	switch (alarm->type) {
-	case ALARM_INFO: 
+	char alarm_time[24] = "";
+	time_t first_seen = (time_t)alarm->first_seen;
+	struct tm tm_seen;
+	if (localtime_r(&first_seen, &tm_seen) != NULL) {
+		strftime(alarm_time, sizeof(alarm_time), "%Y/%m/%d %H:%M:%S", &tm_seen);
+	}
+	tt_obj_label_create(cont, alarm_time);
+	char alarm_type[100] = "";
+	switch (alarm->severity) {
+	case 0:
 		sprintf(alarm_type, "#%06X Info", TT_COLOR_INFO);
 		break;
-	case ALARM_WARNING:
+	case 1:
 		sprintf(alarm_type, "#%06X Warning", TT_COLOR_WARNING);
 		break;
-	case ALARM_ERROR:
+	case 2:
 		sprintf(alarm_type, "#%06X Error", TT_COLOR_ERROR);
 		break;
-	case ALARM_CRITICAL_ERROR:
+	case 3:
 		sprintf(alarm_type, "#%06X Critical error", TT_COLOR_CRITICAL_ERROR);
 		break;
 	default:

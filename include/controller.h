@@ -1,6 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include "app/app_state.h"
 #include "models.h"
 
 #ifdef __cplusplus
@@ -35,6 +36,11 @@ void controller_post_ble_confirm_mac(const char* mac);
 void controller_post_ble_confirm_all();
 void controller_get_nw_services();
 void controller_get_nw_info();
+
+/** @brief GET /alarms. Returns 0 on success. */
+int controller_get_alarms(app_state_alarms_t* alarms);
+/** @brief POST /alarms/ack for one alarm id. Returns 0 on success. */
+int controller_post_alarm_ack(const char* id);
 void controller_get_nw_if();
 void controller_put_nw_if(const models_nw_if_t* nw_if);
 void controller_post_nw_reset();

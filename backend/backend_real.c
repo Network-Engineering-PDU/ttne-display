@@ -73,6 +73,9 @@ typedef enum {
 	BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART,
 	BACKEND_CMD_LOGIN_CONFIG_REFRESH,
 	BACKEND_CMD_LOGIN_SET_SKIP,
+	BACKEND_CMD_CONFIG_RELOAD,
+	BACKEND_CMD_ALARMS_REFRESH,
+	BACKEND_CMD_ALARM_ACK,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -1154,6 +1157,29 @@ static void* backend_worker(void* arg)
 			config_set_skip_login(cmd.status ? 1 : 0);
 			publish_login_config_from_config();
 			break;
+		case BACKEND_CMD_CONFIG_RELOAD: {
+			int rotation_changed = 0;
+			if (config_reload_if_changed(&rotation_changed)) {
+				publish_visual_config_from_config();
+				publish_login_config_from_config();
+				if (rotation_changed) {
+					/* Same as changing the rotation on the screen */
+					reset_program();
+				}
+			}
+			break;
+		}
+		case BACKEND_CMD_ALARMS_REFRESH: {
+			static app_state_alarms_t alarms;
+			err = controller_get_alarms(&alarms);
+			if (err == 0) {
+				app_state_set_alarms(&alarms);
+			}
+			break;
+		}
+		case BACKEND_CMD_ALARM_ACK:
+			err = controller_post_alarm_ack(cmd.text);
+			break;
 		default:
 			err = 1;
 			break;
@@ -1766,6 +1792,41 @@ int backend_login_set_skip(bool skip_login, backend_callback_t callback,
 		.callback = callback,
 		.userdata = userdata,
 	};
+	return backend_submit(&cmd);
+}
+
+int backend_config_reload(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_CONFIG_RELOAD,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_alarms_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_ALARMS_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_alarm_ack(const char* id, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_ALARM_ACK,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	if (id == NULL) {
+		return -1;
+	}
+	snprintf(cmd.text, sizeof(cmd.text), "%s", id);
 	return backend_submit(&cmd);
 }
 

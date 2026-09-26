@@ -450,6 +450,32 @@ int controller_put_snmp(const models_snmp_t* snmp)
 	return err;
 }
 
+int controller_get_alarms(app_state_alarms_t* alarms)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "alarms";
+	int err = http_helper_get(&req, url);
+	if (err == 0) {
+		err = json_helper_parse_alarms(req.buffer, alarms);
+	}
+	http_helper_free(&req);
+	return err;
+}
+
+int controller_post_alarm_ack(const char* id)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "alarms/ack";
+	cJSON* json = cJSON_CreateObject();
+	cJSON_AddStringToObject(json, "id", id);
+	char* post_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_post(&req, url, post_data);
+	cJSON_free(post_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+	return err;
+}
+
 void controller_get_nw_info()
 {
 	http_get_req_t req;

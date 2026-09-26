@@ -16,6 +16,7 @@ extern "C" {
 #define APP_STATE_NW_TEXT_LEN 128
 #define APP_STATE_MAX_SENSORS 8
 #define APP_STATE_MAX_DISCOVERED_SENSORS 16
+#define APP_STATE_MAX_ALARMS 32
 
 typedef struct {
 	int line_id;
@@ -237,6 +238,24 @@ typedef struct {
 	bool valid;
 } app_state_login_config_t;
 
+/* Severity: 0 info, 1 warning, 2 error, 3 critical (same as the API) */
+typedef struct {
+	char id[64];
+	char code[8];
+	char path[48];
+	char desc[64];
+	int severity;
+	long first_seen; /* epoch seconds */
+	bool ack;
+} app_state_alarm_t;
+
+typedef struct {
+	app_state_alarm_t items[APP_STATE_MAX_ALARMS];
+	int count;
+	int unacked;
+	bool valid;
+} app_state_alarms_t;
+
 typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
@@ -258,6 +277,7 @@ typedef struct {
 	app_state_pdu_info_t pdu_info;
 	app_state_visual_config_t visual_config;
 	app_state_login_config_t login_config;
+	app_state_alarms_t alarms;
 	char license_type[16];
 	int outlet_count;
 	int sensor_count;
@@ -282,6 +302,7 @@ typedef struct {
 	uint32_t visual_config_revision;
 	uint32_t login_config_revision;
 	uint32_t license_revision;
+	uint32_t alarms_revision;
 } app_state_snapshot_t;
 
 void app_state_init(void);
@@ -309,6 +330,7 @@ void app_state_set_pdu_info(const app_state_pdu_info_t* pdu_info);
 void app_state_set_visual_config(const app_state_visual_config_t* visual_config);
 void app_state_set_login_config(const app_state_login_config_t* login_config);
 void app_state_set_license_type(const char* license_type);
+void app_state_set_alarms(const app_state_alarms_t* alarms);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 
 #ifdef __cplusplus

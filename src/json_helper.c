@@ -730,6 +730,58 @@ int json_helper_update_nw_info(const char* json_str)
 	return 0;
 }
 
+int json_helper_parse_alarms(const char* json_str, app_state_alarms_t* alarms)
+{
+	memset(alarms, 0, sizeof(*alarms));
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	cJSON* list = cJSON_GetObjectItemCaseSensitive(json, "alarms");
+	if (!cJSON_IsArray(list)) {
+		cJSON_Delete(json);
+		return 1;
+	}
+
+	cJSON* item;
+	cJSON_ArrayForEach(item, list) {
+		if (alarms->count >= APP_STATE_MAX_ALARMS) {
+			break;
+		}
+		app_state_alarm_t* alarm = &alarms->items[alarms->count];
+		const char* id = json_get_string(item, "id");
+		const char* code = json_get_string(item, "code");
+		const char* path = json_get_string(item, "path");
+		const char* desc = json_get_string(item, "desc");
+		int severity = 0;
+		int first_seen = 0;
+		bool ack = false;
+
+		if (id == NULL || code == NULL || path == NULL || desc == NULL ||
+				json_get_int(&severity, item, "severity") != 0) {
+			continue;
+		}
+		json_get_int(&first_seen, item, "first_seen");
+		json_get_bool(&ack, item, "ack");
+
+		snprintf(alarm->id, sizeof(alarm->id), "%s", id);
+		snprintf(alarm->code, sizeof(alarm->code), "%s", code);
+		snprintf(alarm->path, sizeof(alarm->path), "%s", path);
+		snprintf(alarm->desc, sizeof(alarm->desc), "%s", desc);
+		alarm->severity = severity;
+		alarm->first_seen = first_seen;
+		alarm->ack = ack;
+		alarms->count++;
+		if (!ack) {
+			alarms->unacked++;
+		}
+	}
+
+	cJSON_Delete(json);
+	return 0;
+}
+
 int json_helper_update_nw_if(const char* json_str)
 {
 	cJSON* json = cJSON_Parse(json_str);

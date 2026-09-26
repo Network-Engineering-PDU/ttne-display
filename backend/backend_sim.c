@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "app/app_state.h"
 
@@ -854,6 +855,77 @@ int backend_login_set_skip(bool skip_login, backend_callback_t callback,
 	app_state_set_login_config(&sim_login_config);
 	if (callback != NULL) {
 		callback(0, userdata);
+	}
+	return 0;
+}
+
+/* Simulated alarms: a warning and an error, plus a network warning that is
+ * removed by acknowledging it three times is not modelled - acks just stick. */
+static app_state_alarms_t sim_alarms;
+static bool sim_alarms_init;
+
+static void sim_alarms_publish(void)
+{
+	sim_alarms.unacked = 0;
+	for (int i = 0; i < sim_alarms.count; i++) {
+		if (!sim_alarms.items[i].ack) {
+			sim_alarms.unacked++;
+		}
+	}
+	app_state_set_alarms(&sim_alarms);
+}
+
+static void sim_alarm_add(const char* code, int severity, const char* path,
+		const char* desc)
+{
+	app_state_alarm_t* alarm = &sim_alarms.items[sim_alarms.count++];
+
+	snprintf(alarm->id, sizeof(alarm->id), "%s:%s", code, path);
+	snprintf(alarm->code, sizeof(alarm->code), "%s", code);
+	snprintf(alarm->path, sizeof(alarm->path), "%s", path);
+	snprintf(alarm->desc, sizeof(alarm->desc), "%s", desc);
+	alarm->severity = severity;
+	alarm->first_seen = (long)time(NULL) - 90;
+}
+
+int backend_config_reload(backend_callback_t callback, void* userdata)
+{
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_alarms_refresh(backend_callback_t callback, void* userdata)
+{
+	if (!sim_alarms_init) {
+		sim_alarms_init = true;
+		memset(&sim_alarms, 0, sizeof(sim_alarms));
+		sim_alarm_add("#201", 2, "/PDU/Main/L2", "Current above rated current");
+		sim_alarm_add("#202", 1, "/PDU/Aux/L1", "Current close to rated current");
+		sim_alarm_add("#301", 1, "/PDU/Network", "Network disconnected");
+	}
+	sim_alarms_publish();
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_alarm_ack(const char* id, backend_callback_t callback,
+		void* userdata)
+{
+	int err = 1;
+
+	for (int i = 0; id != NULL && i < sim_alarms.count; i++) {
+		if (strcmp(sim_alarms.items[i].id, id) == 0) {
+			sim_alarms.items[i].ack = true;
+			err = 0;
+		}
+	}
+	sim_alarms_publish();
+	if (callback != NULL) {
+		callback(err, userdata);
 	}
 	return 0;
 }

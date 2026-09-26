@@ -448,6 +448,19 @@ void app_state_set_license_type(const char* license_type)
 	pthread_mutex_unlock(&state_mutex);
 }
 
+void app_state_set_alarms(const app_state_alarms_t* alarms)
+{
+	if (alarms == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.alarms = *alarms;
+	state.alarms.valid = true;
+	state.alarms_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
 void app_state_get_snapshot(app_state_snapshot_t* snapshot)
 {
 	if (snapshot == NULL) {

@@ -11,6 +11,15 @@ extern "C" {
 void config_init();
 
 /**
+ * @brief Reloads the config file if it was changed by someone else (the web
+ * UI, through the API).
+ *
+ * @param[out] rotation_changed     Set to 1 if the rotation value changed.
+ * @return 1 if any setting changed, 0 otherwise.
+ */
+int config_reload_if_changed(int* rotation_changed);
+
+/**
  * @brief Set the rotation of the display.
  *
  * @param[in] rotation  Rotation value [0->0; 1->90; 2->180; 3->270].

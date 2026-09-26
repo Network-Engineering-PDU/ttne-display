@@ -24,6 +24,8 @@ static lv_color_t buf[DISP_BUF_SIZE];
 static lv_disp_draw_buf_t disp_buf;
 #endif
 
+#define CONFIG_CHECK_MS 2000
+
 static char* prog_name;
 
 static void hal_init(void);
@@ -183,6 +185,7 @@ int main(int argc, char **argv)
 	uint32_t visual_revision = 0;
 	int inactivity_time = get_inactivity_timeout_ms(&visual_revision);
 	uint32_t last_inactivity_check = 0;
+	uint32_t last_config_check = 0;
 
 	while (1) {
 			/* Periodically call the lv_task handler.
@@ -194,6 +197,11 @@ int main(int argc, char **argv)
 			backend_process();
 
 			uint32_t now = lv_tick_get();
+			if (now - last_config_check >= CONFIG_CHECK_MS) {
+				/* Picks up display settings changed from the web UI */
+				backend_config_reload(NULL, NULL);
+				last_config_check = now;
+			}
 			if (now - last_inactivity_check >= 250) {
 				app_state_snapshot_t snapshot;
 
