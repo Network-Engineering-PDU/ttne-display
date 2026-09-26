@@ -219,6 +219,7 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 {
 
 	lv_obj_t* cont_parent = lv_obj_create(parent);
+	lv_obj_set_user_data(cont_parent, alarm);
 	lv_obj_set_size(cont_parent, LV_PCT(100), LV_SIZE_CONTENT);
 	lv_obj_align(cont_parent, LV_ALIGN_OUT_TOP_MID, 5, 50);
 	lv_obj_add_style(cont_parent, &invisible_cont_style, LV_STATE_DEFAULT);
