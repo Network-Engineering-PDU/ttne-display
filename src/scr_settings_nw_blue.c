@@ -254,7 +254,7 @@ static void apply_bluetooth_snapshot(void)
 	tt_obj_btn_toggle_set_state(btn_powered, bt_status->powered);
 	tt_obj_btn_toggle_set_state(btn_pairable, bt_status->pairable);
 	tt_obj_btn_toggle_set_state(btn_discoverable, bt_status->discoverable);
-	tt_obj_btn_set_text(btn_scan, bt_status->discovering ? "Stop scan" : "Scan devices");
+	tt_obj_btn_set_text(btn_scan, bt_status->discovering ? "Stop scan" : "Start scan");
 
 	char status[160];
 	snprintf(status, sizeof(status), "%s  %s  %s",
@@ -300,7 +300,7 @@ void scr_settings_nw_blue_create(lv_obj_t* menu_param, lv_obj_t* btn)
 	btn_pairable = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, "Pairable");
 	btn_discoverable = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, "Discoverable");
 
-	btn_scan = tt_obj_btn_create(page_handle, scan_cb, "Scan devices", NULL,
+	btn_scan = tt_obj_btn_create(page_handle, scan_cb, "Start scan", NULL,
 			LV_PCT(48), 44, LV_ALIGN_CENTER);
 	tt_obj_btn_create(page_handle, refresh_cb, "Refresh", NULL,
 			LV_PCT(48), 44, LV_ALIGN_CENTER);
