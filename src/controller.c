@@ -2,6 +2,7 @@
 #include <cjson/cJSON.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 
 #include "controller.h"
@@ -238,14 +239,52 @@ bool controller_get_sensor_live(const char* mac)
 	return err == 0;
 }
 
+/* The web app only accepts scan changes from a logged-in user or from this
+ * touchscreen holding the device token (ne/rest/display_token.py). */
+#define NE_DISPLAY_TOKEN_PATH "/home/root/.ne/display_token"
+
+static const char* display_token_header(char* buf, size_t len)
+{
+	char token[128] = { 0 };
+	FILE* f = fopen(NE_DISPLAY_TOKEN_PATH, "r");
+
+	if (f == NULL) {
+		LV_LOG_ERROR("Display token file is not readable");
+		return NULL;
+	}
+	if (fgets(token, sizeof(token), f) == NULL) {
+		token[0] = '\0';
+	}
+	fclose(f);
+	token[strcspn(token, "\r\n")] = '\0';
+	if (token[0] == '\0') {
+		return NULL;
+	}
+	snprintf(buf, len, "X-NE-Display-Token: %s", token);
+	return buf;
+}
+
+/* POST to /api/sensors-scan/<action>. Returns 0 if the request went through;
+ * check http_code for the status the web app sent back. */
+static int post_sensors_scan(const char* action, char* post_data,
+		http_get_req_t* req, long* http_code)
+{
+	char url[128];
+	char header[160];
+
+	snprintf(url, sizeof(url), NE_BASE_URL "api/sensors-scan/%s", action);
+	return http_helper_post_ex(req, url, post_data,
+			display_token_header(header, sizeof(header)), http_code);
+}
+
 bool controller_post_ble_scan_start()
 {
 	http_get_req_t req;
-	char* url = NE_BASE_URL "api/sensors-scan/start/";
-	int err = http_helper_post(&req, url, NULL);
+	long http_code = 0;
+	int err = post_sensors_scan("start/", NULL, &req, &http_code);
 	bool ok = false;
 
-	if (err == 0 && req.buffer != NULL) {
+	if (err == 0 && http_code == 200 && req.buffer != NULL) {
 		cJSON* json = cJSON_Parse(req.buffer);
 		if (json != NULL) {
 			cJSON* result = cJSON_GetObjectItemCaseSensitive(json, "result");
@@ -262,7 +301,7 @@ bool controller_post_ble_scan_start()
 		}
 	}
 	if (!ok) {
-		LV_LOG_ERROR("BLE scan start error");
+		LV_LOG_ERROR("BLE scan start error: HTTP %ld", http_code);
 	}
 	http_helper_free(&req);
 	return ok;
@@ -271,10 +310,10 @@ bool controller_post_ble_scan_start()
 void controller_post_ble_scan_stop()
 {
 	http_get_req_t req;
-	char* url = NE_BASE_URL "api/sensors-scan/stop/";
-	int err = http_helper_post(&req, url, NULL);
-	if (err != 0) {
-		LV_LOG_ERROR("BLE scan stop error");
+	long http_code = 0;
+	int err = post_sensors_scan("stop/", NULL, &req, &http_code);
+	if (err != 0 || http_code != 200) {
+		LV_LOG_ERROR("BLE scan stop error: HTTP %ld", http_code);
 	}
 	http_helper_free(&req);
 }
@@ -290,38 +329,42 @@ void controller_get_ble_discovered()
 	http_helper_free(&req);
 }
 
-void controller_post_ble_confirm_mac(const char* mac)
+bool controller_post_ble_confirm_mac(const char* mac)
 {
 	http_get_req_t req;
-	char* url = NE_BASE_URL "api/sensors-scan/confirm/";
+	long http_code = 0;
 	cJSON* json = cJSON_CreateObject();
 	cJSON* macs = cJSON_CreateArray();
 	cJSON_AddItemToArray(macs, cJSON_CreateString(mac));
 	cJSON_AddItemToObject(json, "macs", macs);
 	char* post_data = cJSON_PrintUnformatted(json);
-	int err = http_helper_post(&req, url, post_data);
-	if (err != 0) {
-		LV_LOG_ERROR("BLE confirm error");
+	int err = post_sensors_scan("confirm/", post_data, &req, &http_code);
+	if (err != 0 || http_code != 200) {
+		LV_LOG_ERROR("BLE confirm error: HTTP %ld", http_code);
 	}
 	cJSON_free(post_data);
 	cJSON_Delete(json);
+	bool ok = err == 0 && http_code == 200;
 	http_helper_free(&req);
+	return ok;
 }
 
-void controller_post_ble_confirm_all()
+bool controller_post_ble_confirm_all()
 {
 	http_get_req_t req;
-	char* url = NE_BASE_URL "api/sensors-scan/confirm/";
+	long http_code = 0;
 	cJSON* json = cJSON_CreateObject();
 	cJSON_AddTrueToObject(json, "all");
 	char* post_data = cJSON_PrintUnformatted(json);
-	int err = http_helper_post(&req, url, post_data);
-	if (err != 0) {
-		LV_LOG_ERROR("BLE confirm all error");
+	int err = post_sensors_scan("confirm/", post_data, &req, &http_code);
+	if (err != 0 || http_code != 200) {
+		LV_LOG_ERROR("BLE confirm all error: HTTP %ld", http_code);
 	}
 	cJSON_free(post_data);
 	cJSON_Delete(json);
+	bool ok = err == 0 && http_code == 200;
 	http_helper_free(&req);
+	return ok;
 }
 
 void controller_get_nw_services()

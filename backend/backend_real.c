@@ -1107,12 +1107,12 @@ static void* backend_worker(void* arg)
 			publish_discovered_from_models();
 			break;
 		case BACKEND_CMD_BLE_CONFIRM_MAC:
-			controller_post_ble_confirm_mac(cmd.text);
+			err = controller_post_ble_confirm_mac(cmd.text) ? 0 : 1;
 			controller_get_sensors();
 			publish_sensors_from_models();
 			break;
 		case BACKEND_CMD_BLE_CONFIRM_ALL:
-			controller_post_ble_confirm_all();
+			err = controller_post_ble_confirm_all() ? 0 : 1;
 			controller_get_sensors();
 			publish_sensors_from_models();
 			break;

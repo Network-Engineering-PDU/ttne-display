@@ -101,6 +101,12 @@ cleanup:
 
 int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 {
+	return http_helper_post_ex(req, url, post_data, NULL, NULL);
+}
+
+int http_helper_post_ex(http_get_req_t* req, char* url, char* post_data,
+		const char* extra_header, long* http_code)
+{
 	int err = 0;
 
 	CURL* curl = NULL;
@@ -117,6 +123,9 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 		headers = curl_slist_append(headers, "accept: application/json");
 		if (post_data) {
 			headers = curl_slist_append(headers, "Content-Type: application/json");
+		}
+		if (extra_header != NULL) {
+			headers = curl_slist_append(headers, extra_header);
 		}
 		req->buffer = malloc(CHUNK_SIZE);
 		if (req->buffer == NULL) {
@@ -142,6 +151,9 @@ int http_helper_post(http_get_req_t* req, char* url, char* post_data)
 		int retcode;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &retcode);
 		HTTP_DEBUG_LOG("Curl result: %u, retcode: %d [%s]", res, retcode, url);
+		if (http_code != NULL) {
+			*http_code = retcode;
+		}
 		if (res != CURLE_OK) {
 			LV_LOG_ERROR("Failed: %s\n", curl_easy_strerror(res));
 			err = 1;

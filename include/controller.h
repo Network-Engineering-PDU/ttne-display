@@ -32,8 +32,8 @@ bool controller_get_sensor_live(const char* mac);
 bool controller_post_ble_scan_start();
 void controller_post_ble_scan_stop();
 void controller_get_ble_discovered();
-void controller_post_ble_confirm_mac(const char* mac);
-void controller_post_ble_confirm_all();
+bool controller_post_ble_confirm_mac(const char* mac);
+bool controller_post_ble_confirm_all();
 void controller_get_nw_services();
 void controller_get_nw_info();
 
