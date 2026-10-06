@@ -11,6 +11,8 @@
 #include "app/app_state.h"
 #include "backend/backend.h"
 
+#define CONFIRM_MSG_TIMEOUT_MS 5000
+
 #define TIMER_SCAN 2000 // ms
 #define MIN_SCAN_POLLS 3
 #define MAX_SCAN_RETRIES 30 // 30 * 2s = 60 seconds scan timeout
@@ -290,6 +292,10 @@ static void show_found_sensors_selection(void)
 		lv_obj_add_event_cb(btn_found_sensor[i], btn_found_sensor_cb,
 				LV_EVENT_CLICKED, (void*)(long)i);
 		lv_obj_set_height(btn_found_sensor[i], 50);
+		/* Long names roll back and forth instead of looping around */
+		lv_obj_t* lbl_found = lv_obj_get_child(btn_found_sensor[i], 0);
+		lv_label_set_long_mode(lbl_found, LV_LABEL_LONG_SCROLL);
+		lv_obj_set_width(lbl_found, LV_PCT(90));
 	}
 
 	lv_obj_t* btn_back = tt_obj_btn_perc_create(selection_scr, NULL, "Cancel", 100);
@@ -377,11 +383,13 @@ static void confirm_sensor_cb(int err, void* userdata)
 
 	finish_selection_and_return();
 	if (open_after_add && !open_sensor_by_mac_from_snapshot(selected_discovered_mac)) {
-		tt_obj_info_box_create("Sensor added",
-				"Sensor registered.\nOpen it to view live data.", 1);
+		tt_obj_info_box_create_timed("Sensor added",
+				"Sensor registered.\nOpen it to view live data.", 1,
+				CONFIRM_MSG_TIMEOUT_MS);
 	} else if (!open_after_add) {
-		tt_obj_info_box_create("Sensors added",
-				"Sensors registered.\nOpen one to view live data.", 1);
+		tt_obj_info_box_create_timed("Sensors added",
+				"Sensors registered.\nOpen one to view live data.", 1,
+				CONFIRM_MSG_TIMEOUT_MS);
 	}
 }
 

@@ -313,6 +313,30 @@ lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
 	return msgbox;
 }
 
+static void info_box_timeout_cb(lv_timer_t* timer)
+{
+	lv_obj_t* msgbox = lv_timer_get_user_data(timer);
+	/* Close asynchronously: deleting here would free the timer that is running */
+	lv_timer_pause(timer);
+	lv_msgbox_close_async(msgbox);
+}
+
+static void info_box_deleted_cb(lv_event_t* e)
+{
+	lv_timer_t* timer = lv_event_get_user_data(e);
+	lv_timer_del(timer);
+}
+
+lv_obj_t* tt_obj_info_box_create_timed(char* title, char* msg, int severity,
+		uint32_t timeout_ms)
+{
+	lv_obj_t* msgbox = tt_obj_info_box_create(title, msg, severity);
+	lv_timer_t* timer = lv_timer_create(info_box_timeout_cb, timeout_ms, msgbox);
+	/* Closed by timeout or by the user: either way the timer goes with the box */
+	lv_obj_add_event_cb(msgbox, info_box_deleted_cb, LV_EVENT_DELETE, timer);
+	return msgbox;
+}
+
 lv_obj_t* tt_obj_spinner_inline_create(lv_obj_t* scr, const char* msg)
 {
 	lv_obj_t* cont = lv_obj_create(scr);

@@ -181,6 +181,18 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry);
 
 /**
+ * @brief Creates an info box that closes itself after timeout_ms.
+ *        The user can still close it earlier.
+ *
+ * @param[in] title       Title of the info box.
+ * @param[in] msg         Text of the info box.
+ * @param[in] severity    Message severity: 0=INFO; 1=ERROR
+ * @param[in] timeout_ms  Time before the box closes itself.
+ */
+lv_obj_t* tt_obj_info_box_create_timed(char* title, char* msg, int severity,
+		uint32_t timeout_ms);
+
+/**
  * @brief Creates a little spinner with the text on its right.
  *
  * @param[in] scr       Screen in which spinner is shown.
