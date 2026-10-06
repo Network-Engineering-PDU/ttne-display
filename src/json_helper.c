@@ -419,7 +419,7 @@ int json_helper_update_sensors(const char* json_str)
 			sensors[i].last_data.pres = (err == 0) ? sensors[i].last_data.pres : NAN;
 			err = json_get_int(&sensors[i].last_data.rssi, last_data, "rssi");
 			sensors[i].last_data.rssi = (err == 0) ? sensors[i].last_data.rssi : -1;
-			err = json_get_int(&sensors[i].last_data.bat, last_data, "battery");
+			err = json_get_float(&sensors[i].last_data.bat, last_data, "battery");
 			sensors[i].last_data.bat = (err == 0) ? sensors[i].last_data.bat : -1;
 		}
 		i++;

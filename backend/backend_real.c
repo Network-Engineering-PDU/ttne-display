@@ -634,7 +634,7 @@ static void publish_sensor_data_from_live(int sensor_index,
 		if (bat_mv <= 0 && stored->last_data.bat > 0) {
 			bat_mv = (stored->last_data.bat < 20.0f)
 					? (int)(stored->last_data.bat * 1000.0f)
-					: stored->last_data.bat;
+					: (int)stored->last_data.bat;
 		}
 	}
 
@@ -686,7 +686,7 @@ static int run_sensor_data_refresh(int sensor_index)
 		.rssi = stored->last_data.rssi,
 		.bat_mv = (stored->last_data.bat < 20.0f)
 				? (int)(stored->last_data.bat * 1000.0f)
-				: stored->last_data.bat,
+				: (int)stored->last_data.bat,
 		.bat_pct = -1,
 	};
 	publish_sensor_data_from_live(sensor_index, &fallback, NULL);

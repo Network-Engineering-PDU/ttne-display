@@ -106,7 +106,7 @@ typedef struct sensor_last_data_t {
 	float humd;
 	float pres;
 	int rssi;
-	int bat;
+	float bat; /* volts from the API, e.g. 2.88 */
 } sensor_last_data_t;
 
 typedef struct models_sensor_t {
