@@ -155,6 +155,25 @@ typedef struct {
 
 typedef struct {
 	int addr;
+	/* RTU (RS-485, the "485" ports). Data bits are always 8. */
+	int baud_rate;
+	char parity; /* 'N', 'E' or 'O' */
+	int stop_bits;
+	/* TCP: each Ethernet port gated independently. */
+	bool tcp_eth1;
+	bool tcp_eth2;
+	/* RTU: each 485 jack gated independently. Only boards with one
+	 * transceiver per jack can do this (rtu_port_control, read-only). */
+	bool rtu_port1;
+	bool rtu_port2;
+	bool rtu_port_control;
+	/* Daisy chain: the master polls the other PDUs on the 485 bus. */
+	bool master;
+	int scan_first;
+	int scan_last;
+	int timeout_ms;
+	int poll_interval_s;
+	int offline_after;
 	bool valid;
 } app_state_modbus_t;
 

@@ -673,14 +673,29 @@ void controller_get_license()
 	http_helper_free(&req);
 }
 
-void controller_put_modbus(const models_modbus_t* modbus)
+int controller_put_modbus(const models_modbus_t* modbus)
 {
 	http_get_req_t req;
 	char* url = BASE_URL "settings/modbus";
+	char parity_str[2] = { modbus->parity, '\0' };
 	cJSON *json = cJSON_CreateObject();
 	cJSON_AddNumberToObject(json, "addr", modbus->addr);
+	cJSON_AddNumberToObject(json, "baud_rate", modbus->baud_rate);
+	cJSON_AddStringToObject(json, "parity", parity_str);
+	cJSON_AddNumberToObject(json, "stop_bits", modbus->stop_bits);
+	cJSON_AddBoolToObject(json, "tcp_eth1_enabled", modbus->tcp_eth1);
+	cJSON_AddBoolToObject(json, "tcp_eth2_enabled", modbus->tcp_eth2);
+	cJSON_AddBoolToObject(json, "rtu_port1_enabled", modbus->rtu_port1);
+	cJSON_AddBoolToObject(json, "rtu_port2_enabled", modbus->rtu_port2);
+	cJSON_AddStringToObject(json, "role", modbus->master ? "master" : "slave");
+	cJSON_AddNumberToObject(json, "scan_first", modbus->scan_first);
+	cJSON_AddNumberToObject(json, "scan_last", modbus->scan_last);
+	cJSON_AddNumberToObject(json, "timeout_ms", modbus->timeout_ms);
+	cJSON_AddNumberToObject(json, "poll_interval_s", modbus->poll_interval_s);
+	cJSON_AddNumberToObject(json, "offline_after", modbus->offline_after);
 	char* put_data = cJSON_PrintUnformatted(json);
-	int err = http_helper_put(&req, url, put_data);
+	/* The API restarts the Modbus service before it answers. */
+	int err = http_helper_put_timeout(&req, url, put_data, 10000);
 	if (err != 0) {
 		LV_LOG_ERROR("Modbus error");
 	}
@@ -688,6 +703,7 @@ void controller_put_modbus(const models_modbus_t* modbus)
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);
+	return err;
 }
 
 void controller_get_modbus()
