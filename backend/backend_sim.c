@@ -22,6 +22,20 @@ static app_state_nw_services_t sim_nw_services = {
 };
 static app_state_modbus_t sim_modbus = {
 	.addr = 1,
+	.baud_rate = 115200,
+	.parity = 'N',
+	.stop_bits = 1,
+	.tcp_eth1 = true,
+	.tcp_eth2 = true,
+	.rtu_port1 = true,
+	.rtu_port2 = true,
+	.rtu_port_control = true,
+	.master = false,
+	.scan_first = 2,
+	.scan_last = 16,
+	.timeout_ms = 200,
+	.poll_interval_s = 5,
+	.offline_after = 3,
 	.valid = true,
 };
 static app_state_ntp_t sim_ntp = {
@@ -78,7 +92,7 @@ static app_state_visual_config_t sim_visual_config = {
 	.valid = true,
 };
 static app_state_login_config_t sim_login_config = {
-	.skip_login = false,
+	.skip_login = true, /* TEMP: screenshot session only, revert before commit */
 	.valid = true,
 };
 static app_state_sensor_t sim_sensors[APP_STATE_MAX_SENSORS];
@@ -673,10 +687,17 @@ int backend_snmp_save(const app_state_snmp_t* snmp,
 	return 0;
 }
 
-int backend_modbus_set_addr(int addr, backend_callback_t callback,
-		void* userdata)
+int backend_modbus_save(const app_state_modbus_t* modbus,
+		backend_callback_t callback, void* userdata)
 {
-	sim_modbus.addr = addr;
+	if (modbus == NULL) {
+		if (callback != NULL) {
+			callback(1, userdata);
+		}
+		return -1;
+	}
+	sim_modbus = *modbus;
+	sim_modbus.valid = true;
 	app_state_set_modbus(&sim_modbus);
 	if (callback != NULL) {
 		callback(0, userdata);

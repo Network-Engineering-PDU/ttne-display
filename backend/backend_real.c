@@ -53,7 +53,7 @@ typedef enum {
 	BACKEND_CMD_NETWORK_SERVICES_REFRESH,
 	BACKEND_CMD_NETWORK_SERVICE_SET,
 	BACKEND_CMD_MODBUS_REFRESH,
-	BACKEND_CMD_MODBUS_SET_ADDR,
+	BACKEND_CMD_MODBUS_SAVE,
 	BACKEND_CMD_NTP_REFRESH,
 	BACKEND_CMD_NTP_SAVE,
 	BACKEND_CMD_SNMP_REFRESH,
@@ -89,6 +89,7 @@ typedef struct {
 	char action[32];
 	app_state_nw_if_t nw_if;
 	app_state_snmp_t snmp;
+	app_state_modbus_t modbus;
 	backend_callback_t callback;
 	void* userdata;
 } backend_cmd_t;
@@ -350,10 +351,24 @@ static void publish_network_services_from_models(void)
 static void publish_modbus_from_models(void)
 {
 	const models_modbus_t* model = models_get_modbus();
-	app_state_modbus_t modbus = {
-		.addr = model != NULL ? model->addr : 0,
-		.valid = true,
-	};
+	app_state_modbus_t modbus = { .valid = true };
+	if (model != NULL) {
+		modbus.addr = model->addr;
+		modbus.baud_rate = model->baud_rate;
+		modbus.parity = model->parity;
+		modbus.stop_bits = model->stop_bits;
+		modbus.tcp_eth1 = model->tcp_eth1;
+		modbus.tcp_eth2 = model->tcp_eth2;
+		modbus.rtu_port1 = model->rtu_port1;
+		modbus.rtu_port2 = model->rtu_port2;
+		modbus.rtu_port_control = model->rtu_port_control;
+		modbus.master = model->master;
+		modbus.scan_first = model->scan_first;
+		modbus.scan_last = model->scan_last;
+		modbus.timeout_ms = model->timeout_ms;
+		modbus.poll_interval_s = model->poll_interval_s;
+		modbus.offline_after = model->offline_after;
+	}
 	app_state_set_modbus(&modbus);
 }
 
@@ -1028,11 +1043,25 @@ static void* backend_worker(void* arg)
 			controller_get_modbus();
 			publish_modbus_from_models();
 			break;
-		case BACKEND_CMD_MODBUS_SET_ADDR: {
+		case BACKEND_CMD_MODBUS_SAVE: {
 			models_modbus_t modbus = {
-				.addr = cmd.value,
+				.addr = cmd.modbus.addr,
+				.baud_rate = cmd.modbus.baud_rate,
+				.parity = cmd.modbus.parity,
+				.stop_bits = cmd.modbus.stop_bits,
+				.tcp_eth1 = cmd.modbus.tcp_eth1,
+				.tcp_eth2 = cmd.modbus.tcp_eth2,
+				.rtu_port1 = cmd.modbus.rtu_port1,
+				.rtu_port2 = cmd.modbus.rtu_port2,
+				.rtu_port_control = cmd.modbus.rtu_port_control,
+				.master = cmd.modbus.master,
+				.scan_first = cmd.modbus.scan_first,
+				.scan_last = cmd.modbus.scan_last,
+				.timeout_ms = cmd.modbus.timeout_ms,
+				.poll_interval_s = cmd.modbus.poll_interval_s,
+				.offline_after = cmd.modbus.offline_after,
 			};
-			controller_put_modbus(&modbus);
+			err = controller_put_modbus(&modbus);
 			controller_get_modbus();
 			publish_modbus_from_models();
 			break;
@@ -1620,12 +1649,15 @@ int backend_snmp_save(const app_state_snmp_t* snmp,
 	return backend_submit(&cmd);
 }
 
-int backend_modbus_set_addr(int addr, backend_callback_t callback,
-		void* userdata)
+int backend_modbus_save(const app_state_modbus_t* modbus,
+		backend_callback_t callback, void* userdata)
 {
+	if (modbus == NULL) {
+		return -1;
+	}
 	backend_cmd_t cmd = {
-		.type = BACKEND_CMD_MODBUS_SET_ADDR,
-		.value = addr,
+		.type = BACKEND_CMD_MODBUS_SAVE,
+		.modbus = *modbus,
 		.callback = callback,
 		.userdata = userdata,
 	};

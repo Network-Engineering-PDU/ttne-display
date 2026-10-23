@@ -23,7 +23,23 @@ static models_bt_status_t bt_status;
 static models_nw_info_t nw_info;
 static models_nw_if_t nw_if;
 static models_license_t license;
-static models_modbus_t modbus;
+static models_modbus_t modbus = {
+	.addr = 1,
+	.baud_rate = 115200,
+	.parity = 'N',
+	.stop_bits = 1,
+	.tcp_eth1 = true,
+	.tcp_eth2 = true,
+	.rtu_port1 = true,
+	.rtu_port2 = true,
+	.rtu_port_control = false,
+	.master = false,
+	.scan_first = 2,
+	.scan_last = 16,
+	.timeout_ms = 200,
+	.poll_interval_s = 5,
+	.offline_after = 3,
+};
 static models_ntp_t ntp;
 static models_snmp_t snmp;
 static models_update_status_t update_status;
@@ -463,7 +479,7 @@ const models_modbus_t* models_get_modbus()
 
 void models_set_modbus(const models_modbus_t* l_modbus)
 {
-	modbus.addr = l_modbus->addr;
+	modbus = *l_modbus;
 }
 
 const models_update_status_t* models_get_update_status()

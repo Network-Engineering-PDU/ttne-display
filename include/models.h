@@ -214,6 +214,24 @@ typedef struct models_license_t {
 
 typedef struct models_modbus_t {
 	int addr;
+	/* RTU (RS-485, the "485" ports). Data bits are always 8. */
+	int baud_rate;
+	char parity; /* 'N', 'E' or 'O' */
+	int stop_bits;
+	/* TCP: each Ethernet port gated independently. */
+	bool tcp_eth1;
+	bool tcp_eth2;
+	/* RTU: each 485 jack gated independently, on boards that support it. */
+	bool rtu_port1;
+	bool rtu_port2;
+	bool rtu_port_control;
+	/* Daisy chain master settings. */
+	bool master;
+	int scan_first;
+	int scan_last;
+	int timeout_ms;
+	int poll_interval_s;
+	int offline_after;
 } models_modbus_t;
 
 typedef struct models_ntp_t {
