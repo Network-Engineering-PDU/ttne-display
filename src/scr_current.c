@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_current.h"
 #include "tt_obj.h"
@@ -35,8 +36,8 @@ static void rated_current_cb(int err, void* userdata)
 {
 	(void)userdata;
 	if (err != 0) {
-		tt_obj_info_box_create("Rated Current",
-				"Could not save rated current", 1);
+		tt_obj_info_box_create(tr("Rated Current"),
+				tr("Could not save rated current"), 1);
 	}
 }
 
@@ -69,9 +70,9 @@ static void current_btn_cb(lv_event_t* e)
 
     select_current_button(current);
 
-    char msg[64];
-    snprintf(msg, sizeof(msg), "Rated current set to %d A", current);
-    tt_obj_info_box_create("Rated Current", msg, 0);
+    char msg[128];
+    snprintf(msg, sizeof(msg), tr("Rated current set to %d A"), current);
+    tt_obj_info_box_create(tr("Rated Current"), msg, 0);
 }
 
 void scr_current_create(lv_obj_t* l_menu, lv_obj_t* btn)
@@ -79,7 +80,7 @@ void scr_current_create(lv_obj_t* l_menu, lv_obj_t* btn)
     menu = l_menu;
 
     /* Create the Rated Current page directly */
-    lv_obj_t* current_page = tt_obj_menu_page_create(menu, btn, NULL,"Rated Current");
+    lv_obj_t* current_page = tt_obj_menu_page_create(menu, btn, NULL,tr("Rated Current"));
 
     /* Apply Flex layout directly to the page. 
        In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 

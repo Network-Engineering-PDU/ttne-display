@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_splash.h"
 #include "tt_obj.h"
@@ -119,7 +120,7 @@ static void splash_update_display(void)
 	}
 	
 	snprintf(str, sizeof(str), "%s", "PowerIT Easy");
-	lv_label_set_text(lbl_system, str);
+	i18n_label_set_text(lbl_system, str);
 
 	int nw_mode = nw_if->nw_mode;
 	if (nw_mode < NW_MODE_SINGLE_LAN || nw_mode > NW_MODE_LAN_WIFI) {
@@ -157,7 +158,7 @@ static void splash_update_display(void)
 		snprintf(str, sizeof(str), "IP: %s (ETH)", eth_ip);
 		break;
 	}
-	lv_label_set_text(lbl_ip, str);
+	i18n_label_set_text(lbl_ip, str);
 }
 
 static void splash_timer_cb(lv_timer_t* timer)
@@ -192,7 +193,7 @@ lv_obj_t* scr_splash_create(lv_obj_t* prev_scr)
 	lv_obj_add_event_cb(splash_scr, splash_cb, LV_EVENT_CLICKED, prev_scr);
 
 	init_spinner = tt_obj_spinner_inline_create(splash_scr,
-			"Initializing system...");
+			tr("Initializing system..."));
 	info_cont = tt_obj_cont_create(splash_scr);
 	lv_obj_set_size(info_cont, 200, 60);
 

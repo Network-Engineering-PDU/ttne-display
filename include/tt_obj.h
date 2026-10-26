@@ -30,7 +30,7 @@ lv_obj_t* tt_obj_btn_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl,
  * @param[in] lbl       Button label.
  * @param[in] img_path  Button image path. NULL if no image.
  */
-lv_obj_t* tt_obj_btn_mtx_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl,
+lv_obj_t* tt_obj_btn_mtx_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl,
 		char* img_path);
 
 /**
@@ -40,7 +40,7 @@ lv_obj_t* tt_obj_btn_mtx_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl,
  * @param[in] lbl       Card label.
  * @param[in] img_path  Card image path. NULL if no image.
  */
-lv_obj_t* tt_obj_card_create(lv_obj_t* parent, char* lbl, char* img_path);
+lv_obj_t* tt_obj_card_create(lv_obj_t* parent, const char* lbl, char* img_path);
 
 /**
  * @brief Change the text of the label of a card.
@@ -65,7 +65,7 @@ lv_obj_t* tt_obj_card_set_img(lv_obj_t* card, char* img_path);
  * @param[in] cb        Callback function to be call when pressed.
  * @param[in] lbl       Button label.
  */
-lv_obj_t* tt_obj_btn_std_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl);
+lv_obj_t* tt_obj_btn_std_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl);
 
 /**
  * @brief Creates a toggle button.
@@ -75,7 +75,7 @@ lv_obj_t* tt_obj_btn_std_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl);
  * @param[in] lbl       Button label.
  */
 lv_obj_t* tt_obj_btn_toggle_create(lv_obj_t* parent, lv_event_cb_t cb,
-		char* lbl);
+		const char* lbl);
 
 /**
  * @brief Sets toggle button state.
@@ -94,7 +94,7 @@ void tt_obj_btn_toggle_set_state(lv_obj_t* btn, bool state);
  * @param[in] percentage Button width in percentage.
  */
 lv_obj_t* tt_obj_btn_toggle_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
-		char* lbl, int percentage);
+		const char* lbl, int percentage);
 
 /**
  * @brief Creates a button with certain width in percentage.
@@ -105,7 +105,7 @@ lv_obj_t* tt_obj_btn_toggle_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
  * @param[in] percentage Button width in percentage.
  */
 lv_obj_t* tt_obj_btn_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
-		char* lbl, int percentage);
+		const char* lbl, int percentage);
 
 /**
  * @brief Change the text of a button.
@@ -129,7 +129,7 @@ lv_obj_t* tt_obj_label_create(lv_obj_t* parent, const char* txt);
  * @param[in] parent    Pointer to the parent object.
  * @param[in] txt       Label text.
  */
-lv_obj_t* tt_obj_label_color_create(lv_obj_t* parent, char* txt);
+lv_obj_t* tt_obj_label_color_create(lv_obj_t* parent, const char* txt);
 
 /**
  * @brief Creates a menu page.
@@ -141,7 +141,7 @@ lv_obj_t* tt_obj_label_color_create(lv_obj_t* parent, char* txt);
  * @param[in] name      Menu page name.
  */
 lv_obj_t* tt_obj_menu_page_create(lv_obj_t* menu, lv_obj_t* btn,
-		lv_event_cb_t cb, char* name);
+		lv_event_cb_t cb, const char* name);
 /**
  * @brief Creates container.
  *
@@ -168,7 +168,7 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
  * @param[in] txt       Text in spinner passed as user data. //TODO
  * @param[in] cb        Callback function to be call when pressed.
  */
-lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
+lv_obj_t* tt_obj_msg_box_create(const char* title, const char* msg, const char* txt,
 		lv_event_cb_t cb);
 
 /**
@@ -178,7 +178,7 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
  * @param[in] msg       Text of the info box.
  * @param[in] severity  Message severity: 0=INFO; 1=ERROR
  */
-lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry);
+lv_obj_t* tt_obj_info_box_create(const char* title, const char* msg, int severiry);
 
 /**
  * @brief Creates an info box that closes itself after timeout_ms.
@@ -189,7 +189,7 @@ lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry);
  * @param[in] severity    Message severity: 0=INFO; 1=ERROR
  * @param[in] timeout_ms  Time before the box closes itself.
  */
-lv_obj_t* tt_obj_info_box_create_timed(char* title, char* msg, int severity,
+lv_obj_t* tt_obj_info_box_create_timed(const char* title, const char* msg, int severity,
 		uint32_t timeout_ms);
 
 /**
@@ -215,7 +215,7 @@ lv_obj_t* tt_obj_spinner_create(lv_obj_t* scr, const char* msg);
  * @param[in] placeholder Guide text to be desplayed when empty.
  * @param[in] cb          Callback function to be call when selected.
  */
-lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, char* placeholder,
+lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, const char* placeholder,
 		lv_event_cb_t cb);
 
 /**
@@ -225,7 +225,7 @@ lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, char* placeholder,
  * @param[in] options   String with all options splitted with '\n'.
  * @param[in] cb        Callback function to be call when selected.
  */
-lv_obj_t* tt_obj_dropdown_create(lv_obj_t* parent, char* options,
+lv_obj_t* tt_obj_dropdown_create(lv_obj_t* parent, const char* options,
 		lv_event_cb_t cb);
 
 /**
@@ -235,7 +235,7 @@ lv_obj_t* tt_obj_dropdown_create(lv_obj_t* parent, char* options,
  * @param[in] txt       String text to show after checkbox.
  * @param[in] cb        Callback function to be call when checked/unchecked.
  */
-lv_obj_t* tt_obj_checkbox_create(lv_obj_t* parent, char* txt, lv_event_cb_t cb);
+lv_obj_t* tt_obj_checkbox_create(lv_obj_t* parent, const char* txt, lv_event_cb_t cb);
 
 /**
  * @brief Creates a loader screen.

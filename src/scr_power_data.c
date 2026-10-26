@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_power_data.h"
@@ -34,7 +35,7 @@ static void menu_cb(lv_event_t* e)
 void scr_power_data_create(lv_obj_t* menu, lv_obj_t* btn)
 {
 	lv_obj_t* power_data_cont = tt_obj_menu_page_create(menu, btn, menu_cb,
-			"Power / Input x");
+			tr("Power / Input x"));
 
 	power_data_t pwr_data;
 	pwr_data.voltage = 223.61;
@@ -48,28 +49,28 @@ void scr_power_data_create(lv_obj_t* menu, lv_obj_t* btn)
 	pwr_data.energy = 25.5;
 
 	lv_obj_t* btn_toggle = tt_obj_btn_toggle_create(power_data_cont, NULL,
-			"Input enabled");
+			tr("Input enabled"));
 	lv_obj_set_height(btn_toggle, 30);
 
 	lv_obj_t* data_cont = tt_obj_cont_create(power_data_cont);
 
-	char pwr_data_str[100];
-	sprintf(pwr_data_str, "%s: #%06X %.2f V" , "Voltage", TT_COLOR_GREEN_NE, pwr_data.voltage);
+	char pwr_data_str[160];
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f V#" , tr("Voltage"), TT_COLOR_GREEN_NE, pwr_data.voltage);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f A" , "Current", TT_COLOR_GREEN_NE, pwr_data.current);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f A#" , tr("Current"), TT_COLOR_GREEN_NE, pwr_data.current);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f W" , "Active power", TT_COLOR_GREEN_NE, pwr_data.active_power);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f W#" , tr("Active power"), TT_COLOR_GREEN_NE, pwr_data.active_power);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f VAr" , "Reactive power", TT_COLOR_GREEN_NE, pwr_data.reactive_power);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f VAr#" , tr("Reactive power"), TT_COLOR_GREEN_NE, pwr_data.reactive_power);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f VA" , "Apparent power", TT_COLOR_GREEN_NE, pwr_data.apparent_power);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f VA#" , tr("Apparent power"), TT_COLOR_GREEN_NE, pwr_data.apparent_power);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f" , "Power factor", TT_COLOR_GREEN_NE, pwr_data.power_factor);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f#" , tr("Power factor"), TT_COLOR_GREEN_NE, pwr_data.power_factor);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f Hz" , "Frequency", TT_COLOR_GREEN_NE, pwr_data.frequency);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f Hz#" , tr("Frequency"), TT_COLOR_GREEN_NE, pwr_data.frequency);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f deg" , "Phase", TT_COLOR_GREEN_NE, pwr_data.phase_vi);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f deg#" , tr("Phase"), TT_COLOR_GREEN_NE, pwr_data.phase_vi);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
-	sprintf(pwr_data_str, "%s: #%06X %.2f Wh" , "Energy", TT_COLOR_GREEN_NE, pwr_data.energy);
+	snprintf(pwr_data_str, sizeof(pwr_data_str), "%s: #%06X %.2f Wh#" , tr("Energy"), TT_COLOR_GREEN_NE, pwr_data.energy);
 	tt_obj_label_color_create(data_cont, pwr_data_str);
 }

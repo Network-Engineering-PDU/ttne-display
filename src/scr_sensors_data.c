@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_sensors_data.h"
@@ -91,12 +92,12 @@ static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 
 	if (kind != NULL && kind[0] != '\0') {
 		snprintf(txt, sizeof(txt), "%s (%s)", name, kind);
-		lv_label_set_text(lbl_name, txt);
+		i18n_label_set_text(lbl_name, txt);
 	} else {
-		lv_label_set_text(lbl_name, name);
+		i18n_label_set_text(lbl_name, name);
 	}
 
-	lv_label_set_text(lbl_mac, sensor_data->mac);
+	i18n_label_set_text(lbl_mac, sensor_data->mac);
 
 	snprintf(txt, sizeof(txt), "#%06X %s# C", TT_COLOR_GREEN_NE,
 			f_float(buff, sensor_data->temp, "%.2f"));
@@ -116,12 +117,12 @@ static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 		snprintf(txt, sizeof(txt), "#%06X %d# %%",
 				TT_COLOR_GREEN_NE, bat_pct);
 	} else {
-		snprintf(txt, sizeof(txt), "#%06X %s# %%", TT_COLOR_GREEN_NE, "N/A");
+		snprintf(txt, sizeof(txt), "#%06X %s# %%", TT_COLOR_GREEN_NE, tr("N/A"));
 	}
 	tt_obj_card_set_text(card_bat, txt);
 
 	if (name != NULL && name[0] != '\0') {
-		snprintf(title, sizeof(title), "Sensors / %s", name);
+		snprintf(title, sizeof(title), tr("Sensors / %s"), name);
 		if (sensor_data_page != NULL) {
 			lv_menu_set_page_title(sensor_data_page, title);
 		}
@@ -172,7 +173,7 @@ static void sensor_data_refresh_cb(int err, void* userdata)
 	(void)userdata;
 	refresh_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Sensors", "Could not refresh sensor data", 1);
+		tt_obj_info_box_create(tr("Sensors"), tr("Could not refresh sensor data"), 1);
 		return;
 	}
 	sensor_data_apply_snapshot();
@@ -215,7 +216,7 @@ const char* f_float(char* buffer, float num, const char* format)
 
 lv_obj_t* scr_sensors_data_create(lv_obj_t* menu)
 {
-	snprintf(title, sizeof(title), "Sensors");
+	snprintf(title, sizeof(title), "%s", tr("Sensors"));
 	lv_obj_t* sensor_data_cont = tt_obj_menu_page_create(menu, NULL, menu_cb,
 			title);
 	sensor_data_page = lv_obj_get_parent(sensor_data_cont);
@@ -242,7 +243,7 @@ void scr_sensors_data_set_sensor(int l_sensor)
 {
 	sensor_id = l_sensor - 1;
 
-	snprintf(title, sizeof(title), "Sensors / Sensor %d", l_sensor);
+	snprintf(title, sizeof(title), tr("Sensors / Sensor %d"), l_sensor);
 	if (sensor_data_page != NULL) {
 		lv_menu_set_page_title(sensor_data_page, title);
 	}

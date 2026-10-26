@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_outlet_data.h"
@@ -25,7 +26,7 @@ typedef enum {
 static bool running = false;
 
 static int outlet_id;
-static char title[50];
+static char title[128];
 
 static lv_obj_t* btn_en;
 static lv_obj_t* data_cont;
@@ -121,7 +122,7 @@ static void outlet_data_refresh_cb(int err, void* userdata)
 	(void)userdata;
 	data_request_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Outlet data", "Could not refresh outlet data", 1);
+		tt_obj_info_box_create(tr("Outlet data"), tr("Could not refresh outlet data"), 1);
 		return;
 	}
 	apply_outlet_data();
@@ -132,7 +133,7 @@ static void outlet_license_refresh_cb(int err, void* userdata)
 	(void)userdata;
 	license_request_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Outlet data", "Could not read license", 1);
+		tt_obj_info_box_create(tr("Outlet data"), tr("Could not read license"), 1);
 		return;
 	}
 	apply_license();
@@ -143,7 +144,7 @@ static void outlet_set_cb(int err, void* userdata)
 	bool requested_status = (bool)(intptr_t)userdata;
 	if (err != 0) {
 		tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
-		tt_obj_info_box_create("Outlet", "Could not update outlet", 1);
+		tt_obj_info_box_create(tr("Outlet"), tr("Could not update outlet"), 1);
 		return;
 	}
 	out_sw_status = requested_status;
@@ -174,39 +175,39 @@ static void apply_outlet_data(void)
 		return;
 	}
 
-	snprintf(label, sizeof(label), "Voltage: #%06X %.1f V" ,
+	snprintf(label, sizeof(label), tr("Voltage: #%06X %.1f V#"),
 			TT_COLOR_GREEN_NE, out_data->voltage);
-	lv_label_set_text(lbl_v, label);
-	snprintf(label, sizeof(label), "Current: #%06X %.1f A" ,
+	i18n_label_set_text(lbl_v, label);
+	snprintf(label, sizeof(label), tr("Current: #%06X %.1f A#"),
 			TT_COLOR_GREEN_NE, out_data->current);
-	lv_label_set_text(lbl_i, label);
-	snprintf(label, sizeof(label), "Active power: #%06X %.1f W" ,
+	i18n_label_set_text(lbl_i, label);
+	snprintf(label, sizeof(label), tr("Active power: #%06X %.1f W#"),
 			TT_COLOR_GREEN_NE, out_data->active_power);
-	lv_label_set_text(lbl_p, label);
-	snprintf(label, sizeof(label), "Reactive power: #%06X %.2f VAr" ,
+	i18n_label_set_text(lbl_p, label);
+	snprintf(label, sizeof(label), tr("Reactive power: #%06X %.2f VAr#"),
 			TT_COLOR_GREEN_NE, out_data->reactive_power);
-	lv_label_set_text(lbl_q, label);
-	snprintf(label, sizeof(label), "Apparent power: #%06X %.2f VA" ,
+	i18n_label_set_text(lbl_q, label);
+	snprintf(label, sizeof(label), tr("Apparent power: #%06X %.2f VA#"),
 			TT_COLOR_GREEN_NE, out_data->apparent_power);
-	lv_label_set_text(lbl_s, label);
-	snprintf(label, sizeof(label), "Power factor: #%06X %.2f" ,
+	i18n_label_set_text(lbl_s, label);
+	snprintf(label, sizeof(label), tr("Power factor: #%06X %.2f#"),
 			TT_COLOR_GREEN_NE, out_data->power_factor);
-	lv_label_set_text(lbl_pf, label);
-	snprintf(label, sizeof(label), "Frequency: #%06X %.2f Hz" ,
+	i18n_label_set_text(lbl_pf, label);
+	snprintf(label, sizeof(label), tr("Frequency: #%06X %.2f Hz#"),
 			TT_COLOR_GREEN_NE, out_data->frequency);
-	lv_label_set_text(lbl_f, label);
-	snprintf(label, sizeof(label), "Phase: #%06X %.1f deg" ,
+	i18n_label_set_text(lbl_f, label);
+	snprintf(label, sizeof(label), tr("Phase: #%06X %.1f deg#"),
 			TT_COLOR_GREEN_NE, out_data->phase);
-	lv_label_set_text(lbl_ph, label);
-	snprintf(label, sizeof(label), "Energy: #%06X %.1f Wh" ,
+	i18n_label_set_text(lbl_ph, label);
+	snprintf(label, sizeof(label), tr("Energy: #%06X %.1f Wh#"),
 			TT_COLOR_GREEN_NE, out_data->energy);
-	lv_label_set_text(lbl_e, label);
-	snprintf(label, sizeof(label), "Connector: #%06X %s" ,
+	i18n_label_set_text(lbl_e, label);
+	snprintf(label, sizeof(label), tr("Connector: #%06X %s#"),
 			TT_COLOR_GREEN_NE, out_data->conn);
-	lv_label_set_text(lbl_c, label);
-	snprintf(label, sizeof(label), "Fuse: #%06X %s" ,
+	i18n_label_set_text(lbl_c, label);
+	snprintf(label, sizeof(label), tr("Fuse: #%06X %s#"),
 			TT_COLOR_GREEN_NE, get_fuse_str(out_data->fuse));
-	lv_label_set_text(lbl_fuse, label);
+	i18n_label_set_text(lbl_fuse, label);
 }
 
 static void btn_toggle_cb(lv_event_t* e)
@@ -215,13 +216,13 @@ static void btn_toggle_cb(lv_event_t* e)
 	lv_obj_t* btn = lv_event_get_current_target(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		char title[50];
-		char msg[100];
-		sprintf(title, "Outlet %d", outlet_id);
-		sprintf(msg, "Are you sure you want to " TT_COLOR_GREEN_NE_STR
-				" %s outlet %d#?",
-				(lv_obj_get_state(btn) & LV_STATE_CHECKED) ?
-				"enable" : "disable", outlet_id);
+		char title[96];
+		char msg[256];
+		snprintf(title, sizeof(title), tr("Outlet %d"), outlet_id);
+		snprintf(msg, sizeof(msg), (lv_obj_get_state(btn) & LV_STATE_CHECKED) ?
+				tr("Are you sure you want to " TT_COLOR_GREEN_NE_STR " enable outlet %d#?") :
+				tr("Are you sure you want to " TT_COLOR_GREEN_NE_STR " disable outlet %d#?"),
+				outlet_id);
 		tt_obj_msg_box_create(title, msg, NULL, msg_box_outlet_cb);
 	}
 }
@@ -238,7 +239,7 @@ static void msg_box_outlet_cb(lv_event_t* e)
 			if (backend_outlet_set(outlet_id - 1, requested_status,
 					outlet_set_cb, (void*)(intptr_t)requested_status) != 0) {
 				tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
-				tt_obj_info_box_create("Outlet", "Outlet update unavailable", 1);
+				tt_obj_info_box_create(tr("Outlet"), tr("Outlet update unavailable"), 1);
 			}
 		} else {
 			tt_obj_btn_toggle_set_state(btn_en, out_sw_status);
@@ -287,15 +288,15 @@ static const char* get_fuse_str(fuse_t fuse_code)
 {
 	switch (fuse_code) {
 	case FUSE_UNK:
-		return "UNKNOWN";
+		return tr("UNKNOWN");
 	case FUSE_OK:
-		return "PRESENT"; // OK
+		return tr("PRESENT"); // OK
 	case FUSE_NOK:
-		return "NO VOLTAGE";
+		return tr("NO VOLTAGE");
 	case FUSE_NA:
-		return "NOT AVAILABLE";
+		return tr("NOT AVAILABLE");
 	default:
-		return "FUSE ERROR";
+		return tr("FUSE ERROR");
 	}
 }
 
@@ -303,14 +304,14 @@ static const char* get_fuse_str(fuse_t fuse_code)
 
 lv_obj_t* scr_outlet_data_create(lv_obj_t* menu)
 {
-	sprintf(title, "TTNULL");
+	snprintf(title, sizeof(title), "TTNULL");
 	lv_obj_t* outlet_data_cont = tt_obj_menu_page_create(menu, NULL, menu_cb,
 			title);
 
 	btn_en = tt_obj_btn_toggle_create(outlet_data_cont, btn_toggle_cb,
-			"Input enabled");
+			tr("Input enabled"));
 	lbl_relay_license = tt_obj_label_color_create(outlet_data_cont,
-			"Control outlet upgrading your license");
+			tr("Control outlet upgrading your license"));
 
 	data_cont = tt_obj_cont_create(outlet_data_cont);
 
@@ -326,7 +327,7 @@ lv_obj_t* scr_outlet_data_create(lv_obj_t* menu)
 	lbl_c = tt_obj_label_color_create(data_cont, "");
 	lbl_fuse = tt_obj_label_color_create(data_cont, "");
 	lbl_data_license = tt_obj_label_color_create(outlet_data_cont,
-			"Read outlet data upgrading your license");
+			tr("Read outlet data upgrading your license"));
 
 	return lv_obj_get_parent(outlet_data_cont);
 }
@@ -334,5 +335,5 @@ lv_obj_t* scr_outlet_data_create(lv_obj_t* menu)
 void scr_outlet_data_set_out(int l_outlet)
 {
 	outlet_id = l_outlet;
-	sprintf(title, "Outlets / Outlet %d", outlet_id);
+	snprintf(title, sizeof(title), tr("Outlets / Outlet %d"), outlet_id);
 }

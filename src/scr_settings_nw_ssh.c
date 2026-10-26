@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_ssh.h"
 #include "tt_obj.h"
@@ -56,11 +57,11 @@ static void btn_ssh_cb(lv_event_t* e)
 	lv_obj_t* btn = lv_event_get_current_target(e);
 
 	if (code == LV_EVENT_VALUE_CHANGED) {
-		char msg[100];
-		snprintf(msg, sizeof(msg), "Are you sure you want to " TT_COLOR_GREEN_NE_STR
-				" %s# SSH?", (lv_obj_get_state(btn) & LV_STATE_CHECKED) ?
-				"enable" : "disable");
-		tt_obj_msg_box_create("SSH service", msg, NULL, msg_box_ssh_cb);
+		char msg[256];
+		snprintf(msg, sizeof(msg), "%s", (lv_obj_get_state(btn) & LV_STATE_CHECKED) ?
+				tr("Are you sure you want to " TT_COLOR_GREEN_NE_STR " enable# SSH?") :
+				tr("Are you sure you want to " TT_COLOR_GREEN_NE_STR " disable# SSH?"));
+		tt_obj_msg_box_create(tr("SSH service"), msg, NULL, msg_box_ssh_cb);
 	}
 }
 

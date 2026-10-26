@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_alarms.h"
@@ -64,7 +65,7 @@ static void alarm_cont_close_cb(lv_event_t* e)
 	ack_pending = true;
 	if (backend_alarm_ack(alarm->id, alarm_ack_cb, NULL) != 0) {
 		ack_pending = false;
-		tt_obj_info_box_create("Alarms", "Could not acknowledge alarm", 1);
+		tt_obj_info_box_create(tr("Alarms"), tr("Could not acknowledge alarm"), 1);
 	}
 }
 
@@ -73,7 +74,7 @@ static void alarm_ack_cb(int err, void* userdata)
 	(void)userdata;
 	ack_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Alarms", "Could not acknowledge alarm", 1);
+		tt_obj_info_box_create(tr("Alarms"), tr("Could not acknowledge alarm"), 1);
 	}
 	request_refresh();
 }
@@ -124,8 +125,8 @@ static void apply_snapshot(void)
 {
 	static app_state_snapshot_t snapshot;
 
-	lv_label_set_text(lbl_no_alarms, api_error ?
-			"Alarm data unavailable" : "No alarm has been triggered");
+	i18n_label_set_text(lbl_no_alarms, api_error ?
+			tr("Alarm data unavailable") : tr("No alarm has been triggered"));
 
 	app_state_get_snapshot(&snapshot);
 	if (snapshot.alarms.valid && view_changed(&snapshot.alarms)) {
@@ -161,7 +162,7 @@ static void redraw(void)
 		char str[16];
 		lv_obj_add_flag(lbl_no_alarms, LV_OBJ_FLAG_HIDDEN);
 		snprintf(str, sizeof(str), "%d", unacked > 99 ? 99 : unacked);
-		lv_label_set_text(badge_lbl, str);
+		i18n_label_set_text(badge_lbl, str);
 		lv_obj_clear_flag(badge, LV_OBJ_FLAG_HIDDEN);
 	}
 }
@@ -170,12 +171,12 @@ static void redraw(void)
 
 void scr_alarms_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	lv_obj_t* alarms_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Alarms");
+	lv_obj_t* alarms_cont = tt_obj_menu_page_create(menu, btn, menu_cb, tr("Alarms"));
 
 	alarms_alarms_cont = tt_obj_cont_create(alarms_cont);
-	tt_obj_label_create(alarms_alarms_cont, "Alarms");
+	tt_obj_label_create(alarms_alarms_cont, tr("Alarms"));
 	lbl_no_alarms = tt_obj_label_color_create(alarms_alarms_cont,
-			"No alarm has been triggered");
+			tr("No alarm has been triggered"));
 
 	/* Count badge on the main menu button */
 	badge = lv_obj_create(btn);

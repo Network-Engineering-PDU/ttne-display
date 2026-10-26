@@ -14,6 +14,7 @@ typedef struct config_t {
 	int rotation;
 	int inactivity_time;
 	int skip_login;
+	char language[16];
 	char pdu_company[256];
 	char pdu_rack[256];
 	char pdu_system[256];
@@ -51,6 +52,7 @@ static void update_config_file()
 	fprintf(file, "rotation=%d\n", config.rotation);
 	fprintf(file, "inactivity_time=%d\n", config.inactivity_time);
 	fprintf(file, "skip_login=%d\n", config.skip_login);
+	fprintf(file, "language=%s\n", config.language);
 	fprintf(file, "pdu_company=%s\n", config.pdu_company);
 	fprintf(file, "pdu_rack=%s\n", config.pdu_rack);
 	fprintf(file, "pdu_system=%s\n", config.pdu_system);
@@ -69,6 +71,7 @@ static void set_defaults()
 	config.rotation = 2; // 180 degrees (default vertical orientation)
 	config.inactivity_time = 5; // 5 min
 	config.skip_login = 0;
+	snprintf(config.language, sizeof(config.language), "en");
 	memset(config.pdu_company, 0, sizeof(config.pdu_company));
 	memset(config.pdu_rack, 0, sizeof(config.pdu_rack));
 	memset(config.pdu_system, 0, sizeof(config.pdu_system));
@@ -122,6 +125,8 @@ static bool load_config_file()
 		(void)(parse_int(line, "rotation", &config.rotation) ||
 		parse_int(line, "inactivity_time", &config.inactivity_time) ||
 		parse_int(line, "skip_login", &config.skip_login) ||
+		parse_text(line, "language", config.language,
+				sizeof(config.language)) ||
 		parse_text(line, "pdu_company", config.pdu_company,
 				sizeof(config.pdu_company)) ||
 		parse_text(line, "pdu_rack", config.pdu_rack,
@@ -161,13 +166,13 @@ void config_init()
 	remember_file_mtime();
 }
 
-int config_reload_if_changed(int* rotation_changed)
+int config_reload_if_changed(int* restart_needed)
 {
 	struct stat st;
 	config_t old = config;
 
-	if (rotation_changed != NULL) {
-		*rotation_changed = 0;
+	if (restart_needed != NULL) {
+		*restart_needed = 0;
 	}
 	if (stat(config_file, &st) != 0) {
 		return 0;
@@ -183,8 +188,10 @@ int config_reload_if_changed(int* rotation_changed)
 		return 0;
 	}
 	remember_file_mtime();
-	if (rotation_changed != NULL) {
-		*rotation_changed = config.rotation != old.rotation;
+	/* Rotation and language are applied when the screens are built. */
+	if (restart_needed != NULL) {
+		*restart_needed = config.rotation != old.rotation ||
+				strcmp(config.language, old.language) != 0;
 	}
 	return memcmp(&old, &config, sizeof(config)) != 0;
 }
@@ -309,6 +316,19 @@ void config_set_pdu_service(const char* value)
 const char* config_get_pdu_service()
 {
 	return config.pdu_service;
+}
+
+void config_set_language(const char* code)
+{
+	if (code != NULL) {
+		snprintf(config.language, sizeof(config.language), "%s", code);
+		update_config_file();
+	}
+}
+
+const char* config_get_language()
+{
+	return config.language;
 }
 
 void config_set_skip_login(int skip_login)

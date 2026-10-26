@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_upd.h"
 #include "scr_keyboard.h"
@@ -66,7 +67,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_t* lbl_server;
 
     /* 1. Create page and main container */
-    lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, "System Update");
+    lv_obj_t* cont = tt_obj_menu_page_create(menu, btn, NULL, tr("System Update"));
     lv_obj_t* main = tt_obj_cont_create(cont);
     lv_obj_set_flex_flow(main, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(main, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -76,7 +77,7 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
 
     /* 2. Remote update server Label */
     lbl_server = tt_obj_label_create(main,
-            "Remote server update file location I.P / DNS");
+            tr("Remote server update file location I.P / DNS"));
     lv_label_set_long_mode(lbl_server, LV_LABEL_LONG_SCROLL);
     lv_obj_set_style_text_align(lbl_server, LV_TEXT_ALIGN_LEFT, 0);
     lv_obj_set_width(lbl_server, LV_PCT(100));
@@ -102,14 +103,14 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_align(auto_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t* lbl_auto = lv_label_create(auto_row);
-    lv_label_set_text(lbl_auto, "Automatic Updates");
+    i18n_label_set_text(lbl_auto, tr("Automatic Updates"));
     lv_label_set_long_mode(lbl_auto, LV_LABEL_LONG_SCROLL);
     lv_obj_set_width(lbl_auto, LV_PCT(60));
     lv_obj_set_scrollbar_mode(lbl_auto, LV_SCROLLBAR_MODE_OFF);
 
     // Create Dropdown for ON/OFF
     btn_auto = lv_dropdown_create(auto_row);
-    lv_dropdown_set_options(btn_auto, "ON\nOFF");
+    lv_dropdown_set_options(btn_auto, tr("ON\nOFF"));
     lv_dropdown_set_selected(btn_auto, 1);
     lv_obj_set_size(btn_auto, LV_PCT(40), 40);
     lv_obj_add_event_cb(btn_auto, btn_auto_cb, LV_EVENT_VALUE_CHANGED, NULL);
@@ -131,19 +132,19 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_align(period_row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t* lbl_period = lv_label_create(period_row);
-    lv_label_set_text(lbl_period, "OTA Periodic Checks");
+    i18n_label_set_text(lbl_period, tr("OTA Periodic Checks"));
     lv_label_set_long_mode(lbl_period, LV_LABEL_LONG_SCROLL);
     lv_obj_set_width(lbl_period, LV_PCT(50));
     lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
 
-    dd_period = tt_obj_dropdown_create(period_row, "Daily\nWeekly\nMonthly", dd_period_cb);
+    dd_period = tt_obj_dropdown_create(period_row, tr("Daily\nWeekly\nMonthly"), dd_period_cb);
     lv_dropdown_set_selected(dd_period, 1);
     lv_obj_set_size(dd_period, LV_PCT(50), 40);
 
     /* 5. Bottom buttons */
-    tt_obj_btn_mtx_create(main, btn_update_cb, "  Update\nFrom USB", ASSET("usb2.png"));
-    tt_obj_btn_mtx_create(main, btn_reboot_cb, "Reboot", ASSET("reboot.png"));
-    tt_obj_btn_mtx_create(main, btn_factory_cb, "Factory\n Reset", ASSET("f_reset.png"));
+    tt_obj_btn_mtx_create(main, btn_update_cb, tr("  Update\nFrom USB"), ASSET("usb2.png"));
+    tt_obj_btn_mtx_create(main, btn_reboot_cb, tr("Reboot"), ASSET("reboot.png"));
+    tt_obj_btn_mtx_create(main, btn_factory_cb, tr("Factory\n Reset"), ASSET("f_reset.png"));
     
     /* Start polling for pending updates from remote server */
     // Delete any existing timer to prevent duplicates
@@ -200,21 +201,21 @@ static void usb_detect_cb(int err, void* userdata) {
     app_state_get_snapshot(&snapshot);
     const app_state_usb_update_t* usb_update = &snapshot.usb_update;
     if (err != 0 || !usb_update->valid || !usb_update->device_found) {
-        tt_obj_info_box_create("Device update", "No USB detected", 1);
+        tt_obj_info_box_create(tr("Device update"), tr("No USB detected"), 1);
         return;
     }
 
-    char msg[200];
-    snprintf(msg, sizeof(msg), "USB device " TT_COLOR_GREEN_NE_STR
-            " %s detected. Update?", usb_update->device_name);
-    tt_obj_msg_box_create("Device update", msg, "Updating Device...",
+    char msg[384];
+    snprintf(msg, sizeof(msg), tr("USB device " TT_COLOR_GREEN_NE_STR
+            " %s detected. Update?"), usb_update->device_name);
+    tt_obj_msg_box_create(tr("Device update"), msg, tr("Updating Device..."),
             msg_box_update_cb);
 }
 
 static void usb_update_start_cb(int err, void* userdata) {
     (void)userdata;
     if (err != 0) {
-        tt_obj_info_box_create("Device update", "Could not start USB update", 1);
+        tt_obj_info_box_create(tr("Device update"), tr("Could not start USB update"), 1);
         return;
     }
     if (timer_check_update == NULL) {
@@ -261,9 +262,9 @@ static void apply_update_status_snapshot(void) {
             lv_timer_pause(timer_poll_update_status);
         }
         
-        char msg[300];
-        snprintf(msg, sizeof(msg), "Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?");
-        tt_obj_msg_box_create("Firmware Update", msg, "Updating device...", msg_box_update_confirmation_cb);
+        char msg[512];
+        snprintf(msg, sizeof(msg), "%s", tr("Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?"));
+        tt_obj_msg_box_create(tr("Firmware Update"), msg, tr("Updating device..."), msg_box_update_confirmation_cb);
     }
 }
 
@@ -369,7 +370,7 @@ static void msg_box_update_cb(lv_event_t* e) {
             app_state_get_snapshot(&snapshot);
             backend_usb_update_start(snapshot.usb_update.update_dev,
                     usb_update_start_cb, NULL);
-            lv_obj_t* loader_scr = tt_obj_loader_create("Updating Device...", NULL);
+            lv_obj_t* loader_scr = tt_obj_loader_create(tr("Updating Device..."), NULL);
             lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
             lv_scr_load(loader_scr);
         }
@@ -383,7 +384,7 @@ static void msg_box_update_confirmation_cb(lv_event_t* e) {
         if (lv_msgbox_get_active_btn(obj) == 0) {
             // YES - confirm update
             backend_update_confirm(true, update_confirm_cb, NULL);
-            lv_obj_t* loader_scr = tt_obj_loader_create("Updating Device...", NULL);
+            lv_obj_t* loader_scr = tt_obj_loader_create(tr("Updating Device..."), NULL);
             lv_obj_add_event_cb(loader_scr, loader_cb, LV_EVENT_ALL, lv_scr_act());
             lv_scr_load(loader_scr);
         } else {
@@ -421,7 +422,7 @@ static void msg_box_reboot_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t* obj = lv_event_get_current_target(e);
         if (lv_msgbox_get_active_btn(obj) == 0) {
-            lv_obj_t* loader_scr = tt_obj_loader_create("Rebooting Device...", NULL);
+            lv_obj_t* loader_scr = tt_obj_loader_create(tr("Rebooting Device..."), NULL);
             lv_scr_load(loader_scr);
             backend_system_reboot(NULL, NULL);
         }
@@ -436,7 +437,7 @@ static void msg_box_factory_cb(lv_event_t* e) {
             if (txt_server != NULL) {
                 lv_textarea_set_text(txt_server, DEFAULT_UPDATE_SERVER);
             }
-            lv_obj_t* loader_scr = tt_obj_loader_create("Resetting to factory defaults...", NULL);
+            lv_obj_t* loader_scr = tt_obj_loader_create(tr("Resetting to factory defaults..."), NULL);
             lv_scr_load(loader_scr);
             backend_system_factory_reset(NULL, NULL);
         }
@@ -446,16 +447,16 @@ static void msg_box_factory_cb(lv_event_t* e) {
 
 static void btn_reboot_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        char msg[200];
-        sprintf(msg, "Are you sure you want to reboot the system?");
-        tt_obj_msg_box_create("System reboot", msg, "Rebooting Device...", msg_box_reboot_cb);
+        char msg[512];
+        snprintf(msg, sizeof(msg), "%s", tr("Are you sure you want to reboot the system?"));
+        tt_obj_msg_box_create(tr("System reboot"), msg, tr("Rebooting Device..."), msg_box_reboot_cb);
     }
 }
 
 static void btn_factory_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        char msg[200];
-        sprintf(msg, "Are you sure you want to perform a factory reset?\nAll settings will be lost!");
-        tt_obj_msg_box_create("Factory reset", msg, "Resetting Device...", msg_box_factory_cb);
+        char msg[512];
+        snprintf(msg, sizeof(msg), "%s", tr("Are you sure you want to perform a factory reset?\nAll settings will be lost!"));
+        tt_obj_msg_box_create(tr("Factory reset"), msg, tr("Resetting Device..."), msg_box_factory_cb);
     }
 }

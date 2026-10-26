@@ -8,6 +8,7 @@
 
 #include <cjson/cJSON.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "http_async.h"
 #include "scr_keyboard.h"
@@ -62,9 +63,9 @@ static const char* capacity_api(access_capacity_t capacity)
 
 static const char* capacity_display(access_capacity_t capacity)
 {
-	static const char* values[] = {"Read only", "Control", "Full edit"};
-	return values[capacity >= ACCESS_READ_ONLY &&
-			capacity <= ACCESS_FULL_EDIT ? capacity : ACCESS_READ_ONLY];
+	static const char* values[] = {N_("Read only"), N_("Control"), N_("Full edit")};
+	return tr(values[capacity >= ACCESS_READ_ONLY &&
+			capacity <= ACCESS_FULL_EDIT ? capacity : ACCESS_READ_ONLY]);
 }
 
 static bool parse_capacity(const char* value, access_capacity_t* capacity)
@@ -159,7 +160,7 @@ static lv_obj_t* create_list_box(lv_obj_t* parent)
 static void add_list_line(lv_obj_t* list, const char* text)
 {
 	lv_obj_t* label = lv_label_create(list);
-	lv_label_set_text(label, text);
+	i18n_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR);
 	lv_obj_set_width(label, LV_PCT(100));
 }
@@ -176,7 +177,7 @@ static void rebuild_level_dropdown(void)
 				sizeof(options) - strlen(options) - 1);
 	}
 	lv_dropdown_set_options(dd_user_level,
-			options[0] != '\0' ? options : "No levels");
+			options[0] != '\0' ? options : tr("No levels"));
 	lv_dropdown_set_selected(dd_user_level, 0);
 }
 
@@ -184,7 +185,7 @@ static void rebuild_lists(void)
 {
 	lv_obj_clean(users_list);
 	if (draft_config.user_count == 0) {
-		add_list_line(users_list, "No users");
+		add_list_line(users_list, tr("No users"));
 	}
 	for (int i = 0; i < draft_config.user_count; i++) {
 		char line[2 * USER_ACCESS_NAME_LEN + 8];
@@ -285,7 +286,7 @@ static void load_cb(int err, void* buffer, size_t len, void* userdata)
 	request_pending = false;
 	if (err != 0 || !parse_config(buffer, &loaded_config)) {
 		free(buffer);
-		tt_obj_info_box_create("Users", "Can not load users and levels", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Can not load users and levels"), 1);
 		return;
 	}
 	free(buffer);
@@ -301,14 +302,14 @@ static void save_cb(int err, void* buffer, size_t len, void* userdata)
 	user_access_config_t saved;
 	if (err != 0 || !parse_config(buffer, &saved)) {
 		free(buffer);
-		tt_obj_info_box_create("Users", "Can not save users and levels", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Can not save users and levels"), 1);
 		return;
 	}
 	free(buffer);
 	loaded_config = saved;
 	draft_config = saved;
 	rebuild_lists();
-	tt_obj_info_box_create("Users", "Users and levels saved", 0);
+	tt_obj_info_box_create(tr("Users"), tr("Users and levels saved"), 0);
 }
 
 static void request_load(void)
@@ -319,7 +320,7 @@ static void request_load(void)
 	request_pending = true;
 	if (http_async_get(USER_ACCESS_URL, load_cb, NULL) < 0) {
 		request_pending = false;
-		tt_obj_info_box_create("Users", "Can not load users and levels", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Can not load users and levels"), 1);
 	}
 }
 
@@ -330,13 +331,13 @@ static void request_save(void)
 	}
 	char* json = serialize_config();
 	if (json == NULL) {
-		tt_obj_info_box_create("Users", "Can not prepare settings", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Can not prepare settings"), 1);
 		return;
 	}
 	request_pending = true;
 	if (http_async_put(USER_ACCESS_URL, json, save_cb, NULL) < 0) {
 		request_pending = false;
-		tt_obj_info_box_create("Users", "Can not save users and levels", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Can not save users and levels"), 1);
 	}
 	free(json);
 }
@@ -370,21 +371,21 @@ static void add_user_cb(lv_event_t* e)
 	}
 	const char* name = lv_textarea_get_text(txt_user_name);
 	if (!valid_name(name)) {
-		tt_obj_info_box_create("Users",
-				"User name must contain 1-24 safe characters", 1);
+		tt_obj_info_box_create(tr("Users"),
+				tr("User name must contain 1-24 safe characters"), 1);
 		return;
 	}
 	if (draft_config.user_count >= USER_ACCESS_MAX_USERS) {
-		tt_obj_info_box_create("Users", "Maximum 16 users", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Maximum 16 users"), 1);
 		return;
 	}
 	if (user_name_exists(name)) {
-		tt_obj_info_box_create("Users", "User name already exists", 1);
+		tt_obj_info_box_create(tr("Users"), tr("User name already exists"), 1);
 		return;
 	}
 	int selected = (int)lv_dropdown_get_selected(dd_user_level);
 	if (selected < 0 || selected >= draft_config.level_count) {
-		tt_obj_info_box_create("Users", "Select a valid access level", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Select a valid access level"), 1);
 		return;
 	}
 	user_entry_t* user = &draft_config.users[draft_config.user_count++];
@@ -402,16 +403,16 @@ static void add_level_cb(lv_event_t* e)
 	}
 	const char* name = lv_textarea_get_text(txt_level_name);
 	if (!valid_name(name)) {
-		tt_obj_info_box_create("Users",
-				"Level name must contain 1-24 safe characters", 1);
+		tt_obj_info_box_create(tr("Users"),
+				tr("Level name must contain 1-24 safe characters"), 1);
 		return;
 	}
 	if (draft_config.level_count >= USER_ACCESS_MAX_LEVELS) {
-		tt_obj_info_box_create("Users", "Maximum 8 access levels", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Maximum 8 access levels"), 1);
 		return;
 	}
 	if (level_name_exists(name)) {
-		tt_obj_info_box_create("Users", "Access level already exists", 1);
+		tt_obj_info_box_create(tr("Users"), tr("Access level already exists"), 1);
 		return;
 	}
 	level_entry_t* level = &draft_config.levels[draft_config.level_count++];
@@ -443,7 +444,7 @@ static void cancel_cb(lv_event_t* e)
 static lv_obj_t* create_section_label(lv_obj_t* parent, const char* text)
 {
 	lv_obj_t* label = lv_label_create(parent);
-	lv_label_set_text(label, text);
+	i18n_label_set_text(label, text);
 	lv_obj_set_width(label, LV_PCT(100));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	return label;
@@ -451,7 +452,7 @@ static lv_obj_t* create_section_label(lv_obj_t* parent, const char* text)
 
 void scr_settings_sys_users_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	lv_obj_t* page = tt_obj_menu_page_create(menu, btn, menu_cb, "Users");
+	lv_obj_t* page = tt_obj_menu_page_create(menu, btn, menu_cb, tr("Users"));
 	lv_obj_t* main = tt_obj_cont_create(page);
 	lv_obj_set_width(main, LV_PCT(100));
 	lv_obj_set_height(main, 0);
@@ -464,40 +465,40 @@ void scr_settings_sys_users_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_pad_all(main, 4, 0);
 	lv_obj_set_style_pad_row(main, 3, 0);
 
-	create_section_label(main, "Users");
+	create_section_label(main, tr("Users"));
 	users_list = create_list_box(main);
 
 	lv_obj_t* row = create_row(main, 38);
-	tt_obj_btn_perc_create(row, add_user_cb, "Add user", 31);
-	txt_user_name = tt_obj_txt_create(row, "User name", text_cb);
+	tt_obj_btn_perc_create(row, add_user_cb, tr("Add user"), 31);
+	txt_user_name = tt_obj_txt_create(row, tr("User name"), text_cb);
 	lv_obj_set_size(txt_user_name, LV_PCT(32), 34);
 	lv_textarea_set_max_length(txt_user_name, USER_ACCESS_NAME_LEN - 1);
 	lv_textarea_set_accepted_chars(txt_user_name,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.- ");
-	dd_user_level = tt_obj_dropdown_create(row, "Full edit", NULL);
+	dd_user_level = tt_obj_dropdown_create(row, tr("Full edit"), NULL);
 	lv_obj_set_size(dd_user_level, LV_PCT(33), 34);
 
 	row = create_row(main, 48);
 	tt_obj_btn_perc_create(row, ok_cb, "OK", 47);
-	tt_obj_btn_perc_create(row, cancel_cb, "Cancel", 47);
+	tt_obj_btn_perc_create(row, cancel_cb, tr("Cancel"), 47);
 
-	create_section_label(main, "Level");
+	create_section_label(main, tr("Level"));
 	levels_list = create_list_box(main);
 
 	row = create_row(main, 38);
-	tt_obj_btn_perc_create(row, add_level_cb, "Add level", 31);
-	txt_level_name = tt_obj_txt_create(row, "Level name", text_cb);
+	tt_obj_btn_perc_create(row, add_level_cb, tr("Add level"), 31);
+	txt_level_name = tt_obj_txt_create(row, tr("Level name"), text_cb);
 	lv_obj_set_size(txt_level_name, LV_PCT(32), 34);
 	lv_textarea_set_max_length(txt_level_name, USER_ACCESS_NAME_LEN - 1);
 	lv_textarea_set_accepted_chars(txt_level_name,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.- ");
 	dd_level_capacity = tt_obj_dropdown_create(row,
-			"Read only\nControl\nFull edit", NULL);
+			tr("Read only\nControl\nFull edit"), NULL);
 	lv_obj_set_size(dd_level_capacity, LV_PCT(33), 34);
 
 	row = create_row(main, 48);
 	tt_obj_btn_perc_create(row, ok_cb, "OK", 47);
-	tt_obj_btn_perc_create(row, cancel_cb, "Cancel", 47);
+	tt_obj_btn_perc_create(row, cancel_cb, tr("Cancel"), 47);
 
 	memset(&loaded_config, 0, sizeof(loaded_config));
 	memset(&draft_config, 0, sizeof(draft_config));

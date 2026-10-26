@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_power.h"
@@ -148,9 +149,9 @@ static void set_line_label(lv_obj_t* lbl, float data1, float data2, float data3)
 				TT_COLOR_GREEN_NE, data1, TT_COLOR_GREEN_NE, data2,
 				TT_COLOR_GREEN_NE, data3);
 	} else {
-		snprintf(str, sizeof(str), "#%06X ERROR#", TT_COLOR_GREEN_NE);
+		snprintf(str, sizeof(str), "#%06X %s#", TT_COLOR_GREEN_NE, tr("ERROR"));
 	}
-	lv_label_set_text(lbl, str);
+	i18n_label_set_text(lbl, str);
 }
 
 /* Callbacks ******************************************************************/
@@ -171,7 +172,7 @@ static void power_refresh_cb(int err, void* userdata)
 	(void)userdata;
 	refresh_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Power", "Could not refresh power data", 1);
+		tt_obj_info_box_create(tr("Power"), tr("Could not refresh power data"), 1);
 		return;
 	}
 	apply_power_snapshot();
@@ -199,18 +200,18 @@ static void apply_power_snapshot(void)
 		tot_e += (in_data[i].energy < 0.0f) ? -in_data[i].energy : in_data[i].energy;
 	}
 
-	char label[100];
-	snprintf(label, sizeof(label), "Power: #%06X %.2f W",
+	char label[160];
+	snprintf(label, sizeof(label), tr("Power: #%06X %.2f W#"),
 			TT_COLOR_GREEN_NE, tot_p);
-	lv_label_set_text(lbl_tot_p, label);
-	snprintf(label, sizeof(label), "Energy: #%06X %.2f Wh",
+	i18n_label_set_text(lbl_tot_p, label);
+	snprintf(label, sizeof(label), tr("Energy: #%06X %.2f Wh#"),
 			TT_COLOR_GREEN_NE, tot_e);
-	lv_label_set_text(lbl_tot_e, label);
+	i18n_label_set_text(lbl_tot_e, label);
 
-	char pwr_info_str[100];
+	char pwr_info_str[160];
 	switch (power->branch) {
 	case 0:
-		snprintf(pwr_info_str, sizeof(pwr_info_str), "Branch: #%06X Main",
+		snprintf(pwr_info_str, sizeof(pwr_info_str), tr("Branch: #%06X Main#"),
 				TT_COLOR_GREEN_NE);
 		n_branches = 1;
 		lv_obj_clear_flag(power_line_cont[0], LV_OBJ_FLAG_HIDDEN);
@@ -218,48 +219,48 @@ static void apply_power_snapshot(void)
 		break;
 	case 1:
 		snprintf(pwr_info_str, sizeof(pwr_info_str),
-				"Branch: #%06X Main and aux", TT_COLOR_GREEN_NE);
+				tr("Branch: #%06X Main and aux#"), TT_COLOR_GREEN_NE);
 		n_branches = 2;
 		lv_obj_clear_flag(power_line_cont[0], LV_OBJ_FLAG_HIDDEN);
 		lv_obj_clear_flag(power_line_cont[1], LV_OBJ_FLAG_HIDDEN);
 		break;
 	default:
-		snprintf(pwr_info_str, sizeof(pwr_info_str), "Branch: #%06X ERROR",
+		snprintf(pwr_info_str, sizeof(pwr_info_str), tr("Branch: #%06X ERROR#"),
 				TT_COLOR_GREEN_NE);
 		lv_obj_add_flag(power_line_cont[0], LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_flag(power_line_cont[1], LV_OBJ_FLAG_HIDDEN);
 		n_branches = 0;
 		break;
 	};
-	lv_label_set_text(lbl_branch, pwr_info_str);
+	i18n_label_set_text(lbl_branch, pwr_info_str);
 	switch (power->sys_type) {
 	case 0:
 		snprintf(pwr_info_str, sizeof(pwr_info_str),
-				"Type: #%06X Single-phase", TT_COLOR_GREEN_NE);
+				tr("Type: #%06X Single-phase#"), TT_COLOR_GREEN_NE);
 		n_phases = 1;
 		break;
 	case 1:
-		snprintf(pwr_info_str, sizeof(pwr_info_str), "Type: #%06X Bi-phase",
+		snprintf(pwr_info_str, sizeof(pwr_info_str), tr("Type: #%06X Bi-phase#"),
 				TT_COLOR_GREEN_NE);
 		n_phases = 2;
 		break;
 	case 2:
 		snprintf(pwr_info_str, sizeof(pwr_info_str),
-				"Type: #%06X Three-phase without N", TT_COLOR_GREEN_NE);
+				tr("Type: #%06X Three-phase without N#"), TT_COLOR_GREEN_NE);
 		n_phases = 3;
 		break;
 	case 3:
 		snprintf(pwr_info_str, sizeof(pwr_info_str),
-				"Type: #%06X Three-phase with N", TT_COLOR_GREEN_NE);
+				tr("Type: #%06X Three-phase with N#"), TT_COLOR_GREEN_NE);
 		n_phases = 3;
 		break;
 	default:
-		snprintf(pwr_info_str, sizeof(pwr_info_str), "Type: #%06X ERROR",
+		snprintf(pwr_info_str, sizeof(pwr_info_str), tr("Type: #%06X ERROR#"),
 				TT_COLOR_GREEN_NE);
 		n_phases = 0;
 		break;
 	};
-	lv_label_set_text(lbl_sys_type, pwr_info_str);
+	i18n_label_set_text(lbl_sys_type, pwr_info_str);
 
 	if (n_phases == 0) {
 		return;
@@ -313,22 +314,22 @@ static void apply_power_snapshot(void)
 
 void scr_power_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	lv_obj_t* power_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Power");
+	lv_obj_t* power_cont = tt_obj_menu_page_create(menu, btn, menu_cb, tr("Power"));
 	power_info_cont = tt_obj_cont_create(power_cont);
-	tt_obj_label_create(power_info_cont, "Power info");
+	tt_obj_label_create(power_info_cont, tr("Power info"));
 
 	lbl_branch = tt_obj_label_color_create(power_info_cont, "");
 	lbl_sys_type = tt_obj_label_color_create(power_info_cont, "");
 	
 	lv_obj_t* power_tot_cont = tt_obj_cont_create(power_cont);
-	tt_obj_label_create(power_tot_cont, "TOTAL");
+	tt_obj_label_create(power_tot_cont, tr("TOTAL"));
 	lbl_tot_p = tt_obj_label_color_create(power_tot_cont, "");
 	lbl_tot_e = tt_obj_label_color_create(power_tot_cont, "");
 
 	power_line_cont[0] = tt_obj_cont_create(power_cont);
 	power_line_cont[1] = tt_obj_cont_create(power_cont);
-	tt_obj_label_create(power_line_cont[0], "MAIN BRANCH");
-	tt_obj_label_create(power_line_cont[1], "AUX BRANCH");
+	tt_obj_label_create(power_line_cont[0], tr("MAIN BRANCH"));
+	tt_obj_label_create(power_line_cont[1], tr("AUX BRANCH"));
 	lv_obj_add_flag(power_line_cont[1], LV_OBJ_FLAG_HIDDEN);
 
 	for (int i = 0; i < MAX_BRANCHES; i++) {
@@ -344,15 +345,15 @@ void scr_power_create(lv_obj_t* menu, lv_obj_t* btn)
 		lv_obj_t* left_col = power_branch_column_create(branch_cols);
 		lv_obj_t* right_col = power_branch_column_create(branch_cols);
 
-		lbl_line_v[i] = power_reading_create(left_col, "V (V):");
-		lbl_line_c[i] = power_reading_create(left_col, "I (A):");
-		lbl_line_s[i] = power_reading_create(left_col, "S (VA):");
-		lbl_line_ph[i] = power_reading_create(left_col, "PH (deg):");
-		lbl_line_e[i] = power_reading_create(left_col, "E (Wh):");
+		lbl_line_v[i] = power_reading_create(left_col, tr("V (V):"));
+		lbl_line_c[i] = power_reading_create(left_col, tr("I (A):"));
+		lbl_line_s[i] = power_reading_create(left_col, tr("S (VA):"));
+		lbl_line_ph[i] = power_reading_create(left_col, tr("PH (deg):"));
+		lbl_line_e[i] = power_reading_create(left_col, tr("E (Wh):"));
 
-		lbl_line_p[i] = power_reading_create(right_col, "P (W):");
-		lbl_line_q[i] = power_reading_create(right_col, "Q (VAr):");
-		lbl_line_pf[i] = power_reading_create(right_col, "PF:");
-		lbl_line_f[i] = power_reading_create(right_col, "f (Hz):");
+		lbl_line_p[i] = power_reading_create(right_col, tr("P (W):"));
+		lbl_line_q[i] = power_reading_create(right_col, tr("Q (VAr):"));
+		lbl_line_pf[i] = power_reading_create(right_col, tr("PF:"));
+		lbl_line_f[i] = power_reading_create(right_col, tr("f (Hz):"));
 	}
 }

@@ -412,7 +412,7 @@
 
 /*Enable Arabic/Persian processing
  *In these languages characters should be replaced with an other form based on their position in the text*/
-#define LV_USE_ARABIC_PERSIAN_CHARS 0
+#define LV_USE_ARABIC_PERSIAN_CHARS 1
 
 /*==================
  *  WIDGET USAGE
@@ -605,10 +605,11 @@
 #define LV_USE_QRCODE 1
 
 /*FreeType library*/
-#define LV_USE_FREETYPE 0
+#define LV_USE_FREETYPE 1
 #if LV_USE_FREETYPE
-    /*Memory used by FreeType to cache characters [bytes] (-1: no caching)*/
-    #define LV_FREETYPE_CACHE_SIZE (16 * 1024)
+    /*Memory used by FreeType to cache characters [bytes] (-1: no caching)
+     *Chinese uses many distinct glyphs, so the cache is larger than usual.*/
+    #define LV_FREETYPE_CACHE_SIZE (256 * 1024)
     #if LV_FREETYPE_CACHE_SIZE >= 0
         /* 1: bitmap cache use the sbit cache, 0:bitmap cache use the image cache. */
         /* sbit cache:it is much more memory efficient for small bitmaps(font size < 256) */

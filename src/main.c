@@ -13,6 +13,8 @@
 
 #include "ttne_display.h"
 #include "config.h"
+#include "i18n.h"
+#include "screenshot.h"
 #include "http_async.h"
 #include "backend/backend.h"
 #include "app/app_state.h"
@@ -177,6 +179,11 @@ int main(int argc, char **argv)
 	/* Initialize async HTTP module */
 	http_async_init();
 	config_init();
+	/* The language decides the fonts, the layout direction and every text,
+	 * so it is applied before the first screen is built. */
+	i18n_init(config_get_language());
+	i18n_setup_display(NULL);
+	screenshot_init();
 	app_state_init();
 	backend_init();
 
@@ -195,6 +202,7 @@ int main(int argc, char **argv)
 			/* Process async HTTP callbacks */
 			http_async_process_callbacks();
 			backend_process();
+			screenshot_process();
 
 			uint32_t now = lv_tick_get();
 			if (now - last_config_check >= CONFIG_CHECK_MS) {

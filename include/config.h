@@ -14,10 +14,24 @@ void config_init();
  * @brief Reloads the config file if it was changed by someone else (the web
  * UI, through the API).
  *
- * @param[out] rotation_changed     Set to 1 if the rotation value changed.
+ * @param[out] restart_needed  Set to 1 if the rotation or the language
+ *                             changed: both apply only when the screens are
+ *                             built, so the program has to restart.
  * @return 1 if any setting changed, 0 otherwise.
  */
-int config_reload_if_changed(int* rotation_changed);
+int config_reload_if_changed(int* restart_needed);
+
+/**
+ * @brief Set the touchscreen language.
+ *
+ * @param[in] code  Language code: "en", "es", "de", "zh-hans" or "ar".
+ */
+void config_set_language(const char* code);
+
+/**
+ * @brief Get the touchscreen language code ("en" when never set).
+ */
+const char* config_get_language();
 
 /**
  * @brief Set the rotation of the display.

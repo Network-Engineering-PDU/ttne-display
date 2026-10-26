@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_diagnose.h"
@@ -36,11 +37,11 @@ static void menu_cb(lv_event_t* e)
 lv_obj_t* scr_diagnose_create(lv_obj_t* menu)
 {
 	lv_obj_t* diagnose_cont = tt_obj_menu_page_create(menu, NULL,
-			menu_cb, "Settings / Diagnose");
+			menu_cb, tr("Settings / Diagnose"));
 
-	tt_obj_label_color_create(diagnose_cont, "Diagnose system");
-	char msg[50];
-	snprintf(msg, sizeof(msg), TT_COLOR_GREEN_NE_STR "     No error found#");
+	tt_obj_label_color_create(diagnose_cont, tr("Diagnose system"));
+	char msg[128];
+	snprintf(msg, sizeof(msg), TT_COLOR_GREEN_NE_STR "     %s#", tr("No error found"));
 	tt_obj_label_color_create(diagnose_cont, msg);
 
 	return lv_obj_get_parent(diagnose_cont);
