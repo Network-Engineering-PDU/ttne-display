@@ -8,11 +8,14 @@
 #include "scr_keyboard.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
+#include "tt_colors.h"
 #include "app/app_state.h"
 #include "backend/backend.h"
 
 #define MODBUS_ROW_HEIGHT 36
 #define MODBUS_CONTROL_HEIGHT 32
+#define MODBUS_SWITCH_WIDTH 50
+#define MODBUS_SWITCH_HEIGHT 26
 /* Modbus RTU unit IDs: 0 is broadcast, 248-255 are reserved. */
 #define MODBUS_ADDR_MIN 1
 #define MODBUS_ADDR_MAX 247
@@ -55,10 +58,11 @@ static lv_obj_t* daisy_page;
 static lv_obj_t* last_page;
 
 /* Modbus page */
-static lv_obj_t* cbx_ethernet_1;
-static lv_obj_t* cbx_ethernet_2;
-static lv_obj_t* cbx_rtu_port1;
-static lv_obj_t* cbx_rtu_port2;
+static lv_obj_t* sw_service;
+static lv_obj_t* sw_ethernet_1;
+static lv_obj_t* sw_ethernet_2;
+static lv_obj_t* sw_rtu_port1;
+static lv_obj_t* sw_rtu_port2;
 static lv_obj_t* lbl_port_note;
 static lv_obj_t* dd_role;
 static lv_obj_t* lbl_addr;
@@ -78,12 +82,15 @@ static lv_obj_t* dd_offline;
 /* Whether this board can switch each 485 jack on its own (read-only). */
 static bool port_control;
 static bool refresh_pending;
+static bool services_refresh_pending;
+static bool service_set_pending;
 static bool save_pending;
 
 /* Function prototypes ********************************************************/
 
 static void refresh_cb(int err, void* userdata);
 static void save_cb(int err, void* userdata);
+static void services_cb(int err, void* userdata);
 static void update_rtu_controls(void);
 
 /* Function definitions *******************************************************/
@@ -128,20 +135,26 @@ static lv_obj_t* create_row_label(lv_obj_t* parent, const char* text)
 	return label;
 }
 
-static lv_obj_t* create_checkbox(lv_obj_t* parent, lv_event_cb_t cb)
+/* On/off switch, styled like the switches on the web UI's Modbus card:
+ * green when on. It uses LV_STATE_CHECKED like a checkbox. */
+static lv_obj_t* create_switch(lv_obj_t* parent, lv_event_cb_t cb)
 {
-	lv_obj_t* checkbox = tt_obj_checkbox_create(parent, "", cb);
-	lv_obj_set_size(checkbox, 30, 30);
-	lv_obj_set_style_border_width(checkbox, 2, LV_PART_INDICATOR);
-	return checkbox;
+	lv_obj_t* sw = lv_switch_create(parent);
+	lv_obj_set_size(sw, MODBUS_SWITCH_WIDTH, MODBUS_SWITCH_HEIGHT);
+	lv_obj_set_style_bg_color(sw, lv_color_hex(TT_COLOR_GREEN_NE),
+			LV_PART_INDICATOR | LV_STATE_CHECKED);
+	if (cb != NULL) {
+		lv_obj_add_event_cb(sw, cb, LV_EVENT_VALUE_CHANGED, NULL);
+	}
+	return sw;
 }
 
 static void create_toggle_row(lv_obj_t* parent, const char* label,
-		lv_obj_t** checkbox, lv_event_cb_t cb)
+		lv_obj_t** sw, lv_event_cb_t cb)
 {
 	lv_obj_t* row = create_row(parent);
 	create_row_label(row, label);
-	*checkbox = create_checkbox(row, cb);
+	*sw = create_switch(row, cb);
 }
 
 static void create_dropdown_row(lv_obj_t* parent, const char* label,
@@ -264,10 +277,10 @@ static void apply_snapshot(void)
 	}
 	const app_state_modbus_t* modbus = &snapshot.modbus;
 	port_control = modbus->rtu_port_control;
-	set_checked(cbx_ethernet_1, modbus->tcp_eth1);
-	set_checked(cbx_ethernet_2, modbus->tcp_eth2);
-	set_checked(cbx_rtu_port1, modbus->rtu_port1);
-	set_checked(cbx_rtu_port2, modbus->rtu_port2);
+	set_checked(sw_ethernet_1, modbus->tcp_eth1);
+	set_checked(sw_ethernet_2, modbus->tcp_eth2);
+	set_checked(sw_rtu_port1, modbus->rtu_port1);
+	set_checked(sw_rtu_port2, modbus->rtu_port2);
 	lv_dropdown_set_selected(dd_role, modbus->master ? ROLE_MASTER_INDEX : 0);
 	set_number_text(txt_addr, modbus->addr);
 	lv_dropdown_set_selected(dd_baud_rate, (uint16_t)index_of(BAUD_RATES,
@@ -285,12 +298,12 @@ static void apply_snapshot(void)
  *  - the Daisy chain button exists only for a master;
  *  - with both 485 ports off, the RTU settings have no effect, so they are
  *    disabled;
- *  - the port checkboxes work only on boards with one transceiver per jack. */
+ *  - the port switches work only on boards with one transceiver per jack. */
 static void update_rtu_controls(void)
 {
 	bool master = role_is_master();
-	bool rtu_used = !port_control || is_checked(cbx_rtu_port1)
-			|| is_checked(cbx_rtu_port2);
+	bool rtu_used = !port_control || is_checked(sw_rtu_port1)
+			|| is_checked(sw_rtu_port2);
 
 	lv_label_set_text(lbl_addr, master ? "PDU number" : "Slave address");
 	if (master) {
@@ -299,8 +312,8 @@ static void update_rtu_controls(void)
 		lv_obj_add_flag(btn_daisy, LV_OBJ_FLAG_HIDDEN);
 	}
 
-	set_enabled(cbx_rtu_port1, port_control);
-	set_enabled(cbx_rtu_port2, port_control);
+	set_enabled(sw_rtu_port1, port_control);
+	set_enabled(sw_rtu_port2, port_control);
 	if (port_control) {
 		lv_obj_add_flag(lbl_port_note, LV_OBJ_FLAG_HIDDEN);
 	} else {
@@ -315,14 +328,60 @@ static void update_rtu_controls(void)
 	set_enabled(btn_daisy, rtu_used);
 }
 
+static void apply_service_state(void)
+{
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	if (snapshot.nw_services.valid) {
+		set_checked(sw_service, snapshot.nw_services.modbus);
+	}
+}
+
 static void request_refresh(void)
 {
-	if (refresh_pending) {
+	if (!refresh_pending) {
+		refresh_pending = true;
+		if (backend_modbus_refresh(refresh_cb, NULL) != 0) {
+			refresh_pending = false;
+		}
+	}
+	if (!services_refresh_pending && !service_set_pending) {
+		services_refresh_pending = true;
+		if (backend_network_services_refresh(services_cb, NULL) != 0) {
+			services_refresh_pending = false;
+		}
+	}
+}
+
+/* Like the web UI's switch, the service turns on or off as soon as the
+ * switch is tapped; Save is only for the settings below it. */
+static void service_cb(lv_event_t* e)
+{
+	if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED || service_set_pending) {
 		return;
 	}
-	refresh_pending = true;
-	if (backend_modbus_refresh(refresh_cb, NULL) != 0) {
-		refresh_pending = false;
+	bool enable = is_checked(sw_service);
+	service_set_pending = true;
+	set_enabled(sw_service, false);
+	if (backend_network_service_set("modbus", enable, services_cb, NULL) != 0) {
+		service_set_pending = false;
+		set_enabled(sw_service, true);
+		apply_service_state();
+		tt_obj_info_box_create("Modbus", "Can not change the Modbus service", 1);
+	}
+}
+
+static void services_cb(int err, void* userdata)
+{
+	(void)userdata;
+	bool was_set = service_set_pending;
+	services_refresh_pending = false;
+	service_set_pending = false;
+	set_enabled(sw_service, true);
+	/* Show what the PDU reports, not what was tapped. */
+	apply_service_state();
+	if (err != 0 && was_set) {
+		tt_obj_info_box_create("Modbus", "Can not change the Modbus service", 1);
 	}
 }
 
@@ -385,10 +444,10 @@ static void collect_settings(app_state_modbus_t* modbus)
 	modbus->baud_rate = BAUD_RATES[lv_dropdown_get_selected(dd_baud_rate)];
 	modbus->parity = PARITIES[lv_dropdown_get_selected(dd_parity)];
 	modbus->stop_bits = lv_dropdown_get_selected(dd_stop_bits) == 1 ? 2 : 1;
-	modbus->tcp_eth1 = is_checked(cbx_ethernet_1);
-	modbus->tcp_eth2 = is_checked(cbx_ethernet_2);
-	modbus->rtu_port1 = is_checked(cbx_rtu_port1);
-	modbus->rtu_port2 = is_checked(cbx_rtu_port2);
+	modbus->tcp_eth1 = is_checked(sw_ethernet_1);
+	modbus->tcp_eth2 = is_checked(sw_ethernet_2);
+	modbus->rtu_port1 = is_checked(sw_rtu_port1);
+	modbus->rtu_port2 = is_checked(sw_rtu_port2);
 	modbus->rtu_port_control = port_control;
 	modbus->master = role_is_master();
 	modbus->scan_first = get_number_text(txt_scan_first);
@@ -512,11 +571,11 @@ static void save_cb(int err, void* userdata)
 	}
 	apply_snapshot();
 	tt_obj_info_box_create_timed("Modbus",
-			"Settings saved. The Modbus service restarts.", 0, 5000);
+			"Settings saved. The Modbus service restarts if it is on.", 0, 5000);
 }
 
-/* Page body: a scrolling area for the settings above a fixed Cancel/Save
- * row, the layout every settings page here uses. */
+/* Page body: one scrolling area holding the settings, with the Cancel/Save
+ * row added as its last item so it appears at the end of the page. */
 static lv_obj_t* create_page_body(lv_obj_t* page)
 {
 	lv_obj_set_height(page, LV_PCT(100));
@@ -542,10 +601,10 @@ static lv_obj_t* create_page_body(lv_obj_t* page)
 	return main;
 }
 
-static void create_button_row(lv_obj_t* page, lv_event_cb_t cancel,
+static void create_button_row(lv_obj_t* main, lv_event_cb_t cancel,
 		lv_event_cb_t save)
 {
-	lv_obj_t* button_row = create_row(page);
+	lv_obj_t* button_row = create_row(main);
 	lv_obj_set_height(button_row, 52);
 	tt_obj_btn_perc_create(button_row, cancel, "Cancel", 47);
 	tt_obj_btn_perc_create(button_row, save, "Save", 47);
@@ -570,7 +629,7 @@ static void create_daisy_page(lv_obj_t* menu, lv_obj_t* btn)
 	create_dropdown_row(poll_section, "Offline after", OFFLINE_OPTIONS,
 			&dd_offline, NULL);
 
-	create_button_row(page, daisy_cancel_cb, ok_cb);
+	create_button_row(main, daisy_cancel_cb, ok_cb);
 
 	set_number_text(txt_scan_first, DEFAULT_SCAN_FIRST);
 	set_number_text(txt_scan_last, DEFAULT_SCAN_LAST);
@@ -587,13 +646,19 @@ void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* page = tt_obj_menu_page_create(menu, btn, menu_cb, "Modbus");
 	lv_obj_t* main = create_page_body(page);
 
+	lv_obj_t* service_section = tt_obj_cont_create(main);
+	lv_obj_clear_flag(service_section, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_flex_flow(service_section, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(service_section, 5, 0);
+	create_toggle_row(service_section, "Modbus service", &sw_service, service_cb);
+
 	lv_obj_t* tcp_section = create_section(main, "MODBUS TCP");
-	create_toggle_row(tcp_section, "Ethernet 1", &cbx_ethernet_1, NULL);
-	create_toggle_row(tcp_section, "Ethernet 2", &cbx_ethernet_2, NULL);
+	create_toggle_row(tcp_section, "Ethernet 1", &sw_ethernet_1, NULL);
+	create_toggle_row(tcp_section, "Ethernet 2", &sw_ethernet_2, NULL);
 
 	lv_obj_t* rtu_section = create_section(main, "MODBUS RTU (RS-485)");
-	create_toggle_row(rtu_section, "485 port 1", &cbx_rtu_port1, port_cb);
-	create_toggle_row(rtu_section, "485 port 2", &cbx_rtu_port2, port_cb);
+	create_toggle_row(rtu_section, "485 port 1", &sw_rtu_port1, port_cb);
+	create_toggle_row(rtu_section, "485 port 2", &sw_rtu_port2, port_cb);
 	lbl_port_note = lv_label_create(rtu_section);
 	lv_label_set_text(lbl_port_note,
 			"Switching each 485 port needs a board revision");
@@ -613,12 +678,12 @@ void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 			"Daisy chain settings  " LV_SYMBOL_RIGHT, NULL, LV_PCT(100),
 			MODBUS_ROW_HEIGHT, LV_ALIGN_CENTER);
 
-	create_button_row(page, cancel_cb, ok_cb);
+	create_button_row(main, cancel_cb, ok_cb);
 
-	/* Until the settings arrive, show the port checkboxes as on (a board
+	/* Until the settings arrive, show the port switches as on (a board
 	 * without per-port control always has both jacks live). */
-	set_checked(cbx_rtu_port1, true);
-	set_checked(cbx_rtu_port2, true);
+	set_checked(sw_rtu_port1, true);
+	set_checked(sw_rtu_port2, true);
 
 	create_daisy_page(menu, btn_daisy);
 
