@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_snmp.h"
 #include "scr_keyboard.h"
@@ -63,7 +64,7 @@ static void show_save_wait_msgbox(void)
 {
 	close_save_msgbox();
 	save_msgbox = tt_obj_info_box_create("SNMP",
-			"Applying SNMP settings...\nPlease wait a moment.", 0);
+			tr("Applying SNMP settings...\nPlease wait a moment."), 0);
 	lv_obj_t* close_btn = lv_msgbox_get_close_btn(save_msgbox);
 	if (close_btn != NULL) {
 		lv_obj_add_flag(close_btn, LV_OBJ_FLAG_HIDDEN);
@@ -104,7 +105,7 @@ static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 	lv_obj_set_style_pad_row(section, 3, 0);
 	if (title != NULL && title[0] != '\0') {
 		lv_obj_t* label = lv_label_create(section);
-		lv_label_set_text(label, title);
+		i18n_label_set_text(label, title);
 		lv_obj_set_width(label, LV_PCT(100));
 		lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	}
@@ -114,7 +115,7 @@ static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 static lv_obj_t* create_row_label(lv_obj_t* row, const char* text)
 {
 	lv_obj_t* label = lv_label_create(row);
-	lv_label_set_text(label, text);
+	i18n_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_flex_grow(label, 1);
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
@@ -124,7 +125,7 @@ static lv_obj_t* create_row_label(lv_obj_t* row, const char* text)
 static lv_obj_t* create_field_label(lv_obj_t* parent, const char* text)
 {
 	lv_obj_t* label = lv_label_create(parent);
-	lv_label_set_text(label, text);
+	i18n_label_set_text(label, text);
 	lv_obj_set_width(label, LV_PCT(100));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	return label;
@@ -183,8 +184,8 @@ static void version_cb(lv_event_t* e)
 				current);
 	}
 	displayed_version = (int)lv_dropdown_get_selected(dd_version);
-	lv_label_set_text(lbl_community,
-			displayed_version == 2 ? "V3 user" : "Community");
+	i18n_label_set_text(lbl_community,
+			displayed_version == 2 ? tr("V3 user") : tr("Community"));
 	lv_textarea_set_text(txt_community,
 			displayed_version == 2 ? v3_user_draft : v1_community_draft);
 	lv_textarea_set_max_length(txt_community,
@@ -216,8 +217,8 @@ static void apply_snapshot(void)
 	displayed_version = snapshot.snmp.version >= 0 &&
 			snapshot.snmp.version <= 2 ? snapshot.snmp.version : 1;
 	lv_dropdown_set_selected(dd_version, (uint16_t)displayed_version);
-	lv_label_set_text(lbl_community,
-			displayed_version == 2 ? "V3 user" : "Community");
+	i18n_label_set_text(lbl_community,
+			displayed_version == 2 ? tr("V3 user") : tr("Community"));
 	lv_textarea_set_text(txt_community,
 			displayed_version == 2 ? v3_user_draft : v1_community_draft);
 	lv_textarea_set_max_length(txt_community,
@@ -244,7 +245,7 @@ static void request_refresh(void)
 	refresh_pending = true;
 	if (backend_snmp_refresh(refresh_cb, NULL) != 0) {
 		refresh_pending = false;
-		tt_obj_info_box_create("SNMP", "Can not load SNMP settings", 1);
+		tt_obj_info_box_create("SNMP", tr("Can not load SNMP settings"), 1);
 	}
 }
 
@@ -358,8 +359,8 @@ static void ok_cb(lv_event_t* e)
 			(version == 2 && strlen(identity) > SNMP_V3_USER_MAX)) {
 		tt_obj_info_box_create("SNMP",
 				version == 2 ?
-				"V3 user must use 1-32 letters, numbers, '.', '-' or '_'" :
-				"Community must use 1-64 letters, numbers, '.', '-' or '_'", 1);
+				tr("V3 user must use 1-32 letters, numbers, '.', '-' or '_'") :
+				tr("Community must use 1-64 letters, numbers, '.', '-' or '_'"), 1);
 		return;
 	}
 
@@ -398,14 +399,14 @@ static void ok_cb(lv_event_t* e)
 			((new_auth_credentials && auth_password[0] == '\0') ||
 			!valid_password(auth_password))) {
 		tt_obj_info_box_create("SNMP",
-				"V3 authentication password must be at least 8 characters", 1);
+				tr("V3 authentication password must be at least 8 characters"), 1);
 		return;
 	}
 	if (version == 2 && snmp.v3_security_level == 2 &&
 			((new_privacy_credentials && privacy_password[0] == '\0') ||
 			!valid_password(privacy_password))) {
 		tt_obj_info_box_create("SNMP",
-				"V3 privacy password must be at least 8 characters", 1);
+				tr("V3 privacy password must be at least 8 characters"), 1);
 		return;
 	}
 	snprintf(snmp.v3_auth_password, sizeof(snmp.v3_auth_password), "%s",
@@ -418,7 +419,7 @@ static void ok_cb(lv_event_t* e)
 		const char* manager = lv_textarea_get_text(txt_managers[i]);
 		if (!valid_manager(manager)) {
 			tt_obj_info_box_create("SNMP",
-					"Trap target must be a valid IPv4 address or DNS name", 1);
+					tr("Trap target must be a valid IPv4 address or DNS name"), 1);
 			return;
 		}
 		snprintf(snmp.managers[i], sizeof(snmp.managers[i]), "%s", manager);
@@ -426,7 +427,7 @@ static void ok_cb(lv_event_t* e)
 	}
 	if (snmp.traps_enabled && !has_manager) {
 		tt_obj_info_box_create("SNMP",
-				"Enter at least one trap IP or DNS name", 1);
+				tr("Enter at least one trap IP or DNS name"), 1);
 		return;
 	}
 
@@ -435,7 +436,7 @@ static void ok_cb(lv_event_t* e)
 	if (backend_snmp_save(&snmp, save_cb, NULL) != 0) {
 		save_pending = false;
 		close_save_msgbox();
-		tt_obj_info_box_create("SNMP", "Can not apply SNMP settings", 1);
+		tt_obj_info_box_create("SNMP", tr("Can not apply SNMP settings"), 1);
 	}
 }
 
@@ -454,7 +455,7 @@ static void refresh_cb(int err, void* userdata)
 	(void)userdata;
 	refresh_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("SNMP", "Can not load SNMP settings", 1);
+		tt_obj_info_box_create("SNMP", tr("Can not load SNMP settings"), 1);
 		return;
 	}
 	apply_snapshot();
@@ -466,13 +467,13 @@ static void save_cb(int err, void* userdata)
 	save_pending = false;
 	if (err != 0) {
 		close_save_msgbox();
-		tt_obj_info_box_create("SNMP", "Can not apply SNMP settings", 1);
+		tt_obj_info_box_create("SNMP", tr("Can not apply SNMP settings"), 1);
 		return;
 	}
 	apply_snapshot();
 	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
-		lv_label_set_text(lv_msgbox_get_text(save_msgbox),
-				"SNMP settings applied");
+		i18n_label_set_text(lv_msgbox_get_text(save_msgbox),
+				tr("SNMP settings applied"));
 		lv_timer_t* timer = lv_timer_create(save_msgbox_timer_cb,
 				SNMP_SUCCESS_MSG_MS, NULL);
 		lv_timer_set_repeat_count(timer, 1);
@@ -504,29 +505,29 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_pad_all(main, 3, 0);
 	lv_obj_set_style_pad_row(main, 5, 0);
 
-	lv_obj_t* section_general = create_section(main, "GENERAL");
+	lv_obj_t* section_general = create_section(main, tr("GENERAL"));
 	lv_obj_t* row = create_row(section_general, SNMP_ROW_HEIGHT);
-	create_row_label(row, "SNMP enabled");
+	create_row_label(row, tr("SNMP enabled"));
 	cbx_enabled = create_checkbox(row);
 
 	row = create_row(section_general, SNMP_ROW_HEIGHT);
-	create_row_label(row, "Version");
+	create_row_label(row, tr("Version"));
 	dd_version = tt_obj_dropdown_create(row, "V1\nV2c\nV3", version_cb);
 	lv_obj_set_size(dd_version, LV_PCT(52), 32);
 
 	row = create_row(section_general, SNMP_ROW_HEIGHT);
-	create_row_label(row, "SET commands");
+	create_row_label(row, tr("SET commands"));
 	cbx_set_enabled = create_checkbox(row);
 
-	lbl_community = create_field_label(section_general, "Community");
-	txt_community = create_full_width_text(section_general, "Community");
+	lbl_community = create_field_label(section_general, tr("Community"));
+	txt_community = create_full_width_text(section_general, tr("Community"));
 	lv_textarea_set_max_length(txt_community, SNMP_COMMUNITY_MAX);
 	lv_textarea_set_accepted_chars(txt_community,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-");
 
-	section_v3 = create_section(main, "SECURITY");
+	section_v3 = create_section(main, tr("SECURITY"));
 	row_v3_security = create_row(section_v3, SNMP_ROW_HEIGHT);
-	create_row_label(row_v3_security, "Security level");
+	create_row_label(row_v3_security, tr("Security level"));
 	dd_v3_security = tt_obj_dropdown_create(row_v3_security,
 			"noAuthNoPriv\nauthNoPriv\nauthPriv", security_cb);
 	lv_obj_set_size(dd_v3_security, LV_PCT(62), 32);
@@ -538,13 +539,13 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_clear_flag(row_v3_auth, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_set_flex_flow(row_v3_auth, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_row(row_v3_auth, 3, 0);
-	create_field_label(row_v3_auth, "Authentication");
+	create_field_label(row_v3_auth, tr("Authentication"));
 	dd_v3_auth = tt_obj_dropdown_create(row_v3_auth, "MD5\nSHA", NULL);
 	lv_obj_set_size(dd_v3_auth, LV_PCT(100), 32);
 	lv_dropdown_set_selected(dd_v3_auth, 1);
-	create_field_label(row_v3_auth, "Authentication password");
+	create_field_label(row_v3_auth, tr("Authentication password"));
 	txt_v3_auth_password = create_full_width_text(
-			row_v3_auth, "New password");
+			row_v3_auth, tr("New password"));
 	lv_textarea_set_password_mode(txt_v3_auth_password, true);
 	lv_textarea_set_max_length(txt_v3_auth_password, SNMP_V3_PASSWORD_MAX);
 	lv_textarea_set_accepted_chars(txt_v3_auth_password,
@@ -556,13 +557,13 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_clear_flag(row_v3_privacy, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_set_flex_flow(row_v3_privacy, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_row(row_v3_privacy, 3, 0);
-	create_field_label(row_v3_privacy, "Privacy");
+	create_field_label(row_v3_privacy, tr("Privacy"));
 	dd_v3_privacy = tt_obj_dropdown_create(row_v3_privacy, "DES\nAES", NULL);
 	lv_obj_set_size(dd_v3_privacy, LV_PCT(100), 32);
 	lv_dropdown_set_selected(dd_v3_privacy, 1);
-	create_field_label(row_v3_privacy, "Privacy password");
+	create_field_label(row_v3_privacy, tr("Privacy password"));
 	txt_v3_privacy_password = create_full_width_text(
-			row_v3_privacy, "New password");
+			row_v3_privacy, tr("New password"));
 	lv_textarea_set_password_mode(txt_v3_privacy_password, true);
 	lv_textarea_set_max_length(txt_v3_privacy_password,
 			SNMP_V3_PASSWORD_MAX);
@@ -571,17 +572,17 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	lv_obj_t* section_traps = create_section(main, "");
 	row = create_row(section_traps, 34);
-	create_row_label(row, "TRAPS");
+	create_row_label(row, tr("TRAPS"));
 	tt_obj_btn_create(row, refresh_button_cb, LV_SYMBOL_REFRESH, NULL,
 			34, 32, LV_ALIGN_CENTER);
 
 	row = create_row(section_traps, 34);
-	create_row_label(row, "Enable traps");
+	create_row_label(row, tr("Enable traps"));
 	cbx_traps_enabled = create_checkbox(row);
 
 	for (int i = 0; i < 4; i++) {
-		char label[24];
-		snprintf(label, sizeof(label), "Destination %d", i + 1);
+		char label[64];
+		snprintf(label, sizeof(label), tr("Destination %d"), i + 1);
 		create_field_label(section_traps, label);
 		txt_managers[i] = create_full_width_text(section_traps, "IP / DNS");
 		lv_textarea_set_max_length(txt_managers[i],
@@ -591,8 +592,8 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	}
 
 	lv_obj_t* footer = create_row(page, 52);
-	tt_obj_btn_perc_create(footer, cancel_cb, "Cancel", 47);
-	tt_obj_btn_perc_create(footer, ok_cb, "Save", 47);
+	tt_obj_btn_perc_create(footer, cancel_cb, tr("Cancel"), 47);
+	tt_obj_btn_perc_create(footer, ok_cb, tr("Save"), 47);
 
 	apply_snapshot();
 }

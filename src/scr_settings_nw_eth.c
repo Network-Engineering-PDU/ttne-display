@@ -1,5 +1,7 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_eth.h"
 #include "scr_keyboard.h"
@@ -138,6 +140,23 @@ static uint16_t determine_network_mode(const app_state_nw_if_t* nw_if);
 static const char* sanitize_dns(const char* dns);
 static const char* default_if_empty(const char* value, const char* default_value);
 
+/* Appends to buf like sprintf, but never past size: translated texts can be
+ * longer than the English ones. Returns the new length. */
+static int append_fmt(char* buf, size_t size, int len, const char* fmt, ...)
+{
+	if (len < 0 || (size_t)len >= size) {
+		return len;
+	}
+	va_list args;
+	va_start(args, fmt);
+	int n = vsnprintf(buf + len, size - (size_t)len, fmt, args);
+	va_end(args);
+	if (n < 0) {
+		return len;
+	}
+	return (size_t)len + (size_t)n < size ? len + n : (int)size - 1;
+}
+
 static void close_save_msgbox(void)
 {
 	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
@@ -155,8 +174,8 @@ static void save_msgbox_timer_cb(lv_timer_t* timer)
 static void show_save_wait_msgbox(void)
 {
 	close_save_msgbox();
-	save_msgbox = tt_obj_info_box_create("Network settings",
-			"Applying network settings...\nPlease wait a moment.", 0);
+	save_msgbox = tt_obj_info_box_create(tr("Network settings"),
+			tr("Applying network settings...\nPlease wait a moment."), 0);
 	lv_obj_t* close_btn = lv_msgbox_get_close_btn(save_msgbox);
 	if (close_btn != NULL) {
 		lv_obj_add_flag(close_btn, LV_OBJ_FLAG_HIDDEN);
@@ -168,7 +187,7 @@ static void show_save_success(const char* message)
 	if (save_msgbox == NULL || !lv_obj_is_valid(save_msgbox)) {
 		return;
 	}
-	lv_label_set_text(lv_msgbox_get_text(save_msgbox), message);
+	i18n_label_set_text(lv_msgbox_get_text(save_msgbox), message);
 	lv_timer_t* timer = lv_timer_create(save_msgbox_timer_cb,
 			NW_SUCCESS_MSG_MS, NULL);
 	lv_timer_set_repeat_count(timer, 1);
@@ -397,14 +416,14 @@ static void network_info_refresh_cb(int err, void* userdata)
 	if (connected) {
 		nw_conn_retries = 0;
 		lv_timer_del(timer);
-		show_save_success("Network settings applied\nConnected to Internet");
+		show_save_success(tr("Network settings applied\nConnected to Internet"));
 		return;
 	}
 	if (nw_conn_retries > MAX_NW_CONN_RETRIES) {
 		nw_conn_retries = 0;
 		lv_timer_del(timer);
 		close_save_msgbox();
-		msg_box_conn = tt_obj_info_box_create("ERROR", "Can not connect to Internet", 1);
+		msg_box_conn = tt_obj_info_box_create(tr("ERROR"), tr("Can not connect to Internet"), 1);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
 	}
@@ -422,8 +441,8 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 			if (backend_network_if_save(&nw_ifaces,
 					network_if_save_cb, NULL) != 0) {
 				close_save_msgbox();
-				tt_obj_info_box_create("ERROR",
-						"Can not apply network configuration", 1);
+				tt_obj_info_box_create(tr("ERROR"),
+						tr("Can not apply network configuration"), 1);
 			}
 			return;
 		}
@@ -438,8 +457,8 @@ static void network_if_save_cb(int err, void* userdata)
 
 	if (err != 0) {
 		close_save_msgbox();
-		msg_box_conn = tt_obj_info_box_create("ERROR",
-				"Can not apply network configuration", 1);
+		msg_box_conn = tt_obj_info_box_create(tr("ERROR"),
+				tr("Can not apply network configuration"), 1);
 		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
 		return;
 	}
@@ -447,14 +466,14 @@ static void network_if_save_cb(int err, void* userdata)
 	bool wifi_mode = nw_ifaces.nw_mode == NW_WIFI_ONLY ||
 			nw_ifaces.nw_mode == NW_LAN_WIFI;
 	if (is_static_network(&nw_ifaces) && !wifi_mode) {
-		show_save_success("Network settings applied");
+		show_save_success(tr("Network settings applied"));
 		return;
 	}
 
 	nw_conn_retries = 0;
 	if (save_msgbox != NULL && lv_obj_is_valid(save_msgbox)) {
-		lv_label_set_text(lv_msgbox_get_text(save_msgbox),
-				"Checking network connection...\nPlease wait a moment.");
+		i18n_label_set_text(lv_msgbox_get_text(save_msgbox),
+				tr("Checking network connection...\nPlease wait a moment."));
 	}
 	lv_timer_create(nw_if_timer_cb, TIMER_NW_CHECK_PERIOD, NULL);
 }
@@ -475,7 +494,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 		/* Determine network type based on selected mode */
 		switch (selected_mode) {
 			case NW_SINGLE_LAN:
-				nw_type = "Single LAN";
+				nw_type = tr("Single LAN");
 				if (dhcp) {
 					nw_ifaces.type = NW_TYPE_ETH_DHCP;
 				} else {
@@ -483,7 +502,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				}
 				break;
 			case NW_WIFI_ONLY:
-				nw_type = "WiFi Only";
+				nw_type = tr("WiFi Only");
 				if (dhcp) {
 					nw_ifaces.type = NW_TYPE_WIFI_DHCP;
 				} else {
@@ -491,7 +510,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				}
 				break;
 			case NW_DUAL_LAN:
-				nw_type = "Dual LAN";
+				nw_type = tr("Dual LAN");
 				if (dhcp) {
 					nw_ifaces.type = NW_TYPE_ETH_DHCP;
 				} else {
@@ -499,7 +518,7 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				}
 				break;
 			case NW_LAN_WIFI:
-				nw_type = "LAN + WiFi";
+				nw_type = tr("LAN + WiFi");
 				if (dhcp) {
 					nw_ifaces.type = NW_TYPE_ETH_DHCP;
 				} else {
@@ -507,15 +526,15 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				}
 				break;
 			default:
-				nw_type = "Unknown";
+				nw_type = tr("Unknown");
 				break;
 		}
 		
 		const char* nw_dhcp;
 		if (dhcp) {
-			nw_dhcp = "Enabled";
+			nw_dhcp = tr("Enabled");
 		} else {
-			nw_dhcp = "Disabled";
+			nw_dhcp = tr("Disabled");
 		}
 		nw_ifaces.dhcp = dhcp;
 		nw_ifaces.nw_mode = selected_mode;  /* Store the selected network mode */
@@ -571,16 +590,16 @@ static void btn_nw_settings_cb(lv_event_t* e)
 						sizeof(nw_ifaces.lan2_gateway), "%s",
 						lv_textarea_get_text(txt_lan2_gateway));
 				if (strcmp(nw_ifaces.lan1_ip, nw_ifaces.lan2_ip) == 0) {
-					lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
-							"LAN1 and LAN2 IP must be different", 1);
+					lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
+							tr("LAN1 and LAN2 IP must be different"), 1);
 					lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD,
 							msg_box);
 					return;
 				}
 				if (!dhcp && (nw_ifaces.lan1_gateway[0] == '\0' ||
 						nw_ifaces.lan2_gateway[0] == '\0')) {
-					lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
-							"LAN1 and LAN2 gateways are required", 1);
+					lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
+							tr("LAN1 and LAN2 gateways are required"), 1);
 					lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD,
 							msg_box);
 					return;
@@ -624,15 +643,15 @@ static void btn_nw_settings_cb(lv_event_t* e)
 							lv_textarea_get_text(txt_lw_wifi_ip));
 					if (nw_ifaces.wifi_ip[0] == '\0' ||
 							nw_ifaces.wifi_mask[0] == '\0') {
-						lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
-								"WiFi IP and subnet mask are required", 1);
+						lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
+								tr("WiFi IP and subnet mask are required"), 1);
 						lv_timer_create(msg_box_timer_cb,
 								TIMER_MSG_BOX_PERIOD, msg_box);
 						return;
 					}
 					if (strcmp(nw_ifaces.ip, nw_ifaces.wifi_ip) == 0) {
-						lv_obj_t* msg_box = tt_obj_info_box_create("ERROR",
-								"Ethernet and WiFi IP must be different", 1);
+						lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
+								tr("Ethernet and WiFi IP must be different"), 1);
 						lv_timer_create(msg_box_timer_cb,
 								TIMER_MSG_BOX_PERIOD, msg_box);
 						return;
@@ -648,27 +667,27 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				break;
 		}
 
-		char msg[1500];
+		char msg[2048];
 		int len = 0;
-		len += sprintf(msg, "Are you sure you want to save this network settings?\n\n"
-				"Type: " TT_COLOR_GREEN_NE_STR " %s\n" \
-				"DHCP: " TT_COLOR_GREEN_NE_STR " %s\n", nw_type, nw_dhcp);
+		len = append_fmt(msg, sizeof(msg), len, tr("Are you sure you want to save this network settings?\n\n"
+				"Type: " TT_COLOR_GREEN_NE_STR " %s\n"
+				"DHCP: " TT_COLOR_GREEN_NE_STR " %s\n"), nw_type, nw_dhcp);
 		
 		/* Add mode-specific information */
 		if (selected_mode == NW_WIFI_ONLY || selected_mode == NW_LAN_WIFI) {
-			len += sprintf(msg + len, "WiFi SSID: " TT_COLOR_GREEN_NE_STR " %s\n"
-				"WiFi Pass: " TT_COLOR_GREEN_NE_STR " *******\n",
+			len = append_fmt(msg, sizeof(msg), len, tr("WiFi SSID: " TT_COLOR_GREEN_NE_STR " %s\n"
+				"WiFi Pass: " TT_COLOR_GREEN_NE_STR " *******\n"),
 				nw_ifaces.ssid);
 		}
 		
 		if (selected_mode == NW_SINGLE_LAN || selected_mode == NW_DUAL_LAN || selected_mode == NW_LAN_WIFI) {
 			if (selected_mode == NW_DUAL_LAN) {
-				len += sprintf(msg + len, "LAN1 IP: " TT_COLOR_GREEN_NE_STR " %s\n"
+				len = append_fmt(msg, sizeof(msg), len, tr("LAN1 IP: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN1 Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN1 Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN2 IP: " TT_COLOR_GREEN_NE_STR " %s\n"
 					"LAN2 Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
-					"LAN2 Gateway: " TT_COLOR_GREEN_NE_STR " %s\n",
+					"LAN2 Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"),
 					lv_textarea_get_text(txt_lan1_ip),
 					lv_textarea_get_text(txt_lan1_mask),
 					lv_textarea_get_text(txt_lan1_gateway),
@@ -678,24 +697,24 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			}
 			
 			if (selected_mode == NW_LAN_WIFI && !dhcp) {
-				len += sprintf(msg + len,
-						"Ethernet IP: " TT_COLOR_GREEN_NE_STR " %s\n"
+				len = append_fmt(msg, sizeof(msg), len,
+						tr("Ethernet IP: " TT_COLOR_GREEN_NE_STR " %s\n"
 						"Ethernet Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
 						"Ethernet Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
 						"Ethernet DNS: " TT_COLOR_GREEN_NE_STR " %s\n"
 						"WiFi IP: " TT_COLOR_GREEN_NE_STR " %s\n"
 						"WiFi Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
 						"WiFi Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
-						"WiFi DNS: " TT_COLOR_GREEN_NE_STR " %s",
+						"WiFi DNS: " TT_COLOR_GREEN_NE_STR " %s"),
 						nw_ifaces.ip, nw_ifaces.mask, nw_ifaces.gw,
 						nw_ifaces.dns, nw_ifaces.wifi_ip,
 						nw_ifaces.wifi_mask, nw_ifaces.wifi_gateway,
 						nw_ifaces.wifi_dns);
 			} else if (!lv_obj_has_flag(txt_ip, LV_OBJ_FLAG_HIDDEN)) {
-				len += sprintf(msg + len, "IP: " TT_COLOR_GREEN_NE_STR " %s\n" \
-					"Mask: " TT_COLOR_GREEN_NE_STR " %s\n" \
-					"Gateway: " TT_COLOR_GREEN_NE_STR " %s\n" \
-					"DNS: " TT_COLOR_GREEN_NE_STR " %s",
+				len = append_fmt(msg, sizeof(msg), len, tr("IP: " TT_COLOR_GREEN_NE_STR " %s\n"
+					"Mask: " TT_COLOR_GREEN_NE_STR " %s\n"
+					"Gateway: " TT_COLOR_GREEN_NE_STR " %s\n"
+					"DNS: " TT_COLOR_GREEN_NE_STR " %s"),
 					nw_ifaces.ip,
 					nw_ifaces.mask,
 					nw_ifaces.gw,
@@ -703,8 +722,8 @@ static void btn_nw_settings_cb(lv_event_t* e)
 			}
 		}
 		
-		tt_obj_msg_box_create("Network settings",
-				msg, "Connecting to internet...", msg_box_nw_if_cb);
+		tt_obj_msg_box_create(tr("Network settings"),
+				msg, tr("Connecting to internet..."), msg_box_nw_if_cb);
 	}
 }
 
@@ -863,10 +882,10 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	const app_state_nw_if_t* nw_if = &snapshot.nw_if;
 
 	// Settings / Network
-	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Network Setup");
+	lv_obj_t* nw_cont = tt_obj_menu_page_create(menu, btn, menu_cb, tr("Network Setup"));
 	lv_obj_t* nw_cont2 = tt_obj_cont_create(nw_cont);
 
-	lv_obj_t* lbl_conn = tt_obj_label_create(nw_cont2, "Connection type");
+	lv_obj_t* lbl_conn = tt_obj_label_create(nw_cont2, tr("Connection type"));
 	lv_label_set_long_mode(lbl_conn, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_scrollbar_mode(lbl_conn, LV_SCROLLBAR_MODE_OFF);
 
@@ -882,7 +901,7 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_pad_all(controls_cont, 0, 0);
 	lv_obj_set_style_pad_column(controls_cont, 6, 0);
 	
-	char* options = "Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi";
+	const char* options = tr("Single LAN\nWiFi Only\nDual LAN\nLAN + WiFi");
 	dd = tt_obj_dropdown_create(controls_cont, options, update_cb);
 	lv_obj_set_width(dd, 140);
 	lv_obj_set_height(dd, 36);
@@ -896,18 +915,18 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	cont_single_lan = tt_obj_cont_create(nw_cont2);
 
 	/* Single LAN fields */
-	lbl_ip = tt_obj_label_create(cont_single_lan, "IP Address");
-	txt_ip = tt_obj_txt_create(cont_single_lan, "IP Address", txt_num_cb);
+	lbl_ip = tt_obj_label_create(cont_single_lan, tr("IP Address"));
+	txt_ip = tt_obj_txt_create(cont_single_lan, tr("IP Address"), txt_num_cb);
 	lv_textarea_set_text(txt_ip,
 			default_if_empty(nw_if->ip, DEFAULT_LAN1_IP));
 
-	lbl_mask = tt_obj_label_create(cont_single_lan, "Subnet Mask");
-	txt_mask = tt_obj_txt_create(cont_single_lan, "Subnet Mask", txt_num_cb);
+	lbl_mask = tt_obj_label_create(cont_single_lan, tr("Subnet Mask"));
+	txt_mask = tt_obj_txt_create(cont_single_lan, tr("Subnet Mask"), txt_num_cb);
 	lv_textarea_set_text(txt_mask,
 			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
 
-	lbl_gw = tt_obj_label_create(cont_single_lan, "Gateway IP");
-	txt_gw = tt_obj_txt_create(cont_single_lan, "Gateway IP", txt_num_cb);
+	lbl_gw = tt_obj_label_create(cont_single_lan, tr("Gateway IP"));
+	txt_gw = tt_obj_txt_create(cont_single_lan, tr("Gateway IP"), txt_num_cb);
 	lv_textarea_set_text(txt_gw,
 			default_if_empty(nw_if->gw, DEFAULT_GATEWAY));
 
@@ -921,59 +940,59 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	cont_wifi_only = tt_obj_cont_create(nw_cont2);
 
 	/* WiFi only fields */
-	lbl_wifi_ssid = tt_obj_label_create(cont_wifi_only, "WiFi SSID");
-	txt_wifi_ssid = tt_obj_txt_create(cont_wifi_only, "WiFi SSID", txt_cb);
+	lbl_wifi_ssid = tt_obj_label_create(cont_wifi_only, tr("WiFi SSID"));
+	txt_wifi_ssid = tt_obj_txt_create(cont_wifi_only, tr("WiFi SSID"), txt_cb);
 	lv_textarea_set_text(txt_wifi_ssid, nw_if->ssid);
 
-	lbl_wifi_pass = tt_obj_label_create(cont_wifi_only, "WiFi password");
-	txt_wifi_pass = tt_obj_txt_create(cont_wifi_only, "WiFi password", txt_cb);
+	lbl_wifi_pass = tt_obj_label_create(cont_wifi_only, tr("WiFi password"));
+	txt_wifi_pass = tt_obj_txt_create(cont_wifi_only, tr("WiFi password"), txt_cb);
 	lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
-	cbx_pass = tt_obj_checkbox_create(cont_wifi_only, "Show WiFi password", cbx_pass_cb);
+	cbx_pass = tt_obj_checkbox_create(cont_wifi_only, tr("Show WiFi password"), cbx_pass_cb);
 	lv_textarea_set_password_mode(txt_wifi_pass, true);
 
 	/* LAN + WiFi Ethernet configuration */
 	cont_lan_wifi_eth = tt_obj_cont_create(nw_cont2);
-	tt_obj_label_create(cont_lan_wifi_eth, "Ethernet Configuration");
+	tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet Configuration"));
 
-	lbl_lw_eth_ip = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet IP Address");
+	lbl_lw_eth_ip = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet IP Address"));
 	txt_lw_eth_ip = tt_obj_txt_create(cont_lan_wifi_eth,
-			"Ethernet IP Address", txt_num_cb);
-	lbl_lw_eth_mask = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet Subnet Mask");
+			tr("Ethernet IP Address"), txt_num_cb);
+	lbl_lw_eth_mask = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet Subnet Mask"));
 	txt_lw_eth_mask = tt_obj_txt_create(cont_lan_wifi_eth,
-			"Ethernet Subnet Mask", txt_num_cb);
-	lbl_lw_eth_gw = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet Gateway");
+			tr("Ethernet Subnet Mask"), txt_num_cb);
+	lbl_lw_eth_gw = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet Gateway"));
 	txt_lw_eth_gw = tt_obj_txt_create(cont_lan_wifi_eth,
-			"Ethernet Gateway", txt_num_cb);
-	lbl_lw_eth_dns = tt_obj_label_create(cont_lan_wifi_eth, "Ethernet DNS");
+			tr("Ethernet Gateway"), txt_num_cb);
+	lbl_lw_eth_dns = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet DNS"));
 	txt_lw_eth_dns = tt_obj_txt_create(cont_lan_wifi_eth,
-			"Ethernet DNS", txt_num_cb);
+			tr("Ethernet DNS"), txt_num_cb);
 	lv_textarea_set_accepted_chars(txt_lw_eth_dns, "0123456789.");
 
 	/* LAN + WiFi WiFi configuration */
 	cont_lan_wifi_wifi = tt_obj_cont_create(nw_cont2);
-	tt_obj_label_create(cont_lan_wifi_wifi, "WiFi Configuration");
+	tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi Configuration"));
 
-	lbl_lw_wifi_ip = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi IP Address");
+	lbl_lw_wifi_ip = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi IP Address"));
 	txt_lw_wifi_ip = tt_obj_txt_create(cont_lan_wifi_wifi,
-			"WiFi IP Address", txt_num_cb);
-	lbl_lw_wifi_mask = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi Subnet Mask");
+			tr("WiFi IP Address"), txt_num_cb);
+	lbl_lw_wifi_mask = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi Subnet Mask"));
 	txt_lw_wifi_mask = tt_obj_txt_create(cont_lan_wifi_wifi,
-			"WiFi Subnet Mask", txt_num_cb);
-	lbl_lw_wifi_gw = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi Gateway");
+			tr("WiFi Subnet Mask"), txt_num_cb);
+	lbl_lw_wifi_gw = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi Gateway"));
 	txt_lw_wifi_gw = tt_obj_txt_create(cont_lan_wifi_wifi,
-			"WiFi Gateway", txt_num_cb);
-	lbl_lw_wifi_dns = tt_obj_label_create(cont_lan_wifi_wifi, "WiFi DNS");
+			tr("WiFi Gateway"), txt_num_cb);
+	lbl_lw_wifi_dns = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi DNS"));
 	txt_lw_wifi_dns = tt_obj_txt_create(cont_lan_wifi_wifi,
-			"WiFi DNS", txt_num_cb);
+			tr("WiFi DNS"), txt_num_cb);
 	lv_textarea_set_accepted_chars(txt_lw_wifi_dns, "0123456789.");
-	tt_obj_label_create(cont_lan_wifi_wifi, "WiFi SSID");
+	tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi SSID"));
 	txt_lw_wifi_ssid = tt_obj_txt_create(cont_lan_wifi_wifi,
-			"WiFi SSID", txt_cb);
-	tt_obj_label_create(cont_lan_wifi_wifi, "WiFi password");
+			tr("WiFi SSID"), txt_cb);
+	tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi password"));
 	txt_lw_wifi_pass = tt_obj_txt_create(cont_lan_wifi_wifi,
-			"WiFi password", txt_cb);
+			tr("WiFi password"), txt_cb);
 	cbx_lw_wifi_pass = tt_obj_checkbox_create(cont_lan_wifi_wifi,
-			"Show WiFi password", cbx_pass_cb);
+			tr("Show WiFi password"), cbx_pass_cb);
 	lv_textarea_set_password_mode(txt_lw_wifi_pass, true);
 
 	lv_textarea_set_text(txt_lw_eth_ip,
@@ -1000,25 +1019,25 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	cont_dual_lan = tt_obj_cont_create(nw_cont2);
 
 	/* Dual LAN fields */
-	lbl_lan1 = tt_obj_label_create(cont_dual_lan, "LAN1 Interface");
-	lbl_lan1_ip = tt_obj_label_create(cont_dual_lan, "LAN1 IP Address");
-	txt_lan1_ip = tt_obj_txt_create(cont_dual_lan, "LAN1 IP Address", txt_num_cb);
+	lbl_lan1 = tt_obj_label_create(cont_dual_lan, tr("LAN1 Interface"));
+	lbl_lan1_ip = tt_obj_label_create(cont_dual_lan, tr("LAN1 IP Address"));
+	txt_lan1_ip = tt_obj_txt_create(cont_dual_lan, tr("LAN1 IP Address"), txt_num_cb);
 
-	lbl_lan1_mask = tt_obj_label_create(cont_dual_lan, "LAN1 Subnet Mask");
-	txt_lan1_mask = tt_obj_txt_create(cont_dual_lan, "LAN1 Subnet Mask", txt_num_cb);
-	lbl_lan1_gateway = tt_obj_label_create(cont_dual_lan, "LAN1 Gateway");
-	txt_lan1_gateway = tt_obj_txt_create(cont_dual_lan, "LAN1 Gateway", txt_num_cb);
+	lbl_lan1_mask = tt_obj_label_create(cont_dual_lan, tr("LAN1 Subnet Mask"));
+	txt_lan1_mask = tt_obj_txt_create(cont_dual_lan, tr("LAN1 Subnet Mask"), txt_num_cb);
+	lbl_lan1_gateway = tt_obj_label_create(cont_dual_lan, tr("LAN1 Gateway"));
+	txt_lan1_gateway = tt_obj_txt_create(cont_dual_lan, tr("LAN1 Gateway"), txt_num_cb);
 
-	lbl_lan2 = tt_obj_label_create(cont_dual_lan, "LAN2 Interface");
-	lbl_lan2_ip = tt_obj_label_create(cont_dual_lan, "LAN2 IP Address");
-	txt_lan2_ip = tt_obj_txt_create(cont_dual_lan, "LAN2 IP Address", txt_num_cb);
+	lbl_lan2 = tt_obj_label_create(cont_dual_lan, tr("LAN2 Interface"));
+	lbl_lan2_ip = tt_obj_label_create(cont_dual_lan, tr("LAN2 IP Address"));
+	txt_lan2_ip = tt_obj_txt_create(cont_dual_lan, tr("LAN2 IP Address"), txt_num_cb);
 
-	lbl_lan2_mask = tt_obj_label_create(cont_dual_lan, "LAN2 Subnet Mask");
-	txt_lan2_mask = tt_obj_txt_create(cont_dual_lan, "LAN2 Subnet Mask", txt_num_cb);
-	lbl_lan2_gateway = tt_obj_label_create(cont_dual_lan, "LAN2 Gateway");
-	txt_lan2_gateway = tt_obj_txt_create(cont_dual_lan, "LAN2 Gateway", txt_num_cb);
+	lbl_lan2_mask = tt_obj_label_create(cont_dual_lan, tr("LAN2 Subnet Mask"));
+	txt_lan2_mask = tt_obj_txt_create(cont_dual_lan, tr("LAN2 Subnet Mask"), txt_num_cb);
+	lbl_lan2_gateway = tt_obj_label_create(cont_dual_lan, tr("LAN2 Gateway"));
+	txt_lan2_gateway = tt_obj_txt_create(cont_dual_lan, tr("LAN2 Gateway"), txt_num_cb);
 
-	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, "Save settings");
+	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, tr("Save settings"));
 
 	load_network_form(nw_if);
 	if (!nw_if->valid) {

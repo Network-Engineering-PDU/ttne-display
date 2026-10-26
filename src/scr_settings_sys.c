@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_settings_menu.h"
@@ -29,7 +30,7 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     l_menu = menu;
 
     /* Create the settings page directly */
-    lv_obj_t* settings_sys_page = tt_obj_menu_page_create(l_menu, btn, NULL, "System Setup");
+    lv_obj_t* settings_sys_page = tt_obj_menu_page_create(l_menu, btn, NULL, tr("System Setup"));
 
     /* Apply Flex layout directly to the page. 
        In LVGL, menu pages usually have a 'scrollable' part or are objects themselves 
@@ -38,13 +39,13 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_flow(settings_sys_page, LV_FLEX_FLOW_ROW_WRAP);
 
     /* HUB buttons: Parent is now 'settings_page' instead of 'cont' */
-    lv_obj_t* btn_current = tt_obj_btn_mtx_create(settings_sys_page, NULL, " Rated \nCurrent", ASSET("r_current.png"));
+    lv_obj_t* btn_current = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr(" Rated \nCurrent"), ASSET("r_current.png"));
 
-    lv_obj_t* btn_info = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Info", ASSET("info.png"));
+    lv_obj_t* btn_info = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Info"), ASSET("info.png"));
 
-    lv_obj_t* btn_support = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Support", ASSET("support.png"));
+    lv_obj_t* btn_support = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Support"), ASSET("support.png"));
 
-    lv_obj_t* btn_users = tt_obj_btn_mtx_create(settings_sys_page, NULL, "Users", ASSET("sys_setup.png"));
+    lv_obj_t* btn_users = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Users"), ASSET("sys_setup.png"));
 
     /* Navigation links remain the same */
     scr_current_create(l_menu, btn_current);

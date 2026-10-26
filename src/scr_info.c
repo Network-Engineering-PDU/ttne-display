@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_info.h"
 #include "tt_obj.h"
@@ -47,7 +48,7 @@ static void configure_info_value_label(lv_obj_t* label)
 
 static const char* display_version(void)
 {
-	return GIT_VERSION[0] != '\0' ? GIT_VERSION : "Unknown";
+	return GIT_VERSION[0] != '\0' ? GIT_VERSION : tr("Unknown");
 }
 
 static void refresh_info_display(void)
@@ -58,34 +59,34 @@ static void refresh_info_display(void)
 	const app_state_system_info_t* info = &snapshot.system_info;
 	const app_state_pdu_info_t* pdu_info = &snapshot.pdu_info;
 
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "Name", TT_COLOR_GREEN_NE, "PowerIT Easy");
-	lv_label_set_text(lbl_name, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "PN", TT_COLOR_GREEN_NE, info->product_pn);
-	lv_label_set_text(lbl_pn, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "SN", TT_COLOR_GREEN_NE, info->product_sn);
-	lv_label_set_text(lbl_sn, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
-	lv_label_set_text(lbl_mac, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "IP", TT_COLOR_GREEN_NE, info->ip);
-	lv_label_set_text(lbl_ip, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("Name"), TT_COLOR_GREEN_NE, "PowerIT Easy");
+	i18n_label_set_text(lbl_name, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", "PN", TT_COLOR_GREEN_NE, info->product_pn);
+	i18n_label_set_text(lbl_pn, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", "SN", TT_COLOR_GREEN_NE, info->product_sn);
+	i18n_label_set_text(lbl_sn, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
+	i18n_label_set_text(lbl_mac, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", "IP", TT_COLOR_GREEN_NE, info->ip);
+	i18n_label_set_text(lbl_ip, str);
 
-	snprintf(str, sizeof(str), "  %s: #%06X %d", "Outlets", TT_COLOR_GREEN_NE, pdu_info->n_outlets);
-	lv_label_set_text(lbl_outlets, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %d A", "Rated current", TT_COLOR_GREEN_NE, pdu_info->rated_current);
-	lv_label_set_text(lbl_rated_curr, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "Controller", TT_COLOR_GREEN_NE, pdu_info->controller);
-	lv_label_set_text(lbl_controller, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %d#", tr("Outlets"), TT_COLOR_GREEN_NE, pdu_info->n_outlets);
+	i18n_label_set_text(lbl_outlets, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %d A#", tr("Rated current"), TT_COLOR_GREEN_NE, pdu_info->rated_current);
+	i18n_label_set_text(lbl_rated_curr, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("Controller"), TT_COLOR_GREEN_NE, pdu_info->controller);
+	i18n_label_set_text(lbl_controller, str);
 
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "SW version", TT_COLOR_GREEN_NE, info->sw_version);
-	lv_label_set_text(lbl_version, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "OM version", TT_COLOR_GREEN_NE, info->om_version);
-	lv_label_set_text(lbl_om_version, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "PMB version", TT_COLOR_GREEN_NE, info->pmb_version);
-	lv_label_set_text(lbl_pmb_version, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "Display version", TT_COLOR_GREEN_NE, display_version());
-	lv_label_set_text(lbl_display_version, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s", "Uptime (DDD:HH:MM)", TT_COLOR_GREEN_NE, info->uptime);
-	lv_label_set_text(lbl_uptime, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("SW version"), TT_COLOR_GREEN_NE, info->sw_version);
+	i18n_label_set_text(lbl_version, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("OM version"), TT_COLOR_GREEN_NE, info->om_version);
+	i18n_label_set_text(lbl_om_version, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("PMB version"), TT_COLOR_GREEN_NE, info->pmb_version);
+	i18n_label_set_text(lbl_pmb_version, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("Display version"), TT_COLOR_GREEN_NE, display_version());
+	i18n_label_set_text(lbl_display_version, str);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("Uptime (DDD:HH:MM)"), TT_COLOR_GREEN_NE, info->uptime);
+	i18n_label_set_text(lbl_uptime, str);
 }
 
 static void info_refresh_cb(int err, void* userdata)
@@ -117,9 +118,9 @@ static void menu_cb(lv_event_t* e)
 
 void scr_info_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-	lv_obj_t* info_cont = tt_obj_menu_page_create(menu, btn, menu_cb, "Info");
+	lv_obj_t* info_cont = tt_obj_menu_page_create(menu, btn, menu_cb, tr("Info"));
 	lv_obj_t* info_product_cont = tt_obj_cont_create(info_cont);
-	tt_obj_label_color_create(info_product_cont, "Information");
+	tt_obj_label_color_create(info_product_cont, tr("Information"));
 
 	lbl_name = tt_obj_label_color_create(info_product_cont, "");
 	lbl_pn = tt_obj_label_color_create(info_product_cont, "");

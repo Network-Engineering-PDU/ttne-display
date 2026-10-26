@@ -84,6 +84,10 @@ int backend_visual_set_pdu_field(int field_id, const char* value,
 		backend_callback_t callback, void* userdata);
 int backend_visual_save_rotation_and_restart(int rotation,
 		backend_callback_t callback, void* userdata);
+/** @brief Saves the touchscreen language ("en", "es", "de", "zh-hans", "ar")
+ * and restarts the program so every screen is built in it. */
+int backend_visual_save_language_and_restart(const char* code,
+		backend_callback_t callback, void* userdata);
 /** @brief Reloads settings changed on disk by the web UI (via the API). */
 int backend_config_reload(backend_callback_t callback, void* userdata);
 int backend_alarms_refresh(backend_callback_t callback, void* userdata);

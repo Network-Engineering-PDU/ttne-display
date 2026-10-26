@@ -4,6 +4,7 @@
 #include "ttne_display.h"
 #include "tt_keyboard.h"
 #include "utils.h"
+#include "i18n.h"
 #include "tt_obj.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
@@ -92,17 +93,17 @@ void ttne_display(void)
 
 	lv_menu_set_page_title_static(main_page, "Network Engineering");
 
-	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, "INFO",
+	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, tr("INFO"),
 			ASSET("menu.png"));
-	lv_obj_t* btn_alarms = tt_obj_btn_mtx_create(main_cont, NULL,"ALARMS",
+	lv_obj_t* btn_alarms = tt_obj_btn_mtx_create(main_cont, NULL,tr("ALARMS"),
 			ASSET("alarms.png"));
-	lv_obj_t* btn_power = tt_obj_btn_mtx_create(main_cont, NULL, "POWER",
+	lv_obj_t* btn_power = tt_obj_btn_mtx_create(main_cont, NULL, tr("POWER"),
 			ASSET("power.png"));
-	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, "OUTLETS",
+	lv_obj_t* btn_outlets = tt_obj_btn_mtx_create(main_cont, NULL, tr("OUTLETS"),
 			ASSET("outlets.png"));
-	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, "SENSORS",
+	lv_obj_t* btn_sensors = tt_obj_btn_mtx_create(main_cont, NULL, tr("SENSORS"),
 			ASSET("sensors2.png"));
-	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, "SETTINGS",
+	lv_obj_t* btn_settings = tt_obj_btn_mtx_create(main_cont, NULL, tr("SETTINGS"),
 			ASSET("settings.png"));
 
 	// Notifications test

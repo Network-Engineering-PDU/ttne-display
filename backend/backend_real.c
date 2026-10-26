@@ -71,6 +71,7 @@ typedef enum {
 	BACKEND_CMD_VISUAL_SET_INACTIVITY,
 	BACKEND_CMD_VISUAL_SET_PDU_FIELD,
 	BACKEND_CMD_VISUAL_SAVE_ROTATION_RESTART,
+	BACKEND_CMD_VISUAL_SAVE_LANGUAGE_RESTART,
 	BACKEND_CMD_LOGIN_CONFIG_REFRESH,
 	BACKEND_CMD_LOGIN_SET_SKIP,
 	BACKEND_CMD_CONFIG_RELOAD,
@@ -1179,6 +1180,10 @@ static void* backend_worker(void* arg)
 			publish_visual_config_from_config();
 			reset_program();
 			break;
+		case BACKEND_CMD_VISUAL_SAVE_LANGUAGE_RESTART:
+			config_set_language(cmd.text);
+			reset_program();
+			break;
 		case BACKEND_CMD_LOGIN_CONFIG_REFRESH:
 			publish_login_config_from_config();
 			break;
@@ -1187,12 +1192,12 @@ static void* backend_worker(void* arg)
 			publish_login_config_from_config();
 			break;
 		case BACKEND_CMD_CONFIG_RELOAD: {
-			int rotation_changed = 0;
-			if (config_reload_if_changed(&rotation_changed)) {
+			int restart_needed = 0;
+			if (config_reload_if_changed(&restart_needed)) {
 				publish_visual_config_from_config();
 				publish_login_config_from_config();
-				if (rotation_changed) {
-					/* Same as changing the rotation on the screen */
+				if (restart_needed) {
+					/* Same as changing the rotation or language on the screen */
 					reset_program();
 				}
 			}
@@ -1802,6 +1807,18 @@ int backend_visual_save_rotation_and_restart(int rotation,
 		.callback = callback,
 		.userdata = userdata,
 	};
+	return backend_submit(&cmd);
+}
+
+int backend_visual_save_language_and_restart(const char* code,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_VISUAL_SAVE_LANGUAGE_RESTART,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	snprintf(cmd.text, sizeof(cmd.text), "%s", code != NULL ? code : "en");
 	return backend_submit(&cmd);
 }
 

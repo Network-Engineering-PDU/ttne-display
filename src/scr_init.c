@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_init.h"
 #include "scr_splash.h"
@@ -62,7 +63,7 @@ lv_obj_t* scr_init_create()
 
 	// lv_obj_add_flag(splash_scr, LV_OBJ_FLAG_CLICKABLE);
 
-	tt_obj_spinner_create(init_scr, "Initializing system");
+	tt_obj_spinner_create(init_scr, tr("Initializing system"));
 
 	timer = lv_timer_create(init_timer_cb, TIMER_REFRESH_RATE, NULL);
 

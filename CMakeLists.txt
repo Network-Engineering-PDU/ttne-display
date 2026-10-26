@@ -34,7 +34,6 @@ add_definitions("-DGIT_VERSION=\"${GIT_VERSION}\"")
 if(SIMULATOR_ENABLED)
 add_compile_definitions(SIMULATOR_ENABLED)
 find_package(SDL2 REQUIRED SDL2)
-find_package(Freetype REQUIRED)
 include_directories(
         ${SDL2_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}/../
@@ -46,6 +45,8 @@ else()
     )
 endif(SIMULATOR_ENABLED)
 
+# Renders every language's text from TrueType fonts (see src/i18n.c).
+find_package(Freetype REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cJSON REQUIRED)
 find_package(Threads REQUIRED)
@@ -69,9 +70,9 @@ include_directories(${CJSON_INCLUDE_DIR})
 
 target_include_directories(lvgl SYSTEM PUBLIC include)
 
-target_link_libraries(cmdisplay PRIVATE lvgl lvgl::drivers ${CURL_LIBRARIES} ${CJSON_LIBRARIES} Threads::Threads m)
+target_link_libraries(cmdisplay PRIVATE lvgl lvgl::drivers ${CURL_LIBRARIES} ${CJSON_LIBRARIES} ${FREETYPE_LIBRARIES} Threads::Threads m)
 if(SIMULATOR_ENABLED)
-    target_link_libraries(cmdisplay PRIVATE ${SDL2_LIBRARIES} ${FREETYPE_LIBRARIES})
+    target_link_libraries(cmdisplay PRIVATE ${SDL2_LIBRARIES})
 endif(SIMULATOR_ENABLED)
 
 add_custom_target(run COMMAND ${EXECUTABLE_OUTPUT_PATH}/cmdisplay)

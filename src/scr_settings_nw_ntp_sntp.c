@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_ntp_sntp.h"
 #include "scr_keyboard.h"
@@ -43,7 +44,7 @@ static lv_obj_t* create_row(lv_obj_t* parent, const char* label_text,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 	lv_obj_t* label = lv_label_create(row);
-	lv_label_set_text(label, label_text);
+	i18n_label_set_text(label, label_text);
 	lv_obj_set_width(label, LV_PCT(label_width));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	return row;
@@ -110,7 +111,7 @@ static void ok_cb(lv_event_t* e)
 	const char* server = lv_textarea_get_text(txt_server);
 	if (server == NULL || server[0] == '\0') {
 		tt_obj_info_box_create("NTP / SNTP",
-				"Server address can not be empty", 1);
+				tr("Server address can not be empty"), 1);
 		return;
 	}
 	bool enabled = (lv_obj_get_state(cbx_enabled) & LV_STATE_CHECKED) != 0;
@@ -119,7 +120,7 @@ static void ok_cb(lv_event_t* e)
 	if (backend_ntp_save(enabled, offset, server, save_cb, NULL) != 0) {
 		save_pending = false;
 		tt_obj_info_box_create("NTP / SNTP",
-				"Can not apply NTP settings", 1);
+				tr("Can not apply NTP settings"), 1);
 	}
 }
 
@@ -139,7 +140,7 @@ static void refresh_cb(int err, void* userdata)
 	refresh_pending = false;
 	if (err != 0) {
 		tt_obj_info_box_create("NTP / SNTP",
-				"Can not load NTP settings", 1);
+				tr("Can not load NTP settings"), 1);
 		return;
 	}
 	apply_snapshot();
@@ -151,12 +152,12 @@ static void save_cb(int err, void* userdata)
 	save_pending = false;
 	if (err != 0) {
 		tt_obj_info_box_create("NTP / SNTP",
-				"Can not apply NTP settings", 1);
+				tr("Can not apply NTP settings"), 1);
 		return;
 	}
 	apply_snapshot();
 	tt_obj_info_box_create("NTP / SNTP",
-			"Settings saved. Time synchronization may take a few moments.", 0);
+			tr("Settings saved. Time synchronization may take a few moments."), 0);
 }
 
 void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
@@ -174,12 +175,12 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_pad_all(main, 4, 0);
 	lv_obj_set_style_pad_row(main, 2, 0);
 
-	lv_obj_t* enabled_row = create_row(main, "NTP / SNTP enable", 70);
+	lv_obj_t* enabled_row = create_row(main, tr("NTP / SNTP enable"), 70);
 	cbx_enabled = tt_obj_checkbox_create(enabled_row, "", NULL);
 	lv_obj_set_size(cbx_enabled, 34, 34);
 	lv_obj_set_style_border_width(cbx_enabled, 2, LV_PART_INDICATOR);
 
-	lv_obj_t* offset_row = create_row(main, "Time offset", NTP_LABEL_WIDTH);
+	lv_obj_t* offset_row = create_row(main, tr("Time offset"), NTP_LABEL_WIDTH);
 	lv_obj_t* offset_label = lv_obj_get_child(offset_row, 0);
 	lv_label_set_long_mode(offset_label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_height(offset_label, LV_SIZE_CONTENT);
@@ -187,7 +188,7 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_size(dd_offset, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_dropdown_set_selected(dd_offset, 12);
 
-	lv_obj_t* server_row = create_row(main, "Server", NTP_LABEL_WIDTH);
+	lv_obj_t* server_row = create_row(main, tr("Server"), NTP_LABEL_WIDTH);
 	txt_server = tt_obj_txt_create(server_row, "IP / DNS", server_cb);
 	lv_obj_set_size(txt_server, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_textarea_set_max_length(txt_server, APP_STATE_NW_TEXT_LEN - 1);
@@ -207,7 +208,7 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_flex_align(button_row, LV_FLEX_ALIGN_SPACE_BETWEEN,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	tt_obj_btn_perc_create(button_row, ok_cb, "OK", 47);
-	tt_obj_btn_perc_create(button_row, cancel_cb, "Cancel", 47);
+	tt_obj_btn_perc_create(button_row, cancel_cb, tr("Cancel"), 47);
 
 	apply_snapshot();
 }

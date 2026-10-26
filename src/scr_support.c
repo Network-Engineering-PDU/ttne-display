@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_support.h"
@@ -37,9 +38,9 @@ static void menu_cb(lv_event_t* e)
 lv_obj_t* scr_support_create(lv_obj_t* menu, lv_obj_t* btn)
 {
 	lv_obj_t* support_cont = tt_obj_menu_page_create(menu, btn,
-			menu_cb, "Support");
+			menu_cb, tr("Support"));
 
-	tt_obj_label_create(support_cont, "Contact with us:");
+	tt_obj_label_create(support_cont, tr("Contact with us:"));
 	tt_obj_label_create(support_cont, "jl.talavera@net-eng.com");
 	lv_obj_t* qr = lv_qrcode_create(support_cont);
 	const char* data = "mailto:jl.talavera@net-eng.com";

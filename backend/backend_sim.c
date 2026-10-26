@@ -7,6 +7,9 @@
 #include <time.h>
 
 #include "app/app_state.h"
+#include "config.h"
+
+extern void reset_program(void);
 
 #define SIM_OUTLETS 8
 
@@ -857,6 +860,17 @@ int backend_visual_save_rotation_and_restart(int rotation,
 	if (callback != NULL) {
 		callback(0, userdata);
 	}
+	return 0;
+}
+
+int backend_visual_save_language_and_restart(const char* code,
+		backend_callback_t callback, void* userdata)
+{
+	(void)callback;
+	(void)userdata;
+	/* Like the real backend: the language applies when screens are built. */
+	config_set_language(code != NULL ? code : "en");
+	reset_program();
 	return 0;
 }
 

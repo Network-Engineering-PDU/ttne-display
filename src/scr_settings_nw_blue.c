@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_blue.h"
 #include "tt_obj.h"
@@ -202,7 +203,7 @@ static void bluetooth_action_cb(int err, void* userdata)
 	(void)userdata;
 	action_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Bluetooth", "Bluetooth action failed", 1);
+		tt_obj_info_box_create("Bluetooth", tr("Bluetooth action failed"), 1);
 		return;
 	}
 
@@ -213,13 +214,13 @@ static void bluetooth_action_cb(int err, void* userdata)
 			find_device_by_mac(&snapshot.bt_status, action_mac);
 	bool connected = updated_device != NULL && updated_device->connected;
 	bool disconnected = updated_device != NULL && !updated_device->connected;
-	char msg[120];
+	char msg[256];
 	if (action_was_connected) {
-		snprintf(msg, sizeof(msg), "%s %s", action_name,
-				disconnected ? "disconnected" : "disconnect failed");
+		snprintf(msg, sizeof(msg), disconnected ? tr("%s disconnected") :
+				tr("%s: disconnect failed"), action_name);
 	} else {
-		snprintf(msg, sizeof(msg), "%s %s", action_name,
-				connected ? "connected" : "connect failed");
+		snprintf(msg, sizeof(msg), connected ? tr("%s connected") :
+				tr("%s: connect failed"), action_name);
 	}
 	tt_obj_info_box_create("Bluetooth", msg,
 			connected || disconnected ? 0 : 1);
@@ -236,15 +237,15 @@ static void apply_bluetooth_snapshot(void)
 	}
 
 	if (bt_status->pairing_request && pairing_msg_box == NULL) {
-		char msg[180];
+		char msg[256];
 		if (strlen(bt_status->pairing_passkey) > 0) {
-			snprintf(msg, sizeof(msg), "%s wants to pair\nPasskey: %s",
+			snprintf(msg, sizeof(msg), tr("%s wants to pair\nPasskey: %s"),
 					bt_status->pairing_name, bt_status->pairing_passkey);
 		} else {
-			snprintf(msg, sizeof(msg), "%s wants to pair",
+			snprintf(msg, sizeof(msg), tr("%s wants to pair"),
 					bt_status->pairing_name);
 		}
-		pairing_msg_box = tt_obj_msg_box_create("Bluetooth pairing", msg, NULL,
+		pairing_msg_box = tt_obj_msg_box_create(tr("Bluetooth pairing"), msg, NULL,
 				pairing_msg_box_cb);
 	} else if (!bt_status->pairing_request && pairing_msg_box != NULL) {
 		lv_msgbox_close(pairing_msg_box);
@@ -254,14 +255,14 @@ static void apply_bluetooth_snapshot(void)
 	tt_obj_btn_toggle_set_state(btn_powered, bt_status->powered);
 	tt_obj_btn_toggle_set_state(btn_pairable, bt_status->pairable);
 	tt_obj_btn_toggle_set_state(btn_discoverable, bt_status->discoverable);
-	tt_obj_btn_set_text(btn_scan, bt_status->discovering ? "Stop scan" : "Start scan");
+	tt_obj_btn_set_text(btn_scan, bt_status->discovering ? tr("Stop scan") : tr("Start scan"));
 
-	char status[160];
+	char status[256];
 	snprintf(status, sizeof(status), "%s  %s  %s",
-			bt_status->powered ? "ON" : "OFF",
-			bt_status->discoverable ? "Discoverable" : "Hidden",
-			bt_status->pairable ? "Pairable" : "Not pairable");
-	lv_label_set_text(lbl_status, status);
+			bt_status->powered ? tr("On") : tr("Off"),
+			bt_status->discoverable ? tr("Discoverable") : tr("Hidden"),
+			bt_status->pairable ? tr("Pairable") : tr("Not pairable"));
+	i18n_label_set_text(lbl_status, status);
 
 	if (bt_status->device_count == 0) {
 		lv_obj_clear_flag(lbl_no_devices, LV_OBJ_FLAG_HIDDEN);
@@ -273,11 +274,11 @@ static void apply_bluetooth_snapshot(void)
 		if (i < bt_status->device_count) {
 			const app_state_bt_device_t* device = &bt_status->devices[i];
 			lv_obj_clear_flag(btn_device[i], LV_OBJ_FLAG_HIDDEN);
-			lv_label_set_text(lbl_device_name[i], device->name);
-			lv_label_set_text(lbl_device_mac[i], device->mac);
-			lv_label_set_text(lbl_device_state[i],
-					device->connected ? "Connected" :
-					(device->paired ? "Paired" : "Available"));
+			i18n_label_set_text(lbl_device_name[i], device->name);
+			i18n_label_set_text(lbl_device_mac[i], device->mac);
+			i18n_label_set_text(lbl_device_state[i],
+					device->connected ? tr("Connected") :
+					(device->paired ? tr("Paired") : tr("Available")));
 			lv_obj_clear_state(btn_device[i], LV_STATE_CHECKED);
 		} else {
 			lv_obj_add_flag(btn_device[i], LV_OBJ_FLAG_HIDDEN);
@@ -297,18 +298,18 @@ void scr_settings_nw_blue_create(lv_obj_t* menu_param, lv_obj_t* btn)
 	lv_obj_set_style_pad_gap(page_handle, 8, 0);
 
 	btn_powered = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, "Bluetooth");
-	btn_pairable = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, "Pairable");
-	btn_discoverable = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, "Discoverable");
+	btn_pairable = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, tr("Pairable"));
+	btn_discoverable = tt_obj_btn_toggle_create(page_handle, settings_toggle_cb, tr("Discoverable"));
 
-	btn_scan = tt_obj_btn_create(page_handle, scan_cb, "Start scan", NULL,
+	btn_scan = tt_obj_btn_create(page_handle, scan_cb, tr("Start scan"), NULL,
 			LV_PCT(48), 44, LV_ALIGN_CENTER);
-	tt_obj_btn_create(page_handle, refresh_cb, "Refresh", NULL,
+	tt_obj_btn_create(page_handle, refresh_cb, tr("Refresh"), NULL,
 			LV_PCT(48), 44, LV_ALIGN_CENTER);
 
-	lbl_status = tt_obj_label_color_create(page_handle, "OFF  Hidden  Not pairable");
+	lbl_status = tt_obj_label_color_create(page_handle, "");
 	lv_obj_set_width(lbl_status, LV_PCT(100));
 
-	lbl_no_devices = tt_obj_label_color_create(page_handle, "No devices");
+	lbl_no_devices = tt_obj_label_color_create(page_handle, tr("No devices"));
 	lv_obj_set_width(lbl_no_devices, LV_PCT(100));
 
 	for (int i = 0; i < APP_STATE_MAX_BT_DEVICES; i++) {

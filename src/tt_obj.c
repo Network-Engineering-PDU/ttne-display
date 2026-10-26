@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "lvgl/lvgl.h"
 
 #include "utils.h"
 #include "tt_obj.h"
+#include "i18n.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "screen.h"
@@ -23,9 +25,9 @@ static void toggle_cb(lv_event_t* e)
 	if (code == LV_EVENT_VALUE_CHANGED) {
 		lv_obj_t* state_label = lv_obj_get_child(obj, 1);
 		if (lv_obj_get_state(obj) & LV_STATE_CHECKED) {
-			lv_label_set_text(state_label, "ON");
+			i18n_label_set_text(state_label, tr("ON"));
 		} else {
-			lv_label_set_text(state_label, "OFF");
+			i18n_label_set_text(state_label, tr("OFF"));
 		}
 	}
 }
@@ -44,7 +46,7 @@ lv_obj_t* tt_obj_btn_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl,
 	lv_obj_add_style(btn, &btn_hover_style, LV_STATE_PRESSED);
 
 	lv_obj_t* label = lv_label_create(btn);
-	lv_label_set_text(label, lbl);
+	i18n_label_set_text(label, lbl);
 	if (lbl_align == LV_ALIGN_LEFT_MID) {
 		lv_obj_align(label, lbl_align, 10, 0);
 	} else {
@@ -60,7 +62,7 @@ lv_obj_t* tt_obj_btn_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl,
 	return btn;
 }
 
-lv_obj_t* tt_obj_btn_mtx_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl,
+lv_obj_t* tt_obj_btn_mtx_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl,
 		char* img_path)
 {
 	if (screen_is_landscape()) {
@@ -73,7 +75,7 @@ lv_obj_t* tt_obj_btn_mtx_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl,
 	}
 }
 
-lv_obj_t* tt_obj_card_create(lv_obj_t* parent, char* lbl, char* img_path)
+lv_obj_t* tt_obj_card_create(lv_obj_t* parent, const char* lbl, char* img_path)
 {
 	lv_obj_t* card = tt_obj_btn_mtx_create(parent, NULL, lbl, img_path);
 	lv_obj_clear_flag(card, LV_OBJ_FLAG_CLICKABLE);
@@ -83,7 +85,7 @@ lv_obj_t* tt_obj_card_create(lv_obj_t* parent, char* lbl, char* img_path)
 lv_obj_t* tt_obj_card_set_text(lv_obj_t* card, const char* txt)
 {
 	lv_obj_t* lbl = lv_obj_get_child(card, 0);
-	lv_label_set_text(lbl, txt);
+	i18n_label_set_text(lbl, txt);
 	lv_label_set_recolor(lbl, true);
 	return lbl;
 }
@@ -95,14 +97,14 @@ lv_obj_t* tt_obj_card_set_img(lv_obj_t* card, char* img_path)
 	return img;
 }
 
-lv_obj_t* tt_obj_btn_std_create(lv_obj_t* parent, lv_event_cb_t cb, char* lbl)
+lv_obj_t* tt_obj_btn_std_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl)
 {
 	return tt_obj_btn_create(parent, cb, lbl, NULL, LV_PCT(100), 50,
 			LV_ALIGN_LEFT_MID);
 }
 
 lv_obj_t* tt_obj_btn_toggle_create(lv_obj_t* parent, lv_event_cb_t cb,
-		char* lbl)
+		const char* lbl)
 {
 	lv_obj_t* btn = tt_obj_btn_create(parent, cb, lbl, NULL, LV_PCT(100), 50,
 			LV_ALIGN_LEFT_MID);
@@ -112,7 +114,7 @@ lv_obj_t* tt_obj_btn_toggle_create(lv_obj_t* parent, lv_event_cb_t cb,
 	lv_obj_remove_style(btn, &btn_press_style, LV_STATE_PRESSED);
 
 	lv_obj_t* label = lv_label_create(btn);
-	lv_label_set_text(label, "OFF");
+	i18n_label_set_text(label, tr("OFF"));
 	lv_obj_align(label, LV_ALIGN_RIGHT_MID, -10, 0);
 	lv_obj_add_event_cb(btn, toggle_cb, LV_EVENT_ALL, NULL);
 
@@ -124,15 +126,15 @@ void tt_obj_btn_toggle_set_state(lv_obj_t* btn, bool state)
 	lv_obj_t* child = lv_obj_get_child(btn, 1);
 	if (state) {
 		lv_obj_add_state(btn, LV_STATE_CHECKED);
-		lv_label_set_text(child, "ON");
+		i18n_label_set_text(child, tr("ON"));
 	} else {
 		lv_obj_clear_state(btn, LV_STATE_CHECKED);
-		lv_label_set_text(child, "OFF");
+		i18n_label_set_text(child, tr("OFF"));
 	}
 }
 
 lv_obj_t* tt_obj_btn_toggle_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
-		char* lbl, int percentage)
+		const char* lbl, int percentage)
 {
 	lv_obj_t* btn = tt_obj_btn_create(parent, cb, lbl, NULL, LV_PCT(percentage),
 			50, LV_ALIGN_TOP_MID);
@@ -140,14 +142,14 @@ lv_obj_t* tt_obj_btn_toggle_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
 	lv_obj_add_style(btn, &btn_press_style, LV_STATE_CHECKED);
 
 	lv_obj_t* label = lv_label_create(btn);
-	lv_label_set_text(label, "OFF");
+	i18n_label_set_text(label, tr("OFF"));
 	lv_obj_align(label, LV_ALIGN_BOTTOM_MID, 0, 0);
 
 	return btn;
 }
 
 lv_obj_t* tt_obj_btn_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
-		char* lbl, int percentage)
+		const char* lbl, int percentage)
 {
 	return tt_obj_btn_create(parent, cb, lbl, NULL, LV_PCT(percentage),
 			50, LV_ALIGN_CENTER);
@@ -157,7 +159,7 @@ lv_obj_t* tt_obj_btn_perc_create(lv_obj_t* parent, lv_event_cb_t cb,
 lv_obj_t* tt_obj_btn_set_text(lv_obj_t* btn, const char* txt)
 {
 	lv_obj_t* label = lv_obj_get_child(btn, 0);
-	lv_label_set_text(label, txt);
+	i18n_label_set_text(label, txt);
 	return label;
 }
 
@@ -166,14 +168,14 @@ lv_obj_t* tt_obj_label_create(lv_obj_t* parent, const char* txt)
 	lv_obj_t* label = lv_label_create(parent);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
 	lv_obj_set_width(label, LV_PCT(100));
-	lv_label_set_text(label, txt);
+	i18n_label_set_text(label, txt);
 	lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
 	// lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
 
 	return label;
 }
 
-lv_obj_t* tt_obj_label_color_create(lv_obj_t* parent, char* txt)
+lv_obj_t* tt_obj_label_color_create(lv_obj_t* parent, const char* txt)
 {
 	lv_obj_t* label = tt_obj_label_create(parent, txt);
 	lv_label_set_recolor(label, true); 
@@ -182,7 +184,7 @@ lv_obj_t* tt_obj_label_color_create(lv_obj_t* parent, char* txt)
 }
 
 lv_obj_t* tt_obj_menu_page_create(lv_obj_t* menu, lv_obj_t* btn,
-		lv_event_cb_t cb, char* name)
+		lv_event_cb_t cb, const char* name)
 {
 	lv_obj_t* page = lv_menu_page_create(menu, NULL);
 	lv_menu_set_page_title_static(page, name);
@@ -213,6 +215,25 @@ lv_obj_t* tt_obj_cont_create(lv_obj_t* parent)
 	lv_obj_add_style(cont, &cont_style, LV_STATE_DEFAULT);
 
 	return cont;
+}
+
+/* Alarm descriptions come from the API in English. The known ones are
+ * translated, as the web UI does; any other is shown as sent. */
+static const char* alarm_desc_text(const char* desc)
+{
+	static const char* const known[] = {
+		N_("Power data unavailable"),
+		N_("No voltage on input"),
+		N_("Current above rated current"),
+		N_("Current close to rated current"),
+		N_("Network disconnected"),
+	};
+	for (size_t i = 0; desc != NULL && i < sizeof(known) / sizeof(known[0]); i++) {
+		if (strcmp(desc, known[i]) == 0) {
+			return tr(known[i]);
+		}
+	}
+	return desc;
 }
 
 lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
@@ -255,22 +276,22 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 	char alarm_type[100] = "";
 	switch (alarm->severity) {
 	case 0:
-		sprintf(alarm_type, "#%06X Info", TT_COLOR_INFO);
+		snprintf(alarm_type, sizeof(alarm_type), "#%06X %s", TT_COLOR_INFO, tr("Info"));
 		break;
 	case 1:
-		sprintf(alarm_type, "#%06X Warning", TT_COLOR_WARNING);
+		snprintf(alarm_type, sizeof(alarm_type), "#%06X %s", TT_COLOR_WARNING, tr("Warning"));
 		break;
 	case 2:
-		sprintf(alarm_type, "#%06X Error", TT_COLOR_ERROR);
+		snprintf(alarm_type, sizeof(alarm_type), "#%06X %s", TT_COLOR_ERROR, tr("Error"));
 		break;
 	case 3:
-		sprintf(alarm_type, "#%06X Critical error", TT_COLOR_CRITICAL_ERROR);
+		snprintf(alarm_type, sizeof(alarm_type), "#%06X %s", TT_COLOR_CRITICAL_ERROR, tr("Critical error"));
 		break;
 	default:
 		break;
 	}
 	tt_obj_label_color_create(cont, alarm_type);
-	tt_obj_label_create(cont, alarm->desc);
+	tt_obj_label_create(cont, alarm_desc_text(alarm->desc));
 	tt_obj_label_create(cont, alarm->path);
 	tt_obj_label_create(cont, alarm->code);
 
@@ -278,17 +299,25 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 }
 
 // TODO: fix close button
-lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
+lv_obj_t* tt_obj_msg_box_create(const char* title, const char* msg, const char* txt,
 		lv_event_cb_t cb)
 {
-	static const char* btns[] = {"YES", "NO", ""};
+	/* lv_msgbox keeps this pointer while the box is open. */
+	static const char* btns[3];
+	btns[0] = tr("YES");
+	btns[1] = tr("NO");
+	btns[2] = "";
 	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, btns, false);
-	lv_obj_add_event_cb(msgbox, cb, LV_EVENT_ALL, txt);
+	/* The callback only reads the loading message. */
+	lv_obj_add_event_cb(msgbox, cb, LV_EVENT_ALL, (void*)txt);
 	lv_obj_center(msgbox);
 	lv_obj_set_size(msgbox, LV_PCT(90), LV_SIZE_CONTENT);
 	
 	lv_obj_t* msgbox_txt = lv_msgbox_get_text(msgbox);
 	lv_label_set_recolor(msgbox_txt, true);
+	/* lv_msgbox_create() set the text itself; set it again so color
+	 * commands also work in right-to-left languages. */
+	i18n_label_set_text(msgbox_txt, msg);
 
 	lv_obj_t* mtx_btns = lv_msgbox_get_btns(msgbox);
 	lv_obj_set_height(mtx_btns, 50);
@@ -297,7 +326,7 @@ lv_obj_t* tt_obj_msg_box_create(char* title, char* msg, char* txt,
 }
 
 // TODO: fix close button; colors allowed??
-lv_obj_t* tt_obj_info_box_create(char* title, char* msg, int severiry)
+lv_obj_t* tt_obj_info_box_create(const char* title, const char* msg, int severiry)
 {
 	lv_obj_t* msgbox = lv_msgbox_create(NULL, title, msg, NULL, true);
 	lv_obj_center(msgbox);
@@ -327,7 +356,7 @@ static void info_box_deleted_cb(lv_event_t* e)
 	lv_timer_del(timer);
 }
 
-lv_obj_t* tt_obj_info_box_create_timed(char* title, char* msg, int severity,
+lv_obj_t* tt_obj_info_box_create_timed(const char* title, const char* msg, int severity,
 		uint32_t timeout_ms)
 {
 	lv_obj_t* msgbox = tt_obj_info_box_create(title, msg, severity);
@@ -349,7 +378,7 @@ lv_obj_t* tt_obj_spinner_inline_create(lv_obj_t* scr, const char* msg)
 	lv_obj_add_style(spinner, &spinner_inline_bg_style,
 			LV_STATE_DEFAULT | LV_PART_MAIN);
 	lv_obj_t* text = lv_label_create(cont);
-	lv_label_set_text(text, msg);
+	i18n_label_set_text(text, msg);
 	if (screen_is_landscape()) {
 		lv_obj_align(cont, LV_ALIGN_CENTER, 0, 10);
 		lv_obj_align(spinner, LV_ALIGN_LEFT_MID, 60, 0);
@@ -371,7 +400,7 @@ lv_obj_t* tt_obj_spinner_create(lv_obj_t* scr, const char* msg)
 	lv_obj_add_style(spinner, &spinner_style,
 			LV_STATE_DEFAULT | LV_PART_INDICATOR);
 	lv_obj_t* label = lv_label_create(scr);
-	lv_label_set_text(label, msg);
+	i18n_label_set_text(label, msg);
 	if (screen_is_landscape()) {
 		lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 140);
 	} else {
@@ -381,7 +410,7 @@ lv_obj_t* tt_obj_spinner_create(lv_obj_t* scr, const char* msg)
 	return spinner;
 }
 
-lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, char* placeholder,
+lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, const char* placeholder,
 		lv_event_cb_t cb)
 {
 	lv_obj_t* txt = lv_textarea_create(parent);
@@ -395,7 +424,7 @@ lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, char* placeholder,
 	return txt;
 }
 
-lv_obj_t* tt_obj_dropdown_create(lv_obj_t* parent, char* options,
+lv_obj_t* tt_obj_dropdown_create(lv_obj_t* parent, const char* options,
 		lv_event_cb_t cb)
 {
 	lv_obj_t* dd = lv_dropdown_create(parent);
@@ -413,7 +442,7 @@ lv_obj_t* tt_obj_dropdown_create(lv_obj_t* parent, char* options,
 	return dd;
 }
 
-lv_obj_t* tt_obj_checkbox_create(lv_obj_t* parent, char* txt, lv_event_cb_t cb)
+lv_obj_t* tt_obj_checkbox_create(lv_obj_t* parent, const char* txt, lv_event_cb_t cb)
 {
 	lv_obj_t* cbx = lv_checkbox_create(parent);
 	lv_obj_align(cbx, LV_ALIGN_CENTER, 0, 0);
@@ -439,7 +468,7 @@ lv_obj_t* tt_obj_loader_create(const char* msg, lv_event_cb_t cancel_cb)
 		lv_obj_add_style(btn, &btn_press_style, LV_STATE_PRESSED);
 		lv_obj_align(btn, LV_ALIGN_CENTER, 0, 80);
 		lv_obj_t* label = lv_label_create(btn);
-		lv_label_set_text(label, "CANCEL");
+		i18n_label_set_text(label, tr("CANCEL"));
 		lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 	}
 

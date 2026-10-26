@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "scr_settings_nw_modbus.h"
 #include "scr_keyboard.h"
@@ -31,12 +32,12 @@ static const char* BAUD_RATE_OPTIONS = "9600\n19200\n38400\n57600\n115200";
 static const int BAUD_RATES[] = { 9600, 19200, 38400, 57600, 115200 };
 #define BAUD_RATE_COUNT (sizeof(BAUD_RATES) / sizeof(BAUD_RATES[0]))
 
-static const char* PARITY_OPTIONS = "None\nEven\nOdd";
+static const char* PARITY_OPTIONS = N_("None\nEven\nOdd");
 static const char PARITIES[] = { 'N', 'E', 'O' };
 #define PARITY_COUNT (sizeof(PARITIES) / sizeof(PARITIES[0]))
 
 /* Slave answers requests on the 485 bus; Master polls the daisy chain. */
-static const char* ROLE_OPTIONS = "Slave\nMaster";
+static const char* ROLE_OPTIONS = N_("Slave\nMaster");
 #define ROLE_MASTER_INDEX 1
 
 static const char* TIMEOUT_OPTIONS = "100 ms\n200 ms\n500 ms\n1000 ms";
@@ -47,7 +48,7 @@ static const char* POLL_OPTIONS = "1 s\n2 s\n5 s\n10 s\n30 s";
 static const int POLL_INTERVALS_S[] = { 1, 2, 5, 10, 30 };
 #define POLL_COUNT (sizeof(POLL_INTERVALS_S) / sizeof(POLL_INTERVALS_S[0]))
 
-static const char* OFFLINE_OPTIONS = "1 missed\n2 missed\n3 missed\n5 missed\n10 missed";
+static const char* OFFLINE_OPTIONS = N_("1 missed\n2 missed\n3 missed\n5 missed\n10 missed");
 static const int OFFLINE_AFTER[] = { 1, 2, 3, 5, 10 };
 #define OFFLINE_COUNT (sizeof(OFFLINE_AFTER) / sizeof(OFFLINE_AFTER[0]))
 
@@ -119,7 +120,7 @@ static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 	lv_obj_set_style_pad_all(section, 5, 0);
 	lv_obj_set_style_pad_row(section, 3, 0);
 	lv_obj_t* label = lv_label_create(section);
-	lv_label_set_text(label, title);
+	i18n_label_set_text(label, title);
 	lv_obj_set_width(label, LV_PCT(100));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
 	return section;
@@ -128,7 +129,7 @@ static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 static lv_obj_t* create_row_label(lv_obj_t* parent, const char* text)
 {
 	lv_obj_t* label = lv_label_create(parent);
-	lv_label_set_text(label, text);
+	i18n_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_flex_grow(label, 1);
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
@@ -162,7 +163,7 @@ static void create_dropdown_row(lv_obj_t* parent, const char* label,
 {
 	lv_obj_t* row = create_row(parent);
 	create_row_label(row, label);
-	*dropdown = tt_obj_dropdown_create(row, (char*)options, cb);
+	*dropdown = tt_obj_dropdown_create(row, tr(options), cb);
 	lv_obj_set_size(*dropdown, LV_PCT(55), MODBUS_CONTROL_HEIGHT);
 }
 
@@ -305,7 +306,7 @@ static void update_rtu_controls(void)
 	bool rtu_used = !port_control || is_checked(sw_rtu_port1)
 			|| is_checked(sw_rtu_port2);
 
-	lv_label_set_text(lbl_addr, master ? "PDU number" : "Slave address");
+	i18n_label_set_text(lbl_addr, master ? tr("PDU number") : tr("Slave address"));
 	if (master) {
 		lv_obj_clear_flag(btn_daisy, LV_OBJ_FLAG_HIDDEN);
 	} else {
@@ -367,7 +368,7 @@ static void service_cb(lv_event_t* e)
 		service_set_pending = false;
 		set_enabled(sw_service, true);
 		apply_service_state();
-		tt_obj_info_box_create("Modbus", "Can not change the Modbus service", 1);
+		tt_obj_info_box_create("Modbus", tr("Can not change the Modbus service"), 1);
 	}
 }
 
@@ -381,7 +382,7 @@ static void services_cb(int err, void* userdata)
 	/* Show what the PDU reports, not what was tapped. */
 	apply_service_state();
 	if (err != 0 && was_set) {
-		tt_obj_info_box_create("Modbus", "Can not change the Modbus service", 1);
+		tt_obj_info_box_create("Modbus", tr("Can not change the Modbus service"), 1);
 	}
 }
 
@@ -415,7 +416,7 @@ static void port_cb(lv_event_t* e)
 	}
 	if (!is_checked(lv_event_get_target(e)) && !role_is_master()) {
 		tt_obj_info_box_create("Modbus",
-				"PDUs connected to this jack will lose contact with the chain", 0);
+				tr("PDUs connected to this jack will lose contact with the chain"), 0);
 	}
 	update_rtu_controls();
 }
@@ -427,8 +428,8 @@ static void role_cb(lv_event_t* e)
 	}
 	if (role_is_master()) {
 		tt_obj_info_box_create("Modbus",
-				"This PDU will stop answering Modbus RTU on its 485 jacks. "
-				"Modbus TCP keeps working.", 0);
+				tr("This PDU will stop answering Modbus RTU on its 485 jacks. "
+				"Modbus TCP keeps working."), 0);
 	}
 	update_rtu_controls();
 }
@@ -471,28 +472,28 @@ static void collect_settings(app_state_modbus_t* modbus)
 /* Returns the message to show when the settings can't be saved, or NULL. */
 static const char* validate_settings(const app_state_modbus_t* modbus)
 {
-	static char msg[96];
+	static char msg[256];
 
 	if (modbus->addr < MODBUS_ADDR_MIN || modbus->addr > MODBUS_ADDR_MAX) {
 		return modbus->master
-				? "PDU number must be between 1 and 247"
-				: "Slave address must be between 1 and 247";
+				? tr("PDU number must be between 1 and 247")
+				: tr("Slave address must be between 1 and 247");
 	}
 	if (!modbus->master) {
 		return NULL;
 	}
 	if (port_control && !modbus->rtu_port1 && !modbus->rtu_port2) {
-		return "Tick at least one 485 port so the master can reach the chain";
+		return tr("Tick at least one 485 port so the master can reach the chain");
 	}
 	if (modbus->scan_first < MODBUS_ADDR_MIN
 			|| modbus->scan_last > MODBUS_ADDR_MAX
 			|| modbus->scan_first > modbus->scan_last) {
-		return "Scan IDs must be between 1 and 247, with the first ID "
-				"not above the last";
+		return tr("Scan IDs must be between 1 and 247, with the first ID "
+				"not above the last");
 	}
 	if (modbus->addr >= modbus->scan_first && modbus->addr <= modbus->scan_last) {
-		snprintf(msg, sizeof(msg), "Scan range includes this PDU's own "
-				"number (%d). Change one of them.", modbus->addr);
+		snprintf(msg, sizeof(msg), tr("Scan range includes this PDU's own "
+				"number (%d). Change one of them."), modbus->addr);
 		return msg;
 	}
 	return NULL;
@@ -507,13 +508,13 @@ static void save_settings(void)
 	collect_settings(&modbus);
 	const char* error = validate_settings(&modbus);
 	if (error != NULL) {
-		tt_obj_info_box_create("Modbus", (char*)error, 1);
+		tt_obj_info_box_create("Modbus", error, 1);
 		return;
 	}
 	save_pending = true;
 	if (backend_modbus_save(&modbus, save_cb, NULL) != 0) {
 		save_pending = false;
-		tt_obj_info_box_create("Modbus", "Can not apply Modbus settings", 1);
+		tt_obj_info_box_create("Modbus", tr("Can not apply Modbus settings"), 1);
 	}
 }
 
@@ -555,7 +556,7 @@ static void refresh_cb(int err, void* userdata)
 	(void)userdata;
 	refresh_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Modbus", "Can not load Modbus settings", 1);
+		tt_obj_info_box_create("Modbus", tr("Can not load Modbus settings"), 1);
 		return;
 	}
 	apply_snapshot();
@@ -566,12 +567,12 @@ static void save_cb(int err, void* userdata)
 	(void)userdata;
 	save_pending = false;
 	if (err != 0) {
-		tt_obj_info_box_create("Modbus", "Can not apply Modbus settings", 1);
+		tt_obj_info_box_create("Modbus", tr("Can not apply Modbus settings"), 1);
 		return;
 	}
 	apply_snapshot();
 	tt_obj_info_box_create_timed("Modbus",
-			"Settings saved. The Modbus service restarts if it is on.", 0, 5000);
+			tr("Settings saved. The Modbus service restarts if it is on."), 0, 5000);
 }
 
 /* Page body: one scrolling area holding the settings, with the Cancel/Save
@@ -606,27 +607,27 @@ static void create_button_row(lv_obj_t* main, lv_event_cb_t cancel,
 {
 	lv_obj_t* button_row = create_row(main);
 	lv_obj_set_height(button_row, 52);
-	tt_obj_btn_perc_create(button_row, cancel, "Cancel", 47);
-	tt_obj_btn_perc_create(button_row, save, "Save", 47);
+	tt_obj_btn_perc_create(button_row, cancel, tr("Cancel"), 47);
+	tt_obj_btn_perc_create(button_row, save, tr("Save"), 47);
 }
 
 static void create_daisy_page(lv_obj_t* menu, lv_obj_t* btn)
 {
 	lv_obj_t* page = tt_obj_menu_page_create(menu, btn, daisy_menu_cb,
-			"Daisy chain");
+			tr("Daisy chain"));
 	daisy_page = lv_obj_get_parent(page);
 	lv_obj_t* main = create_page_body(page);
 
-	lv_obj_t* scan_section = create_section(main, "SCAN");
-	txt_scan_first = create_number_row(scan_section, "First ID", "1-247", NULL);
-	txt_scan_last = create_number_row(scan_section, "Last ID", "1-247", NULL);
+	lv_obj_t* scan_section = create_section(main, tr("SCAN"));
+	txt_scan_first = create_number_row(scan_section, tr("First ID"), "1-247", NULL);
+	txt_scan_last = create_number_row(scan_section, tr("Last ID"), "1-247", NULL);
 
-	lv_obj_t* poll_section = create_section(main, "POLLING");
-	create_dropdown_row(poll_section, "Reply timeout", TIMEOUT_OPTIONS,
+	lv_obj_t* poll_section = create_section(main, tr("POLLING"));
+	create_dropdown_row(poll_section, tr("Reply timeout"), TIMEOUT_OPTIONS,
 			&dd_timeout, NULL);
-	create_dropdown_row(poll_section, "Poll every", POLL_OPTIONS,
+	create_dropdown_row(poll_section, tr("Poll every"), POLL_OPTIONS,
 			&dd_poll, NULL);
-	create_dropdown_row(poll_section, "Offline after", OFFLINE_OPTIONS,
+	create_dropdown_row(poll_section, tr("Offline after"), OFFLINE_OPTIONS,
 			&dd_offline, NULL);
 
 	create_button_row(main, daisy_cancel_cb, ok_cb);
@@ -650,32 +651,35 @@ void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_clear_flag(service_section, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_set_flex_flow(service_section, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_all(service_section, 5, 0);
-	create_toggle_row(service_section, "Modbus service", &sw_service, service_cb);
+	create_toggle_row(service_section, tr("Modbus service"), &sw_service, service_cb);
 
 	lv_obj_t* tcp_section = create_section(main, "MODBUS TCP");
 	create_toggle_row(tcp_section, "Ethernet 1", &sw_ethernet_1, NULL);
 	create_toggle_row(tcp_section, "Ethernet 2", &sw_ethernet_2, NULL);
 
 	lv_obj_t* rtu_section = create_section(main, "MODBUS RTU (RS-485)");
-	create_toggle_row(rtu_section, "485 port 1", &sw_rtu_port1, port_cb);
-	create_toggle_row(rtu_section, "485 port 2", &sw_rtu_port2, port_cb);
+	create_toggle_row(rtu_section, tr("485 port 1"), &sw_rtu_port1, port_cb);
+	create_toggle_row(rtu_section, tr("485 port 2"), &sw_rtu_port2, port_cb);
 	lbl_port_note = lv_label_create(rtu_section);
-	lv_label_set_text(lbl_port_note,
-			"Switching each 485 port needs a board revision");
+	i18n_label_set_text(lbl_port_note,
+			tr("Switching each 485 port needs a board revision"));
 	lv_label_set_long_mode(lbl_port_note, LV_LABEL_LONG_WRAP);
 	lv_obj_set_width(lbl_port_note, LV_PCT(100));
 	lv_obj_set_style_text_font(lbl_port_note, &lv_font_montserrat_12, 0);
 	lv_obj_set_style_text_color(lbl_port_note,
 			lv_palette_main(LV_PALETTE_GREY), 0);
-	create_dropdown_row(rtu_section, "Role", ROLE_OPTIONS, &dd_role, role_cb);
-	txt_addr = create_number_row(rtu_section, "Slave address", "1-247",
+	create_dropdown_row(rtu_section, tr("Role"), ROLE_OPTIONS, &dd_role, role_cb);
+	txt_addr = create_number_row(rtu_section, tr("Slave address"), "1-247",
 			&lbl_addr);
-	create_dropdown_row(rtu_section, "Baud rate", BAUD_RATE_OPTIONS,
+	create_dropdown_row(rtu_section, tr("Baud rate"), BAUD_RATE_OPTIONS,
 			&dd_baud_rate, NULL);
-	create_dropdown_row(rtu_section, "Parity", PARITY_OPTIONS, &dd_parity, NULL);
-	create_dropdown_row(rtu_section, "Stop bits", "1\n2", &dd_stop_bits, NULL);
-	btn_daisy = tt_obj_btn_create(rtu_section, NULL,
-			"Daisy chain settings  " LV_SYMBOL_RIGHT, NULL, LV_PCT(100),
+	create_dropdown_row(rtu_section, tr("Parity"), PARITY_OPTIONS, &dd_parity, NULL);
+	create_dropdown_row(rtu_section, tr("Stop bits"), "1\n2", &dd_stop_bits, NULL);
+	/* The arrow points the reading direction: left for Arabic. */
+	static char daisy_label[96];
+	snprintf(daisy_label, sizeof(daisy_label), "%s  %s", tr("Daisy chain settings"),
+			i18n_is_rtl() ? LV_SYMBOL_LEFT : LV_SYMBOL_RIGHT);
+	btn_daisy = tt_obj_btn_create(rtu_section, NULL, daisy_label, NULL, LV_PCT(100),
 			MODBUS_ROW_HEIGHT, LV_ALIGN_CENTER);
 
 	create_button_row(main, cancel_cb, ok_cb);

@@ -9,6 +9,7 @@
 #include "tt_styles.h"
 #include "tt_colors.h"
 #include "utils.h"
+#include "i18n.h"
 #include "app/app_state.h"
 #include "backend/backend.h"
 #include "screen.h"
@@ -17,10 +18,12 @@
 
 /* Global variables ***********************************************************/
 
+static lv_obj_t* dd_language;
 static lv_obj_t* dd_rotation;
 static lv_obj_t* txt_screen_saver;
 static lv_timer_t* timer_rot;
 static lv_obj_t* msg_box_rot;
+static lv_obj_t* msg_box_lang;
 
 /* PDU location information pointers */
 static lv_obj_t* txt_fields[7]; 
@@ -29,6 +32,8 @@ static lv_obj_t* txt_fields[7];
 
 static void menu_cb(lv_event_t* e);
 static void rotate_cb(lv_event_t* e);
+static void language_cb(lv_event_t* e);
+static void msg_box_lang_cb(lv_event_t* e);
 static void txt_inactivity_cb(lv_event_t* e);
 static void txt_pdu_info_cb(lv_event_t* e);
 static void update_pdu_info_display();
@@ -76,15 +81,56 @@ static void rotate_cb(lv_event_t* e)
 
         timer_rot = lv_timer_create(timer_rot_cb, TIMER_ROT, NULL);
 
-        const char* orientation = (rotation == 3) ? "Horizontal" : "Vertical";
-        char msg[300];
-        snprintf(msg, sizeof(msg), "Are you sure you want to save screen orientation?\n"
+        const char* orientation = (rotation == 3) ? tr("Horizontal") : tr("Vertical");
+        char msg[512];
+        snprintf(msg, sizeof(msg), tr("Are you sure you want to save screen orientation?\n"
                 "Orientation: " TT_COLOR_GREEN_NE_STR " %s#\n"
-                "(changes will be reverted in 7 seconds)",
+                "(changes will be reverted in 7 seconds)"),
                 orientation);
-                
-        msg_box_rot = tt_obj_msg_box_create("Screen rotation", msg, NULL, msg_box_rot_cb);
+
+        msg_box_rot = tt_obj_msg_box_create(tr("Screen rotation"), msg, NULL,
+                msg_box_rot_cb);
     }
+}
+
+/* A new language applies to screens as they are built, so like the rotation
+ * it is saved and the program restarts. */
+static void language_cb(lv_event_t* e)
+{
+    if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) {
+        return;
+    }
+    i18n_lang_t lang = (i18n_lang_t)lv_dropdown_get_selected(dd_language);
+    if (lang == i18n_get_lang()) {
+        return;
+    }
+    if (msg_box_lang) {
+        lv_obj_del(msg_box_lang);
+        msg_box_lang = NULL;
+    }
+    char msg[512];
+    snprintf(msg, sizeof(msg), tr("Change the screen language to "
+            TT_COLOR_GREEN_NE_STR " %s#?\nThe screen restarts."),
+            i18n_native_name(lang));
+    msg_box_lang = tt_obj_msg_box_create(tr("Language"), msg, NULL,
+            msg_box_lang_cb);
+}
+
+static void msg_box_lang_cb(lv_event_t* e)
+{
+    lv_obj_t* obj = lv_event_get_current_target(e);
+
+    if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) {
+        return;
+    }
+    if (lv_msgbox_get_active_btn(obj) == 0) { // YES
+        i18n_lang_t lang = (i18n_lang_t)lv_dropdown_get_selected(dd_language);
+        backend_visual_save_language_and_restart(i18n_lang_code(lang), NULL, NULL);
+    } else {
+        lv_dropdown_set_selected(dd_language, (uint16_t)i18n_get_lang());
+    }
+    lv_msgbox_close(obj);
+    msg_box_lang = NULL;
 }
 
 static void txt_inactivity_cb(lv_event_t* e)
@@ -99,7 +145,7 @@ static void txt_inactivity_cb(lv_event_t* e)
     if (code == LV_EVENT_READY) {
         int t = atoi(lv_textarea_get_text(obj));
         if (t < 1 || t > 300) {
-            tt_obj_info_box_create("ERROR", "Time must be [1-300]", 1);
+            tt_obj_info_box_create(tr("ERROR"), tr("Time must be [1-300]"), 1);
             return;
         }
         backend_visual_set_inactivity(t, visual_config_cb, NULL);
@@ -252,7 +298,7 @@ static lv_obj_t* create_setting_row(lv_obj_t* parent, const char* label_text)
 
 void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
 {
-    lv_obj_t* vis_page = tt_obj_menu_page_create(menu, btn, menu_cb, "Visualization");
+    lv_obj_t* vis_page = tt_obj_menu_page_create(menu, btn, menu_cb, tr("Visualization"));
     
     // Enable scrollbar as seen in mockup
     lv_obj_set_scrollbar_mode(vis_page, LV_SCROLLBAR_MODE_ON);
@@ -261,32 +307,38 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_gap(cont, 5, 0);
 
-    // 1. Screen Rotation Row
-    lv_obj_t* row_rot = create_setting_row(cont, "Screen rotation");
-    dd_rotation = tt_obj_dropdown_create(row_rot, "Vertical\nHorizontal", rotate_cb);
+    // 1. Language Row (options are written in each language's own script)
+    lv_obj_t* row_lang = create_setting_row(cont, tr("Language"));
+    dd_language = tt_obj_dropdown_create(row_lang, i18n_dropdown_options(), language_cb);
+    lv_obj_set_width(dd_language, LV_PCT(50));
+    lv_dropdown_set_selected(dd_language, (uint16_t)i18n_get_lang());
+
+    // 2. Screen Rotation Row
+    lv_obj_t* row_rot = create_setting_row(cont, tr("Screen rotation"));
+    dd_rotation = tt_obj_dropdown_create(row_rot, tr("Vertical\nHorizontal"), rotate_cb);
     lv_obj_set_width(dd_rotation, LV_PCT(50));
     lv_dropdown_set_selected(dd_rotation, rotation_to_dropdown_index(2));
 
-    // 2. Screen Saver Row
-    lv_obj_t* row_saver = create_setting_row(cont, "Screen saver (min)");
+    // 3. Screen Saver Row
+    lv_obj_t* row_saver = create_setting_row(cont, tr("Screen saver (min)"));
     txt_screen_saver = tt_obj_txt_create(row_saver, "0", txt_inactivity_cb);
     lv_obj_set_width(txt_screen_saver, LV_PCT(50));
 
-    // 3. Section Header
-    lv_obj_t* pdu_header = tt_obj_label_create(cont, "PDU location information");
-    lv_obj_set_style_text_font(pdu_header, &lv_font_montserrat_14, 0);
+    // 4. Section Header
+    lv_obj_t* pdu_header = tt_obj_label_create(cont, tr("PDU location information"));
+    lv_obj_set_style_text_font(pdu_header, i18n_font(14), 0);
     lv_obj_set_style_pad_top(pdu_header, 15, 0);
     lv_obj_set_style_pad_left(pdu_header, 10, 0);
 
-    // 4. PDU Fields Loop
+    // 5. PDU Fields Loop
     const char* pdu_labels[] = {
-        "Company name", "Rack", "System A - B", 
-        "UPS A - B", "Electrical board", "Circuit Breaker", "Service"
+        N_("Company name"), N_("Rack"), N_("System A - B"),
+        N_("UPS A - B"), N_("Electrical board"), N_("Circuit Breaker"), N_("Service")
     };
 
     for (int i = 0; i < 7; i++) {
-        lv_obj_t* row = create_setting_row(cont, pdu_labels[i]);
-        txt_fields[i] = tt_obj_txt_create(row, "Text", NULL);
+        lv_obj_t* row = create_setting_row(cont, tr(pdu_labels[i]));
+        txt_fields[i] = tt_obj_txt_create(row, tr("Text"), NULL);
         lv_obj_set_width(txt_fields[i], LV_PCT(50));
         
         // Attach field ID to the event

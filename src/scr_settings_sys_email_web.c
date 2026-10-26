@@ -8,6 +8,7 @@
 
 #include <cjson/cJSON.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 #include "http_async.h"
 #include "scr_keyboard.h"
@@ -82,7 +83,7 @@ static lv_obj_t* create_field_group(lv_obj_t* parent, const char* label_text,
 	lv_obj_set_style_pad_all(group, 0, 0);
 	lv_obj_set_style_pad_column(group, 2, 0);
 	lv_obj_t* label = lv_label_create(group);
-	lv_label_set_text(label, label_text);
+	i18n_label_set_text(label, label_text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_width(label, LV_PCT(label_width));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
@@ -251,7 +252,7 @@ static void apply_config(void)
 	lv_textarea_set_text(txt_from_address, loaded_config.from_address);
 	lv_textarea_set_text(txt_password, "");
 	lv_textarea_set_placeholder_text(txt_password,
-			loaded_config.password_configured ? "Saved - enter new" : "Password");
+			loaded_config.password_configured ? tr("Saved - enter new") : tr("Password"));
 	for (int i = 0; i < RECIPIENT_COUNT; i++) {
 		lv_textarea_set_text(txt_recipients[i], loaded_config.recipients[i]);
 	}
@@ -308,18 +309,18 @@ static bool validate_form(void)
 	uint16_t ignored;
 	if (!parse_port(lv_textarea_get_text(txt_web_port), &ignored) ||
 			!parse_port(lv_textarea_get_text(txt_smtp_port), &ignored)) {
-		tt_obj_info_box_create("Email/Web", "Ports must be between 1 and 65535", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Ports must be between 1 and 65535"), 1);
 		return false;
 	}
 	if (!valid_server(server)) {
-		tt_obj_info_box_create("Email/Web", "Invalid SMTP server", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Invalid SMTP server"), 1);
 		return false;
 	}
 	bool has_recipient = false;
 	for (int i = 0; i < RECIPIENT_COUNT; i++) {
 		const char* recipient = lv_textarea_get_text(txt_recipients[i]);
 		if (!valid_mail_address(recipient, true)) {
-			tt_obj_info_box_create("Email/Web", "Invalid recipient address", 1);
+			tt_obj_info_box_create(tr("Email/Web"), tr("Invalid recipient address"), 1);
 			return false;
 		}
 		has_recipient = has_recipient || recipient[0] != '\0';
@@ -327,18 +328,18 @@ static bool validate_form(void)
 	bool email_configured = server[0] != '\0' || from[0] != '\0' ||
 			has_recipient || lv_dropdown_get_selected(dd_smtp_auth) != 0;
 	if (!valid_mail_address(from, !email_configured)) {
-		tt_obj_info_box_create("Email/Web", "Invalid From address", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Invalid From address"), 1);
 		return false;
 	}
 	if (email_configured && (server[0] == '\0' || from[0] == '\0' ||
 			!has_recipient)) {
-		tt_obj_info_box_create("Email/Web",
-				"SMTP server, From and recipient are required", 1);
+		tt_obj_info_box_create(tr("Email/Web"),
+				tr("SMTP server, From and recipient are required"), 1);
 		return false;
 	}
 	if (lv_dropdown_get_selected(dd_smtp_auth) == SMTP_AUTH_LOGIN &&
 			password[0] == '\0' && !loaded_config.password_configured) {
-		tt_obj_info_box_create("Email/Web", "SMTP login password is required", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("SMTP login password is required"), 1);
 		return false;
 	}
 	return true;
@@ -351,7 +352,7 @@ static void load_cb(int err, void* buffer, size_t len, void* userdata)
 	request_pending = false;
 	if (err != 0 || !parse_config(buffer, &loaded_config)) {
 		free(buffer);
-		tt_obj_info_box_create("Email/Web", "Can not load settings", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Can not load settings"), 1);
 		return;
 	}
 	free(buffer);
@@ -365,12 +366,12 @@ static void save_cb(int err, void* buffer, size_t len, void* userdata)
 	request_pending = false;
 	if (err != 0 || !parse_config(buffer, &loaded_config)) {
 		free(buffer);
-		tt_obj_info_box_create("Email/Web", "Can not save settings", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Can not save settings"), 1);
 		return;
 	}
 	free(buffer);
 	apply_config();
-	tt_obj_info_box_create("Email/Web", "Settings saved", 0);
+	tt_obj_info_box_create(tr("Email/Web"), tr("Settings saved"), 0);
 }
 
 static void request_load(void)
@@ -381,7 +382,7 @@ static void request_load(void)
 	request_pending = true;
 	if (http_async_get(EMAIL_WEB_URL, load_cb, NULL) < 0) {
 		request_pending = false;
-		tt_obj_info_box_create("Email/Web", "Can not load settings", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Can not load settings"), 1);
 	}
 }
 
@@ -406,13 +407,13 @@ static void ok_cb(lv_event_t* e)
 	}
 	char* json = serialize_config();
 	if (json == NULL) {
-		tt_obj_info_box_create("Email/Web", "Can not prepare settings", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Can not prepare settings"), 1);
 		return;
 	}
 	request_pending = true;
 	if (http_async_put(EMAIL_WEB_URL, json, save_cb, NULL) < 0) {
 		request_pending = false;
-		tt_obj_info_box_create("Email/Web", "Can not save settings", 1);
+		tt_obj_info_box_create(tr("Email/Web"), tr("Can not save settings"), 1);
 	}
 	free(json);
 }
@@ -427,7 +428,7 @@ static void cancel_cb(lv_event_t* e)
 void scr_settings_sys_email_web_create(lv_obj_t* menu, lv_obj_t* btn)
 {
 	lv_obj_t* page = tt_obj_menu_page_create(
-			menu, btn, menu_cb, "Email / Web");
+			menu, btn, menu_cb, tr("Email / Web"));
 	lv_obj_t* main = tt_obj_cont_create(page);
 	lv_obj_set_width(main, LV_PCT(100));
 	lv_obj_set_height(main, 0);
@@ -444,49 +445,49 @@ void scr_settings_sys_email_web_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_t* group = create_field_group(row, "Web", 62, 34);
 	dd_web_protocol = tt_obj_dropdown_create(group, "HTTP\nHTTPS", NULL);
 	lv_obj_set_size(dd_web_protocol, LV_PCT(64), CONTROL_HEIGHT);
-	group = create_field_group(row, "Port", 36, 35);
-	txt_web_port = tt_obj_txt_create(group, "Port", number_cb);
+	group = create_field_group(row, tr("Port"), 36, 35);
+	txt_web_port = tt_obj_txt_create(group, tr("Port"), number_cb);
 	lv_obj_set_size(txt_web_port, LV_PCT(64), CONTROL_HEIGHT);
 	lv_textarea_set_accepted_chars(txt_web_port, "0123456789");
 	lv_textarea_set_max_length(txt_web_port, 5);
 
 	row = create_row(main, ROW_HEIGHT);
-	group = create_field_group(row, "email SMTP", 62, 38);
-	txt_smtp_server = tt_obj_txt_create(group, "SMTP server", text_cb);
+	group = create_field_group(row, tr("email SMTP"), 62, 38);
+	txt_smtp_server = tt_obj_txt_create(group, tr("SMTP server"), text_cb);
 	lv_obj_set_size(txt_smtp_server, LV_PCT(60), CONTROL_HEIGHT);
 	lv_textarea_set_max_length(txt_smtp_server, SERVER_LEN - 1);
 	lv_textarea_set_accepted_chars(txt_smtp_server,
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.:-");
-	group = create_field_group(row, "Port", 36, 35);
-	txt_smtp_port = tt_obj_txt_create(group, "Port", number_cb);
+	group = create_field_group(row, tr("Port"), 36, 35);
+	txt_smtp_port = tt_obj_txt_create(group, tr("Port"), number_cb);
 	lv_obj_set_size(txt_smtp_port, LV_PCT(64), CONTROL_HEIGHT);
 	lv_textarea_set_accepted_chars(txt_smtp_port, "0123456789");
 	lv_textarea_set_max_length(txt_smtp_port, 5);
 
 	row = create_row(main, ROW_HEIGHT);
-	group = create_field_group(row, "Auth", 62, 38);
-	dd_smtp_auth = tt_obj_dropdown_create(group, "None\nLogin", NULL);
+	group = create_field_group(row, tr("Auth"), 62, 38);
+	dd_smtp_auth = tt_obj_dropdown_create(group, tr("None\nLogin"), NULL);
 	lv_obj_set_size(dd_smtp_auth, LV_PCT(60), CONTROL_HEIGHT);
 
 	row = create_row(main, ROW_HEIGHT);
-	group = create_field_group(row, "From", 62, 30);
-	txt_from_address = tt_obj_txt_create(group, "From address", text_cb);
+	group = create_field_group(row, tr("From"), 62, 30);
+	txt_from_address = tt_obj_txt_create(group, tr("From address"), text_cb);
 	lv_obj_set_size(txt_from_address, LV_PCT(68), CONTROL_HEIGHT);
 	lv_textarea_set_max_length(txt_from_address, MAIL_ADDRESS_LEN - 1);
-	group = create_field_group(row, "Password", 36, 43);
-	txt_password = tt_obj_txt_create(group, "Password", text_cb);
+	group = create_field_group(row, tr("Password"), 36, 43);
+	txt_password = tt_obj_txt_create(group, tr("Password"), text_cb);
 	lv_obj_set_size(txt_password, LV_PCT(55), CONTROL_HEIGHT);
 	lv_textarea_set_password_mode(txt_password, true);
 	lv_textarea_set_max_length(txt_password, PASSWORD_LEN - 1);
 
 	lv_obj_t* label = lv_label_create(main);
-	lv_label_set_text(label, "Addresses to");
+	i18n_label_set_text(label, tr("Addresses to"));
 	lv_obj_set_width(label, LV_PCT(100));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
 
 	row = create_row(main, ROW_HEIGHT);
 	for (int i = 0; i < RECIPIENT_COUNT; i++) {
-		txt_recipients[i] = tt_obj_txt_create(row, "Recipient", text_cb);
+		txt_recipients[i] = tt_obj_txt_create(row, tr("Recipient"), text_cb);
 		lv_obj_set_size(txt_recipients[i], LV_PCT(32), CONTROL_HEIGHT);
 		lv_textarea_set_max_length(
 				txt_recipients[i], MAIL_ADDRESS_LEN - 1);
@@ -494,7 +495,7 @@ void scr_settings_sys_email_web_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	row = create_row(main, 48);
 	tt_obj_btn_perc_create(row, ok_cb, "OK", 47);
-	tt_obj_btn_perc_create(row, cancel_cb, "Cancel", 47);
+	tt_obj_btn_perc_create(row, cancel_cb, tr("Cancel"), 47);
 
 	memset(&loaded_config, 0, sizeof(loaded_config));
 	request_load();

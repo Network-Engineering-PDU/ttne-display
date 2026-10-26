@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "i18n.h"
 #include "lvgl/lvgl.h"
 
 #include "scr_outlets.h"
@@ -54,7 +55,7 @@ static void menu_cb(lv_event_t* e)
 		lv_obj_t* page = lv_menu_get_cur_main_page(obj);
 		if (curr_page == page) {
 			if (backend_outlets_refresh(outlets_refresh_cb, NULL) != 0) {
-				tt_obj_info_box_create("Outlets", "Outlet refresh unavailable", 1);
+				tt_obj_info_box_create(tr("Outlets"), tr("Outlet refresh unavailable"), 1);
 			}
 			update_outlet_buttons();
 		}
@@ -87,7 +88,7 @@ static void msg_box_all_cb(lv_event_t* e)
 				}
 				tt_user_data->active_screen = lv_scr_act();
 				loader_scr = tt_obj_loader_create(action ?
-						"Enabling all switches" : "Disabling all switches", NULL);
+						tr("Enabling all switches") : tr("Disabling all switches"), NULL);
 				lv_scr_load(loader_scr);
 				if (backend_outlets_set_all(action, outlets_set_all_cb,
 						tt_user_data) != 0) {
@@ -95,7 +96,7 @@ static void msg_box_all_cb(lv_event_t* e)
 					lv_obj_del(loader_scr);
 					loader_scr = NULL;
 					free(tt_user_data);
-					tt_obj_info_box_create("Outlets", "Outlet update unavailable", 1);
+					tt_obj_info_box_create(tr("Outlets"), tr("Outlet update unavailable"), 1);
 				}
 		}
 		lv_msgbox_close(obj);
@@ -108,10 +109,11 @@ static void btn_all_cb(lv_event_t* e)
 	bool action = (bool)lv_event_get_user_data(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		char msg[100];
-		sprintf(msg, "Are you sure you want to " TT_COLOR_GREEN_NE_STR
-				" %s all outlets#?", action ? "enable" : "disable");
-		lv_obj_t* msg_box = tt_obj_msg_box_create("Outlets", msg, NULL, NULL);
+		char msg[256];
+		snprintf(msg, sizeof(msg), "%s", action ?
+				tr("Are you sure you want to " TT_COLOR_GREEN_NE_STR " enable all outlets#?") :
+				tr("Are you sure you want to " TT_COLOR_GREEN_NE_STR " disable all outlets#?"));
+		lv_obj_t* msg_box = tt_obj_msg_box_create(tr("Outlets"), msg, NULL, NULL);
 		lv_obj_add_event_cb(msg_box, msg_box_all_cb, LV_EVENT_ALL,
 				(void*)(action));
 	}
@@ -121,7 +123,7 @@ static void outlets_refresh_cb(int err, void* userdata)
 {
 	(void)userdata;
 	if (err != 0) {
-		tt_obj_info_box_create("Outlets", "Could not refresh outlets", 1);
+		tt_obj_info_box_create(tr("Outlets"), tr("Could not refresh outlets"), 1);
 		return;
 	}
 	update_outlet_buttons();
@@ -144,7 +146,7 @@ static void outlets_set_all_cb(int err, void* userdata)
 	}
 
 	if (err != 0) {
-		tt_obj_info_box_create("Outlets", "Could not update outlets", 1);
+		tt_obj_info_box_create(tr("Outlets"), tr("Could not update outlets"), 1);
 		return;
 	}
 
@@ -195,7 +197,7 @@ void scr_outlets_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	menu = l_menu;
 
 	lv_obj_t* outlets_cont = tt_obj_menu_page_create(menu, btn,
-			menu_cb, "Outlets");
+			menu_cb, tr("Outlets"));
 
 	out_data_page = scr_outlet_data_create(menu);
 
@@ -203,18 +205,18 @@ void scr_outlets_create(lv_obj_t* l_menu, lv_obj_t* btn)
 	lv_obj_set_flex_flow(outlets_status_cont, LV_FLEX_FLOW_ROW_WRAP);
 
 	lbl_no_out = tt_obj_label_color_create(outlets_status_cont,
-			"No outlets found");
+			tr("No outlets found"));
 	lv_obj_add_flag(lbl_no_out, LV_OBJ_FLAG_HIDDEN);
 	btn_en_all = tt_obj_btn_perc_create(outlets_status_cont, NULL,
-			"ENABLE ALL", 48);
+			tr("ENABLE ALL"), 48);
 	lv_obj_add_event_cb(btn_en_all, btn_all_cb, LV_EVENT_ALL, (void*)true);
 	btn_dis_all = tt_obj_btn_perc_create(outlets_status_cont, NULL,
-			"DISABLE ALL", 48);
+			tr("DISABLE ALL"), 48);
 	lv_obj_add_event_cb(btn_dis_all, btn_all_cb, LV_EVENT_ALL, (void*)false);
 
 	for (int i = 0; i < MAX_OUTLETS; i++) {
-		char str[10];
-		sprintf(str, "OUT %d", i + 1);
+		char str[32];
+		snprintf(str, sizeof(str), tr("OUT %d"), i + 1);
 		if (screen_is_landscape()) {
 			btn_out[i] = tt_obj_btn_toggle_perc_create(outlets_status_cont,
 					NULL, str, 23);
