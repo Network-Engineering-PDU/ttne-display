@@ -121,7 +121,6 @@ static lv_obj_t* txt_lan2_gateway;
 
 static void menu_cb(lv_event_t* e);
 static void update_cb(lv_event_t* e);
-static void msg_box_timer_cb(lv_timer_t* timer);
 static void nw_if_timer_cb(lv_timer_t* timer);
 static void msg_box_nw_if_cb(lv_event_t* e);
 static void btn_nw_settings_cb(lv_event_t* e);
@@ -277,12 +276,6 @@ static void update_cb(lv_event_t* e)
 	}
 }
 
-static void msg_box_timer_cb(lv_timer_t* timer)
-{
-	lv_timer_del(timer);
-	lv_msgbox_close(timer->user_data);
-}
-
 static void load_network_form(const app_state_nw_if_t* nw_if)
 {
 	if (nw_if == NULL) {
@@ -361,8 +354,13 @@ static void load_network_form(const app_state_nw_if_t* nw_if)
 	lv_textarea_set_text(txt_lw_wifi_dns,
 			sanitize_dns(default_if_empty(nw_if->wifi_dns, DEFAULT_DNS)));
 	lv_textarea_set_text(txt_lw_wifi_ssid, nw_if->ssid);
-	/* The API intentionally does not return the stored WiFi secret. Keep a
-	 * password already entered in this session when a refresh returns empty. */
+	/* The API intentionally does not return the stored WiFi secret: say
+	 * whether one is kept (left empty, saving keeps it). Keep a password
+	 * already entered in this session when a refresh returns empty. */
+	const char* pass_hint = nw_if->pass_saved ? tr("Saved password") :
+			tr("WiFi password");
+	lv_textarea_set_placeholder_text(txt_wifi_pass, pass_hint);
+	lv_textarea_set_placeholder_text(txt_lw_wifi_pass, pass_hint);
 	if (nw_if->pass[0] != '\0') {
 		lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
 		lv_textarea_set_text(txt_lw_wifi_pass, nw_if->pass);
@@ -398,7 +396,6 @@ static void nw_if_timer_cb(lv_timer_t* timer)
 static void network_info_refresh_cb(int err, void* userdata)
 {
 	lv_timer_t* timer = userdata;
-	lv_obj_t* msg_box_conn;
 
 	nw_info_refresh_pending = false;
 	if (timer == NULL) {
@@ -423,8 +420,8 @@ static void network_info_refresh_cb(int err, void* userdata)
 		nw_conn_retries = 0;
 		lv_timer_del(timer);
 		close_save_msgbox();
-		msg_box_conn = tt_obj_info_box_create(tr("ERROR"), tr("Can not connect to Internet"), 1);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
+		tt_obj_info_box_create_timed(tr("ERROR"),
+				tr("Can not connect to Internet"), 1, TIMER_MSG_BOX_PERIOD);
 		return;
 	}
 }
@@ -453,13 +450,12 @@ static void msg_box_nw_if_cb(lv_event_t* e)
 static void network_if_save_cb(int err, void* userdata)
 {
 	(void)userdata;
-	lv_obj_t* msg_box_conn;
 
 	if (err != 0) {
 		close_save_msgbox();
-		msg_box_conn = tt_obj_info_box_create(tr("ERROR"),
-				tr("Can not apply network configuration"), 1);
-		lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD, msg_box_conn);
+		tt_obj_info_box_create_timed(tr("ERROR"),
+				tr("Can not apply network configuration"), 1,
+				TIMER_MSG_BOX_PERIOD);
 		return;
 	}
 
@@ -590,18 +586,16 @@ static void btn_nw_settings_cb(lv_event_t* e)
 						sizeof(nw_ifaces.lan2_gateway), "%s",
 						lv_textarea_get_text(txt_lan2_gateway));
 				if (strcmp(nw_ifaces.lan1_ip, nw_ifaces.lan2_ip) == 0) {
-					lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
-							tr("LAN1 and LAN2 IP must be different"), 1);
-					lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD,
-							msg_box);
+					tt_obj_info_box_create_timed(tr("ERROR"),
+							tr("LAN1 and LAN2 IP must be different"), 1,
+							TIMER_MSG_BOX_PERIOD);
 					return;
 				}
 				if (!dhcp && (nw_ifaces.lan1_gateway[0] == '\0' ||
 						nw_ifaces.lan2_gateway[0] == '\0')) {
-					lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
-							tr("LAN1 and LAN2 gateways are required"), 1);
-					lv_timer_create(msg_box_timer_cb, TIMER_MSG_BOX_PERIOD,
-							msg_box);
+					tt_obj_info_box_create_timed(tr("ERROR"),
+							tr("LAN1 and LAN2 gateways are required"), 1,
+							TIMER_MSG_BOX_PERIOD);
 					return;
 				}
 				snprintf(nw_ifaces.gw, sizeof(nw_ifaces.gw), "%s",
@@ -643,17 +637,15 @@ static void btn_nw_settings_cb(lv_event_t* e)
 							lv_textarea_get_text(txt_lw_wifi_ip));
 					if (nw_ifaces.wifi_ip[0] == '\0' ||
 							nw_ifaces.wifi_mask[0] == '\0') {
-						lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
-								tr("WiFi IP and subnet mask are required"), 1);
-						lv_timer_create(msg_box_timer_cb,
-								TIMER_MSG_BOX_PERIOD, msg_box);
+						tt_obj_info_box_create_timed(tr("ERROR"),
+								tr("WiFi IP and subnet mask are required"), 1,
+								TIMER_MSG_BOX_PERIOD);
 						return;
 					}
 					if (strcmp(nw_ifaces.ip, nw_ifaces.wifi_ip) == 0) {
-						lv_obj_t* msg_box = tt_obj_info_box_create(tr("ERROR"),
-								tr("Ethernet and WiFi IP must be different"), 1);
-						lv_timer_create(msg_box_timer_cb,
-								TIMER_MSG_BOX_PERIOD, msg_box);
+						tt_obj_info_box_create_timed(tr("ERROR"),
+								tr("Ethernet and WiFi IP must be different"), 1,
+								TIMER_MSG_BOX_PERIOD);
 						return;
 					}
 				}
@@ -665,6 +657,17 @@ static void btn_nw_settings_cb(lv_event_t* e)
 				nw_ifaces.lan2_gateway[0] = '\0';
 				nw_ifaces.wifi_ip[0] = '\0';
 				break;
+		}
+
+		/* A WiFi profile without a password never connects: an empty
+		 * field is only fine while the PDU keeps this SSID's password. */
+		if ((selected_mode == NW_WIFI_ONLY || selected_mode == NW_LAN_WIFI) &&
+				nw_ifaces.pass[0] == '\0' &&
+				!(snapshot.nw_if.pass_saved &&
+				strcmp(nw_ifaces.ssid, snapshot.nw_if.ssid) == 0)) {
+			tt_obj_info_box_create_timed(tr("ERROR"),
+					tr("Enter the WiFi password"), 1, TIMER_MSG_BOX_PERIOD);
+			return;
 		}
 
 		char msg[2048];

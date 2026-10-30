@@ -782,6 +782,54 @@ int json_helper_parse_alarms(const char* json_str, app_state_alarms_t* alarms)
 	return 0;
 }
 
+int json_helper_parse_datetime(const char* json_str,
+		app_state_datetime_t* datetime)
+{
+	memset(datetime, 0, sizeof(*datetime));
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	const char* timezone = json_get_string(json, "timezone");
+	int hour_format;
+	if (timezone == NULL || timezone[0] == '\0' ||
+			strlen(timezone) >= sizeof(datetime->timezone) ||
+			json_get_int(&hour_format, json, "hour_format") != 0 ||
+			(hour_format != 12 && hour_format != 24) ||
+			json_get_bool(&datetime->clock_set, json, "clock_set") != 0 ||
+			json_get_bool(&datetime->ntp_enabled, json, "ntp_enabled") != 0) {
+		cJSON_Delete(json);
+		return 1;
+	}
+	snprintf(datetime->timezone, sizeof(datetime->timezone), "%s", timezone);
+	datetime->hour_format = hour_format;
+	json_get_bool(&datetime->synchronized, json, "synchronized");
+
+	cJSON_Delete(json);
+	return 0;
+}
+
+int json_helper_parse_wifi_status(const char* json_str, app_state_wifi_t* wifi)
+{
+	memset(wifi, 0, sizeof(*wifi));
+	cJSON* json = cJSON_Parse(json_str);
+	if (json == NULL) {
+		return 1;
+	}
+
+	if (json_get_bool(&wifi->enabled, json, "enabled") != 0 ||
+			json_get_bool(&wifi->connected, json, "connected") != 0) {
+		cJSON_Delete(json);
+		return 1;
+	}
+	/* null when unknown */
+	json_get_int(&wifi->signal, json, "signal");
+
+	cJSON_Delete(json);
+	return 0;
+}
+
 int json_helper_update_nw_if(const char* json_str)
 {
 	cJSON* json = cJSON_Parse(json_str);
@@ -905,6 +953,9 @@ int json_helper_update_nw_if(const char* json_str)
 	if (str != NULL) {
 		nw_if.wifi_dns = str;
 	}
+	/* Older APIs don't say: none kept */
+	nw_if.pass_saved = false;
+	json_get_bool(&nw_if.pass_saved, json, "wifi_password_saved");
 	
 	models_set_nw_if(&nw_if);
 

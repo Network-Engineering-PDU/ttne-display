@@ -77,6 +77,10 @@ typedef enum {
 	BACKEND_CMD_CONFIG_RELOAD,
 	BACKEND_CMD_ALARMS_REFRESH,
 	BACKEND_CMD_ALARM_ACK,
+	BACKEND_CMD_DATETIME_REFRESH,
+	BACKEND_CMD_DATETIME_SAVE,
+	BACKEND_CMD_CLOCK_SET,
+	BACKEND_CMD_WIFI_STATUS_REFRESH,
 } backend_cmd_type_t;
 
 typedef struct {
@@ -322,6 +326,7 @@ static void publish_network_if_from_models(void)
 			model->wifi_gateway != NULL ? model->wifi_gateway : "");
 	snprintf(nw_if.wifi_dns, sizeof(nw_if.wifi_dns), "%s",
 			model->wifi_dns != NULL ? model->wifi_dns : "");
+	nw_if.pass_saved = model->pass_saved;
 
 	app_state_set_nw_if(&nw_if);
 }
@@ -1214,6 +1219,30 @@ static void* backend_worker(void* arg)
 		case BACKEND_CMD_ALARM_ACK:
 			err = controller_post_alarm_ack(cmd.text);
 			break;
+		case BACKEND_CMD_DATETIME_REFRESH:
+		case BACKEND_CMD_DATETIME_SAVE:
+		case BACKEND_CMD_CLOCK_SET: {
+			app_state_datetime_t datetime;
+			if (cmd.type == BACKEND_CMD_DATETIME_SAVE) {
+				err = controller_put_datetime(cmd.text, cmd.value, &datetime);
+			} else if (cmd.type == BACKEND_CMD_CLOCK_SET) {
+				err = controller_put_clock(cmd.text, &datetime);
+			} else {
+				err = controller_get_datetime(&datetime);
+			}
+			if (err == 0) {
+				app_state_set_datetime(&datetime);
+			}
+			break;
+		}
+		case BACKEND_CMD_WIFI_STATUS_REFRESH: {
+			app_state_wifi_t wifi;
+			err = controller_get_wifi_status(&wifi);
+			if (err == 0) {
+				app_state_set_wifi(&wifi);
+			}
+			break;
+		}
 		default:
 			err = 1;
 			break;
@@ -1876,6 +1905,59 @@ int backend_alarm_ack(const char* id, backend_callback_t callback,
 		return -1;
 	}
 	snprintf(cmd.text, sizeof(cmd.text), "%s", id);
+	return backend_submit(&cmd);
+}
+
+int backend_datetime_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_DATETIME_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	return backend_submit(&cmd);
+}
+
+int backend_datetime_save(const char* timezone, int hour_format,
+		backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_DATETIME_SAVE,
+		.value = hour_format,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	if (timezone == NULL || timezone[0] == '\0' ||
+			strlen(timezone) >= APP_STATE_TZ_LEN ||
+			(hour_format != 12 && hour_format != 24)) {
+		return -1;
+	}
+	snprintf(cmd.text, sizeof(cmd.text), "%s", timezone);
+	return backend_submit(&cmd);
+}
+
+int backend_clock_set(const char* local_time, backend_callback_t callback,
+		void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_CLOCK_SET,
+		.callback = callback,
+		.userdata = userdata,
+	};
+	if (local_time == NULL || local_time[0] == '\0') {
+		return -1;
+	}
+	snprintf(cmd.text, sizeof(cmd.text), "%s", local_time);
+	return backend_submit(&cmd);
+}
+
+int backend_wifi_status_refresh(backend_callback_t callback, void* userdata)
+{
+	backend_cmd_t cmd = {
+		.type = BACKEND_CMD_WIFI_STATUS_REFRESH,
+		.callback = callback,
+		.userdata = userdata,
+	};
 	return backend_submit(&cmd);
 }
 

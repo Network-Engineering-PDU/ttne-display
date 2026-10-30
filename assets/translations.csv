@@ -440,7 +440,6 @@ T243,NTP / SNTP,NTP / SNTP enable,Activar NTP / SNTP,NTP / SNTP aktivieren,启�
 T244,NTP / SNTP,Server,Servidor,Server,服务器,الخادم
 T245,NTP / SNTP,Server address can not be empty,La dirección del servidor no puede estar vacía,Die Serveradresse darf nicht leer sein,服务器地址不能为空,لا يمكن أن يكون عنوان الخادم فارغًا
 T246,NTP / SNTP,Settings saved. Time synchronization may take a few moments.,Configuración guardada. La sincronización horaria puede tardar unos momentos.,Einstellungen gespeichert. Die Zeitsynchronisierung kann einen Moment dauern.,设置已保存。时间同步可能需要片刻。,تم حفظ الإعدادات. قد تستغرق مزامنة الوقت بضع لحظات.
-T247,NTP / SNTP,Time offset,Desfase horario,Zeitversatz,时差,فرق التوقيت
 T248,SNMP,"Applying SNMP settings...
 Please wait a moment.","Aplicando la configuración SNMP...
 Espere un momento.","SNMP-Einstellungen werden übernommen...
@@ -475,12 +474,6 @@ T273,SNMP,Version,Versión,Version,版本,الإصدار
 T274,SSH,Are you sure you want to #A1C61A disable# SSH?,¿Seguro que quiere #A1C61A desactivar# SSH?,SSH wirklich #A1C61A deaktivieren#?,确定要 #A1C61A 禁用# SSH 吗？,هل أنت متأكد أنك تريد #A1C61A تعطيل# SSH؟
 T275,SSH,Are you sure you want to #A1C61A enable# SSH?,¿Seguro que quiere #A1C61A activar# SSH?,SSH wirklich #A1C61A aktivieren#?,确定要 #A1C61A 启用# SSH 吗？,هل أنت متأكد أنك تريد #A1C61A تفعيل# SSH؟
 T276,SSH,SSH service,Servicio SSH,SSH-Dienst,SSH 服务,خدمة SSH
-T277,System setup menu," Rated 
-Current","Corriente
-nominal","Nenn-
-strom","额定
-电流","التيار
-المقنَّن"
 T278,System setup menu,System Setup,Configuración del sistema,Systemeinrichtung,系统设置,إعداد النظام
 T279,"System setup menu, Users",Users,Usuarios,Benutzer,用户,المستخدمون
 T280,Email / Web,Addresses to,Destinatarios,Empfänger,收件人,المرسل إليهم
@@ -544,12 +537,6 @@ T322,Users,User name,Nombre de usuario,Benutzername,用户名,اسم المست�
 T323,Users,User name already exists,El nombre de usuario ya existe,Der Benutzername existiert bereits,用户名已存在,اسم المستخدم موجود بالفعل
 T324,Users,User name must contain 1-24 safe characters,El nombre de usuario debe tener 1-24 caracteres válidos,Der Benutzername muss 1-24 zulässige Zeichen haben,用户名须包含 1-24 个有效字符,يجب أن يتكون اسم المستخدم من 1-24 حرفًا صالحًا
 T325,Users,Users and levels saved,Usuarios y niveles guardados,Benutzer und Stufen gespeichert,用户和级别已保存,تم حفظ المستخدمين والمستويات
-T326,System update,"  Update
-From USB","Actualizar
-desde USB","Update
-von USB","从 USB
-更新","تحديث
-من USB"
 T327,System update,"Are you sure you want to perform a factory reset?
 All settings will be lost!","¿Seguro que quiere restablecer los valores de fábrica?
 ¡Se perderá toda la configuración!","Werkseinstellungen wirklich wiederherstellen?
@@ -571,12 +558,6 @@ Monatlich","每天
 أسبوعيًا
 شهريًا"
 T332,System update,Device update,Actualización del equipo,Geräteaktualisierung,设备更新,تحديث الجهاز
-T333,System update,"Factory
- Reset","Valores de
-fábrica","Werks-
-zustand","恢复
-出厂设置","ضبط
-المصنع"
 T334,System update,Factory reset,Restablecer valores de fábrica,Werkseinstellungen,恢复出厂设置,إعادة ضبط المصنع
 T335,System update,Firmware Update,Actualización de firmware,Firmware-Update,固件更新,تحديث البرنامج الثابت
 T336,System update,"Firmware Update Available!
@@ -692,3 +673,37 @@ T405,Units,RH,HR,rF,相对湿度, رطوبة
 T406,Units,hPa,,,百帕,مليبار
 T407,Units,dBm,,,分贝毫瓦,ديسيبل م
 T408,Home,Dashboard,Panel,Übersicht,仪表板,لوحة التحكم
+T409,Date & Time,%s AM,%s a. m.,%s AM,上午 %s,%s ص
+T410,Date & Time,%s PM,%s p. m.,%s PM,下午 %s,%s م
+T411,Date & Time,AM,a. m.,AM,上午,ص
+T412,Date & Time,PM,p. m.,PM,下午,م
+T413,Date & Time,Date & Time,Fecha y hora,Datum & Uhrzeit,日期和时间,التاريخ والوقت
+T414,Date & Time,Africa,África,Afrika,非洲,أفريقيا
+T415,Date & Time,America,América,Amerika,美洲,أمريكا
+T416,Date & Time,Antarctica,Antártida,Antarktis,南极洲,القارة القطبية الجنوبية
+T417,Date & Time,Asia,Asia,Asien,亚洲,آسيا
+T418,Date & Time,Atlantic Ocean,Océano Atlántico,Atlantik,大西洋,المحيط الأطلسي
+T419,Date & Time,Australia,Australia,Australien,澳大利亚,أستراليا
+T420,Date & Time,Europe,Europa,Europa,欧洲,أوروبا
+T421,Date & Time,Indian Ocean,Océano Índico,Indischer Ozean,印度洋,المحيط الهندي
+T422,Date & Time,Pacific Ocean,Océano Pacífico,Pazifik,太平洋,المحيط الهادئ
+T423,Date & Time,Time not set: waiting for the time server,Hora no establecida: esperando al servidor de hora,Uhrzeit nicht gesetzt: Warten auf den Zeitserver,时间未设置：正在等待时间服务器,الوقت غير مضبوط: في انتظار خادم الوقت
+T424,Date & Time,Time not set: set it by hand,Hora no establecida: establézcala manualmente,Uhrzeit nicht gesetzt: bitte manuell einstellen,时间未设置：请手动设置,الوقت غير مضبوط: اضبطه يدويًا
+T425,Date & Time,Synchronized with the time server,Sincronizada con el servidor de hora,Mit dem Zeitserver synchronisiert,已与时间服务器同步,متزامن مع خادم الوقت
+T426,Date & Time,Waiting for the time server,Esperando al servidor de hora,Warten auf den Zeitserver,正在等待时间服务器,في انتظار خادم الوقت
+T427,Date & Time,Set by hand: set it again after a power cut,Hora manual: vuelva a establecerla tras un corte de corriente,Manuell eingestellt: nach einem Stromausfall erneut einstellen,手动设置：断电后需重新设置,مضبوط يدويًا: اضبطه مجددًا بعد انقطاع الكهرباء
+T428,Date & Time,Can not save the date and time settings,No se puede guardar la configuración de fecha y hora,Datums- und Uhrzeiteinstellungen können nicht gespeichert werden,无法保存日期和时间设置,تعذر حفظ إعدادات التاريخ والوقت
+T429,Date & Time,Can not set the time,No se puede establecer la hora,Uhrzeit kann nicht eingestellt werden,无法设置时间,تعذر ضبط الوقت
+T430,Date & Time,The time is set.,La hora se ha establecido.,Die Uhrzeit ist eingestellt.,时间已设置。,تم ضبط الوقت.
+T431,Date & Time,Set date and time,Establecer fecha y hora,Datum und Uhrzeit einstellen,设置日期和时间,ضبط التاريخ والوقت
+T432,Date & Time,Set,Establecer,Einstellen,设置,ضبط
+T433,Date & Time,Automatic time (NTP),Hora automática (NTP),Automatische Zeit (NTP),自动时间 (NTP),الوقت التلقائي (NTP)
+T434,Date & Time,Region,Región,Region,地区,المنطقة
+T435,Date & Time,City,Ciudad,Stadt,城市,المدينة
+T436,Date & Time,Choose a city,Elija una ciudad,Stadt auswählen,选择城市,اختر مدينة
+T437,Date & Time,Time format,Formato de hora,Zeitformat,时间格式,تنسيق الوقت
+T438,Date & Time,24-hour,24 horas,24 Stunden,24 小时制,24 ساعة
+T439,Date & Time,12-hour,12 horas,12 Stunden,12 小时制,12 ساعة
+T440,System update,Update from USB,Actualizar desde USB,Update von USB,从 USB 更新,تحديث من USB
+T441,Network setup,Saved password,Contraseña guardada,Gespeichertes Passwort,已保存的密码,كلمة المرور المحفوظة
+T442,Network setup,Enter the WiFi password,Introduzca la contraseña WiFi,WLAN-Passwort eingeben,请输入 WiFi 密码,أدخل كلمة مرور WiFi

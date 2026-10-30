@@ -6,6 +6,7 @@
 
 #include "utils.h"
 #include "tt_obj.h"
+#include "tt_clock.h"
 #include "i18n.h"
 #include "tt_styles.h"
 #include "tt_colors.h"
@@ -50,6 +51,10 @@ lv_obj_t* tt_obj_btn_create(lv_obj_t* parent, lv_event_cb_t cb, const char* lbl,
 	if (lbl_align == LV_ALIGN_LEFT_MID) {
 		lv_obj_align(label, lbl_align, 10, 0);
 	} else {
+		/* One line: a text longer than the button moves back and forth. */
+		lv_obj_set_width(label, LV_PCT(100));
+		lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
+		lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
 		lv_obj_align(label, lbl_align, 0, 0);
 	}
 
@@ -266,11 +271,15 @@ lv_obj_t* tt_obj_cont_alarm_create(lv_obj_t* parent, lv_event_cb_t cb,
 	lv_obj_add_flag(img, LV_OBJ_FLAG_CLICKABLE);
 	lv_obj_add_event_cb(img, cb, LV_EVENT_ALL, cont_parent);
 
-	char alarm_time[24] = "";
+	char alarm_time[80] = "";
 	time_t first_seen = (time_t)alarm->first_seen;
 	struct tm tm_seen;
 	if (localtime_r(&first_seen, &tm_seen) != NULL) {
-		strftime(alarm_time, sizeof(alarm_time), "%Y/%m/%d %H:%M:%S", &tm_seen);
+		char date[32];
+		char time_of_day[40];
+		tt_clock_format_date(date, sizeof(date), &tm_seen);
+		tt_clock_format_time(time_of_day, sizeof(time_of_day), &tm_seen, true);
+		snprintf(alarm_time, sizeof(alarm_time), "%s %s", date, time_of_day);
 	}
 	tt_obj_label_create(cont, alarm_time);
 	char alarm_type[100] = "";

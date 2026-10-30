@@ -28,6 +28,13 @@ int json_helper_update_nw_info(const char* json_str);
  * @return 0 on success.
  */
 int json_helper_parse_alarms(const char* json_str, app_state_alarms_t* alarms);
+/** @brief Parses the GET/PUT /settings/datetime response. Returns 0 on
+ * success. */
+int json_helper_parse_datetime(const char* json_str,
+		app_state_datetime_t* datetime);
+/** @brief Parses the GET /network/wifi-status response. Returns 0 on
+ * success. */
+int json_helper_parse_wifi_status(const char* json_str, app_state_wifi_t* wifi);
 int json_helper_update_nw_if(const char* json_str);
 int json_helper_update_bt_status(const char* json_str);
 int json_helper_update_license(const char* json_str);

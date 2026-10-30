@@ -10,21 +10,12 @@
 #include "app/app_state.h"
 #include "backend/backend.h"
 
-#define NTP_OFFSET_MIN (-12)
-#define NTP_OFFSET_MAX 12
 #define NTP_LABEL_WIDTH 38
 #define NTP_CONTROL_WIDTH 58
-
-static const char* OFFSET_OPTIONS =
-		"UTC-12\nUTC-11\nUTC-10\nUTC-09\nUTC-08\nUTC-07\nUTC-06\n"
-		"UTC-05\nUTC-04\nUTC-03\nUTC-02\nUTC-01\nUTC+00\nUTC+01\n"
-		"UTC+02\nUTC+03\nUTC+04\nUTC+05\nUTC+06\nUTC+07\nUTC+08\n"
-		"UTC+09\nUTC+10\nUTC+11\nUTC+12";
 
 static lv_obj_t* menu_handle;
 static lv_obj_t* page_handle;
 static lv_obj_t* cbx_enabled;
-static lv_obj_t* dd_offset;
 static lv_obj_t* txt_server;
 static bool refresh_pending;
 static bool save_pending;
@@ -62,11 +53,6 @@ static void apply_snapshot(void)
 	} else {
 		lv_obj_clear_state(cbx_enabled, LV_STATE_CHECKED);
 	}
-	int offset = snapshot.ntp.time_offset;
-	if (offset < NTP_OFFSET_MIN || offset > NTP_OFFSET_MAX) {
-		offset = 0;
-	}
-	lv_dropdown_set_selected(dd_offset, (uint16_t)(offset - NTP_OFFSET_MIN));
 	lv_textarea_set_text(txt_server, snapshot.ntp.server);
 }
 
@@ -115,7 +101,11 @@ static void ok_cb(lv_event_t* e)
 		return;
 	}
 	bool enabled = (lv_obj_get_state(cbx_enabled) & LV_STATE_CHECKED) != 0;
-	int offset = (int)lv_dropdown_get_selected(dd_offset) + NTP_OFFSET_MIN;
+	/* The time zone is set in System Setup > Date & Time; keep the old
+	 * offset setting as it is. */
+	app_state_snapshot_t snapshot;
+	app_state_get_snapshot(&snapshot);
+	int offset = snapshot.ntp.time_offset;
 	save_pending = true;
 	if (backend_ntp_save(enabled, offset, server, save_cb, NULL) != 0) {
 		save_pending = false;
@@ -179,17 +169,6 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	cbx_enabled = tt_obj_checkbox_create(enabled_row, "", NULL);
 	lv_obj_set_size(cbx_enabled, 34, 34);
 	lv_obj_set_style_border_width(cbx_enabled, 2, LV_PART_INDICATOR);
-
-	lv_obj_t* offset_row = create_row(main, tr("Time offset"), NTP_LABEL_WIDTH);
-	lv_obj_t* offset_label = lv_obj_get_child(offset_row, 0);
-	lv_label_set_long_mode(offset_label, LV_LABEL_LONG_SCROLL);
-	lv_obj_set_height(offset_label, LV_SIZE_CONTENT);
-	dd_offset = tt_obj_dropdown_create(offset_row, (char*)OFFSET_OPTIONS, NULL);
-	/* "UTC+01:00" is a code: ASCII digits in every language */
-	i18n_western_digits(dd_offset);
-	i18n_western_digits(lv_dropdown_get_list(dd_offset));
-	lv_obj_set_size(dd_offset, LV_PCT(NTP_CONTROL_WIDTH), 34);
-	lv_dropdown_set_selected(dd_offset, 12);
 
 	lv_obj_t* server_row = create_row(main, tr("Server"), NTP_LABEL_WIDTH);
 	txt_server = tt_obj_address_txt_create(server_row, "IP / DNS", server_cb);

@@ -142,9 +142,9 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_size(dd_period, LV_PCT(50), 40);
 
     /* 5. Bottom buttons */
-    tt_obj_btn_mtx_create(main, btn_update_cb, tr("  Update\nFrom USB"), ASSET("usb2.png"));
+    tt_obj_btn_mtx_create(main, btn_update_cb, tr("Update from USB"), ASSET("usb2.png"));
     tt_obj_btn_mtx_create(main, btn_reboot_cb, tr("Reboot"), ASSET("reboot.png"));
-    tt_obj_btn_mtx_create(main, btn_factory_cb, tr("Factory\n Reset"), ASSET("f_reset.png"));
+    tt_obj_btn_mtx_create(main, btn_factory_cb, tr("Factory reset"), ASSET("f_reset.png"));
     
     /* Start polling for pending updates from remote server */
     // Delete any existing timer to prevent duplicates

@@ -965,4 +965,59 @@ int backend_alarm_ack(const char* id, backend_callback_t callback,
 	return 0;
 }
 
+static app_state_datetime_t sim_datetime = {
+	.timezone = "UTC",
+	.hour_format = 24,
+	.clock_set = true,
+	.ntp_enabled = true,
+};
+
+int backend_datetime_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_set_datetime(&sim_datetime);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
+int backend_datetime_save(const char* timezone, int hour_format,
+		backend_callback_t callback, void* userdata)
+{
+	if (timezone == NULL || timezone[0] == '\0' ||
+			strlen(timezone) >= sizeof(sim_datetime.timezone) ||
+			(hour_format != 12 && hour_format != 24)) {
+		return -1;
+	}
+	snprintf(sim_datetime.timezone, sizeof(sim_datetime.timezone), "%s",
+			timezone);
+	sim_datetime.hour_format = hour_format;
+	return backend_datetime_refresh(callback, userdata);
+}
+
+int backend_clock_set(const char* local_time, backend_callback_t callback,
+		void* userdata)
+{
+	/* The simulator doesn't change the computer's clock. */
+	int err = (local_time == NULL || sim_datetime.ntp_enabled) ? 1 : 0;
+	if (callback != NULL) {
+		callback(err, userdata);
+	}
+	return 0;
+}
+
+int backend_wifi_status_refresh(backend_callback_t callback, void* userdata)
+{
+	app_state_wifi_t wifi = {
+		.enabled = true,
+		.connected = true,
+		.signal = -56,
+	};
+	app_state_set_wifi(&wifi);
+	if (callback != NULL) {
+		callback(0, userdata);
+	}
+	return 0;
+}
+
 #endif /* SIMULATOR_ENABLED */

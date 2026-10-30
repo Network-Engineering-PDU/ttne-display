@@ -17,6 +17,7 @@ extern "C" {
 #define APP_STATE_MAX_SENSORS 8
 #define APP_STATE_MAX_DISCOVERED_SENSORS 16
 #define APP_STATE_MAX_ALARMS 32
+#define APP_STATE_TZ_LEN 64
 
 typedef struct {
 	int line_id;
@@ -137,6 +138,7 @@ typedef struct {
 	char wifi_gateway[APP_STATE_NW_TEXT_LEN];
 	char wifi_dns[APP_STATE_NW_TEXT_LEN];
 	int nw_mode;
+	bool pass_saved; /* the PDU keeps a WiFi password for ssid */
 	bool valid;
 } app_state_nw_if_t;
 
@@ -275,6 +277,24 @@ typedef struct {
 	bool valid;
 } app_state_alarms_t;
 
+/* Date and time settings of the touchscreen. The system clock is in UTC;
+ * the display shows it in the time zone. */
+typedef struct {
+	char timezone[APP_STATE_TZ_LEN]; /* tz database name: "Africa/Cairo" */
+	int hour_format; /* 12 or 24 */
+	bool clock_set; /* false after a power loss, until NTP or the user sets it */
+	bool ntp_enabled;
+	bool synchronized;
+	bool valid;
+} app_state_datetime_t;
+
+typedef struct {
+	bool enabled; /* the network mode uses Wi-Fi */
+	bool connected;
+	int signal; /* dBm; 0 when unknown */
+	bool valid;
+} app_state_wifi_t;
+
 typedef struct {
 	app_state_outlet_t outlets[APP_STATE_MAX_OUTLETS];
 	app_state_outlet_data_t outlet_data;
@@ -297,6 +317,8 @@ typedef struct {
 	app_state_visual_config_t visual_config;
 	app_state_login_config_t login_config;
 	app_state_alarms_t alarms;
+	app_state_datetime_t datetime;
+	app_state_wifi_t wifi;
 	char license_type[16];
 	int outlet_count;
 	int sensor_count;
@@ -322,6 +344,8 @@ typedef struct {
 	uint32_t login_config_revision;
 	uint32_t license_revision;
 	uint32_t alarms_revision;
+	uint32_t datetime_revision;
+	uint32_t wifi_revision;
 } app_state_snapshot_t;
 
 void app_state_init(void);
@@ -350,6 +374,8 @@ void app_state_set_visual_config(const app_state_visual_config_t* visual_config)
 void app_state_set_login_config(const app_state_login_config_t* login_config);
 void app_state_set_license_type(const char* license_type);
 void app_state_set_alarms(const app_state_alarms_t* alarms);
+void app_state_set_datetime(const app_state_datetime_t* datetime);
+void app_state_set_wifi(const app_state_wifi_t* wifi);
 void app_state_get_snapshot(app_state_snapshot_t* snapshot);
 
 #ifdef __cplusplus

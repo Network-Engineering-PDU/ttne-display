@@ -93,6 +93,16 @@ int backend_config_reload(backend_callback_t callback, void* userdata);
 int backend_alarms_refresh(backend_callback_t callback, void* userdata);
 int backend_alarm_ack(const char* id, backend_callback_t callback,
 		void* userdata);
+/** @brief Loads the date and time settings (time zone, 12/24-hour clock). */
+int backend_datetime_refresh(backend_callback_t callback, void* userdata);
+int backend_datetime_save(const char* timezone, int hour_format,
+		backend_callback_t callback, void* userdata);
+/** @brief Sets the clock by hand: local_time is "YYYY-MM-DD HH:MM" in the
+ * saved time zone. Fails while NTP is on. */
+int backend_clock_set(const char* local_time, backend_callback_t callback,
+		void* userdata);
+/** @brief Loads the Wi-Fi link and signal shown in the top bar. */
+int backend_wifi_status_refresh(backend_callback_t callback, void* userdata);
 int backend_login_config_refresh(backend_callback_t callback, void* userdata);
 int backend_login_set_skip(bool skip_login, backend_callback_t callback,
 		void* userdata);

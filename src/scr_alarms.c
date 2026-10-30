@@ -6,6 +6,7 @@
 
 #include "scr_alarms.h"
 #include "tt_obj.h"
+#include "tt_clock.h"
 #include "tt_colors.h"
 #include "app/app_state.h"
 #include "backend/backend.h"
@@ -19,6 +20,7 @@
 
 static app_state_alarms_t view; /* what is currently drawn */
 static bool view_valid;
+static uint32_t view_clock; /* tt_clock_revision() of the drawn times */
 
 static lv_obj_t* alarms_alarms_cont;
 static lv_obj_t* lbl_no_alarms;
@@ -129,9 +131,13 @@ static void apply_snapshot(void)
 			tr("Alarm data unavailable") : tr("No alarm has been triggered"));
 
 	app_state_get_snapshot(&snapshot);
-	if (snapshot.alarms.valid && view_changed(&snapshot.alarms)) {
+	/* Also when the time zone or clock changed: the alarms' times are
+	 * written in them (they load after the first alarms at start). */
+	if (snapshot.alarms.valid && (view_changed(&snapshot.alarms) ||
+			view_clock != tt_clock_revision())) {
 		view = snapshot.alarms;
 		view_valid = true;
+		view_clock = tt_clock_revision();
 		redraw();
 	}
 }

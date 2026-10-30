@@ -21,6 +21,11 @@ void app_state_init(void)
 	state.nw_if.nw_mode = -1;
 	state.ntp.enabled = true;
 	state.ntp.time_offset = 0;
+	snprintf(state.datetime.timezone, sizeof(state.datetime.timezone), "%s",
+			"UTC");
+	state.datetime.hour_format = 24;
+	state.datetime.clock_set = true;
+	state.datetime.ntp_enabled = true;
 	snprintf(state.ntp.server, sizeof(state.ntp.server), "%s",
 			"0.openembedded.pool.ntp.org");
 	state.snmp.enabled = false;
@@ -458,6 +463,33 @@ void app_state_set_alarms(const app_state_alarms_t* alarms)
 	state.alarms = *alarms;
 	state.alarms.valid = true;
 	state.alarms_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_datetime(const app_state_datetime_t* datetime)
+{
+	if (datetime == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.datetime = *datetime;
+	state.datetime.timezone[sizeof(state.datetime.timezone) - 1] = '\0';
+	state.datetime.valid = true;
+	state.datetime_revision++;
+	pthread_mutex_unlock(&state_mutex);
+}
+
+void app_state_set_wifi(const app_state_wifi_t* wifi)
+{
+	if (wifi == NULL) {
+		return;
+	}
+
+	pthread_mutex_lock(&state_mutex);
+	state.wifi = *wifi;
+	state.wifi.valid = true;
+	state.wifi_revision++;
 	pthread_mutex_unlock(&state_mutex);
 }
 

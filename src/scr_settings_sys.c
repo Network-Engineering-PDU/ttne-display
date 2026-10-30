@@ -8,6 +8,7 @@
 #include "scr_settings_vis.h"
 #include "scr_settings_sys.h"
 #include "scr_settings_sys_info.h"
+#include "scr_settings_sys_datetime.h"
 #include "scr_settings_upd.h"
 #include "scr_settings_nw_menu.h"
 #include "scr_current.h"
@@ -39,11 +40,13 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_flex_flow(settings_sys_page, LV_FLEX_FLOW_ROW_WRAP);
 
     /* HUB buttons: Parent is now 'settings_page' instead of 'cont' */
-    lv_obj_t* btn_current = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr(" Rated \nCurrent"), ASSET("r_current.png"));
+    lv_obj_t* btn_current = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Rated Current"), ASSET("r_current.png"));
 
     lv_obj_t* btn_info = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Info"), ASSET("info.png"));
 
     lv_obj_t* btn_support = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Support"), ASSET("support.png"));
+
+    lv_obj_t* btn_datetime = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Date & Time"), ASSET("date_time.png"));
 
     lv_obj_t* btn_users = tt_obj_btn_mtx_create(settings_sys_page, NULL, tr("Users"), ASSET("sys_setup.png"));
 
@@ -51,6 +54,7 @@ void scr_settings_sys_create(lv_obj_t* menu, lv_obj_t* btn) {
     scr_current_create(l_menu, btn_current);
     scr_settings_sys_info_create(l_menu, btn_info);
     scr_support_create(l_menu, btn_support);
+    scr_settings_sys_datetime_create(l_menu, btn_datetime);
     //scr_settings_sys_users_create(l_menu, btn_users);
 
 }

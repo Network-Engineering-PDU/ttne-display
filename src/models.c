@@ -444,6 +444,7 @@ void models_set_nw_if(const models_nw_if_t* l_nw_if)
 	nw_if.type = l_nw_if->type;
 	nw_if.dhcp = l_nw_if->dhcp;
 	nw_if.nw_mode = l_nw_if->nw_mode;
+	nw_if.pass_saved = l_nw_if->pass_saved;
 	nw_if.eth_interface = stralloc(l_nw_if->eth_interface);
 	nw_if.params.ip = stralloc(l_nw_if->params.ip);
 	nw_if.params.mask = stralloc(l_nw_if->params.mask);

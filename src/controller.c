@@ -519,6 +519,67 @@ int controller_post_alarm_ack(const char* id)
 	return err;
 }
 
+int controller_get_datetime(app_state_datetime_t* datetime)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/datetime";
+	int err = http_helper_get(&req, url);
+	if (err == 0) {
+		err = json_helper_parse_datetime(req.buffer, datetime);
+	}
+	http_helper_free(&req);
+	return err;
+}
+
+int controller_put_datetime(const char* timezone, int hour_format,
+		app_state_datetime_t* datetime)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/datetime";
+	cJSON* json = cJSON_CreateObject();
+	cJSON_AddStringToObject(json, "timezone", timezone);
+	cJSON_AddNumberToObject(json, "hour_format", hour_format);
+	char* put_data = cJSON_PrintUnformatted(json);
+	int err = http_helper_put(&req, url, put_data);
+	if (err == 0) {
+		err = json_helper_parse_datetime(req.buffer, datetime);
+	}
+	cJSON_free(put_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+	return err;
+}
+
+int controller_put_clock(const char* local_time, app_state_datetime_t* datetime)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "settings/datetime/clock";
+	cJSON* json = cJSON_CreateObject();
+	cJSON_AddStringToObject(json, "local_time", local_time);
+	char* put_data = cJSON_PrintUnformatted(json);
+	/* Setting the hardware clock takes a moment. */
+	int err = http_helper_put_timeout(&req, url, put_data, 8000L);
+	if (err == 0) {
+		err = json_helper_parse_datetime(req.buffer, datetime);
+	}
+	cJSON_free(put_data);
+	cJSON_Delete(json);
+	http_helper_free(&req);
+	return err;
+}
+
+int controller_get_wifi_status(app_state_wifi_t* wifi)
+{
+	http_get_req_t req;
+	char* url = BASE_URL "network/wifi-status";
+	int err = http_helper_get(&req, url);
+	if (err == 0) {
+		err = json_helper_parse_wifi_status(req.buffer, wifi);
+	}
+	http_helper_free(&req);
+	return err;
+}
+
 void controller_get_nw_info()
 {
 	http_get_req_t req;

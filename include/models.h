@@ -174,6 +174,7 @@ typedef struct models_nw_if_t {
 	const char* wifi_mask;
 	const char* wifi_gateway;
 	const char* wifi_dns;
+	bool pass_saved;  /* The PDU keeps a WiFi password for params.ssid */
 	int nw_mode;  /* Persistent network mode: 0=Single LAN, 1=WiFi Only, 2=Dual LAN, 3=LAN+WiFi */
 } models_nw_if_t;
 

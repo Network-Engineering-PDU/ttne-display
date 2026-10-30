@@ -41,6 +41,16 @@ void controller_get_nw_info();
 int controller_get_alarms(app_state_alarms_t* alarms);
 /** @brief POST /alarms/ack for one alarm id. Returns 0 on success. */
 int controller_post_alarm_ack(const char* id);
+/** @brief GET /settings/datetime. Returns 0 on success. */
+int controller_get_datetime(app_state_datetime_t* datetime);
+/** @brief PUT /settings/datetime: time zone and 12/24-hour clock. */
+int controller_put_datetime(const char* timezone, int hour_format,
+		app_state_datetime_t* datetime);
+/** @brief PUT /settings/datetime/clock: sets the clock to local_time
+ * ("YYYY-MM-DD HH:MM" in the saved time zone). Fails while NTP is on. */
+int controller_put_clock(const char* local_time, app_state_datetime_t* datetime);
+/** @brief GET /network/wifi-status. Returns 0 on success. */
+int controller_get_wifi_status(app_state_wifi_t* wifi);
 void controller_get_nw_if();
 void controller_put_nw_if(const models_nw_if_t* nw_if);
 void controller_post_nw_reset();
