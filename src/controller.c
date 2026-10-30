@@ -982,7 +982,7 @@ void controller_post_update_confirm(bool confirm)
 	http_helper_free(&req);
 }
 
-void controller_put_update_settings(bool auto_update, const char* update_server,
+int controller_put_update_settings(bool auto_update, const char* update_server,
 		int check_interval_hours)
 {
 	http_get_req_t req;
@@ -993,6 +993,7 @@ void controller_put_update_settings(bool auto_update, const char* update_server,
 	cJSON_AddStringToObject(json, "update_server", update_server ? update_server : "");
 	cJSON_AddNumberToObject(json, "check_interval_hours", check_interval_hours);
 	char* put_data = cJSON_PrintUnformatted(json);
+	/* Fails (HTTP 422) for an invalid update location or interval */
 	int err = http_helper_put(&req, url, put_data);
 	if (err != 0) {
 		LV_LOG_ERROR("Update settings error");
@@ -1001,6 +1002,7 @@ void controller_put_update_settings(bool auto_update, const char* update_server,
 	cJSON_Delete(json);
 	free(put_data);
 	http_helper_free(&req);
+	return err;
 }
 
 static void update_local_update_settings(bool auto_update,
@@ -1020,34 +1022,43 @@ static void update_local_update_settings(bool auto_update,
 	models_set_update_status(&update_status);
 }
 
-void controller_set_update_server(const char* server)
+int controller_set_update_server(const char* server)
 {
 	const models_update_status_t* update_status = models_get_update_status();
-	controller_put_update_settings(update_status->auto_update, server,
+	int err = controller_put_update_settings(update_status->auto_update, server,
 			update_status->check_interval_hours);
-	update_local_update_settings(update_status->auto_update, server,
-			update_status->check_interval_hours);
-	LV_LOG_USER("Update server set to: %s", server);
+	if (err == 0) {
+		update_local_update_settings(update_status->auto_update, server,
+				update_status->check_interval_hours);
+		LV_LOG_USER("Update server set to: %s", server);
+	}
+	return err;
 }
 
-void controller_set_auto_update(bool enabled)
+int controller_set_auto_update(bool enabled)
 {
 	const models_update_status_t* update_status = models_get_update_status();
-	controller_put_update_settings(enabled, update_status->update_server,
+	int err = controller_put_update_settings(enabled, update_status->update_server,
 			update_status->check_interval_hours);
-	update_local_update_settings(enabled, update_status->update_server,
-			update_status->check_interval_hours);
-	LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
+	if (err == 0) {
+		update_local_update_settings(enabled, update_status->update_server,
+				update_status->check_interval_hours);
+		LV_LOG_USER("Auto update: %s", enabled ? "enabled" : "disabled");
+	}
+	return err;
 }
 
-void controller_set_update_check_interval(int check_interval_hours)
+int controller_set_update_check_interval(int check_interval_hours)
 {
 	const models_update_status_t* update_status = models_get_update_status();
-	controller_put_update_settings(update_status->auto_update,
+	int err = controller_put_update_settings(update_status->auto_update,
 			update_status->update_server, check_interval_hours);
-	update_local_update_settings(update_status->auto_update,
-			update_status->update_server, check_interval_hours);
-	LV_LOG_USER("OTA check interval: %d hours", check_interval_hours);
+	if (err == 0) {
+		update_local_update_settings(update_status->auto_update,
+				update_status->update_server, check_interval_hours);
+		LV_LOG_USER("OTA check interval: %d hours", check_interval_hours);
+	}
+	return err;
 }
 
 /* ============================================================================

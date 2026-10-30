@@ -40,6 +40,7 @@ static void timer_check_update_cb(lv_timer_t* timer);
 static void timer_poll_update_status_cb(lv_timer_t* timer);
 static void update_status_refresh_cb(int err, void* userdata);
 static void update_settings_cb(int err, void* userdata);
+static void update_server_saved_cb(int err, void* userdata);
 static void update_confirm_cb(int err, void* userdata);
 static void usb_detect_cb(int err, void* userdata);
 static void usb_update_start_cb(int err, void* userdata);
@@ -87,6 +88,12 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     txt_server = tt_obj_address_txt_create(main, "IP / DNS", txt_server_cb);
     lv_obj_set_width(txt_server, LV_PCT(100));
     lv_obj_set_height(txt_server, 45); // Height to match the boxy look
+    /* GitHub (the default) or a web server: http(s)://, IP address or DNS
+     * name, port and folder. The backend command holds 127 characters. */
+    lv_textarea_set_max_length(txt_server, 127);
+    lv_textarea_set_accepted_chars(txt_server,
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            ".-_~:/[]");
     lv_textarea_set_text(txt_server, DEFAULT_UPDATE_SERVER);
 
     /* 4. Automatic update row (Label + Dropdown) */
@@ -137,7 +144,10 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lv_obj_set_width(lbl_period, LV_PCT(50));
     lv_obj_set_scrollbar_mode(lbl_period, LV_SCROLLBAR_MODE_OFF);
 
-    dd_period = tt_obj_dropdown_create(period_row, tr("Daily\nWeekly\nMonthly"), dd_period_cb);
+    static char period_options[128];
+    snprintf(period_options, sizeof(period_options), "%s\n%s\n%s\n%s",
+            tr("Daily"), tr("Weekly"), tr("Monthly"), tr("Yearly"));
+    dd_period = tt_obj_dropdown_create(period_row, period_options, dd_period_cb);
     lv_dropdown_set_selected(dd_period, 1);
     lv_obj_set_size(dd_period, LV_PCT(50), 40);
 
@@ -181,9 +191,22 @@ static void update_status_refresh_cb(int err, void* userdata) {
 
 static void update_settings_cb(int err, void* userdata) {
     (void)userdata;
-    if (err == 0) {
-        apply_update_status_snapshot();
+    if (err != 0) {
+        tt_obj_info_box_create_timed(tr("ERROR"),
+                tr("Can not save the update settings"), 1, TIMER_MSG_BOX_PERIOD);
     }
+    /* Back to the saved settings when they were refused */
+    apply_update_status_snapshot();
+}
+
+static void update_server_saved_cb(int err, void* userdata) {
+    (void)userdata;
+    if (err != 0) {
+        tt_obj_info_box_create_timed(tr("ERROR"),
+                tr("Invalid update server. Enter an IP address or DNS name."),
+                1, TIMER_MSG_BOX_PERIOD);
+    }
+    apply_update_status_snapshot();
 }
 
 static void update_confirm_cb(int err, void* userdata) {
@@ -252,8 +275,9 @@ static void apply_update_status_snapshot(void) {
     UI_POLL_LOG("Poll: pending=%d, auto_update=%d, shown=%d",
         update_status->is_pending, update_status->auto_update, update_confirmation_shown);
 
-    // Only show confirmation once, when an update is pending and auto_update is enabled
-    if (update_status->is_pending && update_status->auto_update && !update_confirmation_shown) {
+    /* Only show confirmation once, when an update waits for it: found by a
+     * check (periodic or "Check now") or uploaded on the web UI. */
+    if (update_status->is_pending && !update_confirmation_shown) {
         update_confirmation_shown = true;
         LV_LOG_USER("Firmware update detected! Showing confirmation dialog.");
         
@@ -263,7 +287,7 @@ static void apply_update_status_snapshot(void) {
         }
         
         char msg[512];
-        snprintf(msg, sizeof(msg), "%s", tr("Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?"));
+        snprintf(msg, sizeof(msg), "%s", tr("Firmware Update Available!\n\nDo you want to install it now?"));
         tt_obj_msg_box_create(tr("Firmware Update"), msg, tr("Updating device..."), msg_box_update_confirmation_cb);
     }
 }
@@ -318,6 +342,8 @@ static uint16_t period_sel_from_hours(int hours) {
             return 1;
         case 720:
             return 2;
+        case 8760:
+            return 3;
         case 24:
         default:
             return 0;
@@ -330,6 +356,8 @@ static int period_hours_from_sel(uint16_t sel) {
             return 168;
         case 2:
             return 720;
+        case 3:
+            return 8760;
         case 0:
         default:
             return 24;
@@ -339,14 +367,18 @@ static int period_hours_from_sel(uint16_t sel) {
 static void txt_server_cb(lv_event_t* e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        lv_obj_t* kb = scr_keyboard_create(lv_scr_act(), lv_event_get_target(e), KB_NUM);
+        /* Letters too: DNS names and URLs */
+        lv_obj_t* kb = scr_keyboard_create(lv_scr_act(), lv_event_get_target(e), KB_LATIN);
         lv_scr_load(kb);
     } else if (code == LV_EVENT_DEFOCUSED) {
-        // After keyboard closes, save the server address
+        // After keyboard closes, save the server address (empty: GitHub)
         lv_obj_t* txt_obj = lv_event_get_target(e);
         const char* server_addr = lv_textarea_get_text(txt_obj);
-        if (server_addr && strlen(server_addr) > 0) {
-            backend_update_set_server(server_addr, update_settings_cb, NULL);
+        app_state_snapshot_t snapshot;
+        app_state_get_snapshot(&snapshot);
+        if (server_addr != NULL &&
+                strcmp(server_addr, snapshot.update_status.update_server) != 0) {
+            backend_update_set_server(server_addr, update_server_saved_cb, NULL);
         }
     }
 }

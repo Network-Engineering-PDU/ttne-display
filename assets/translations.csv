@@ -546,36 +546,9 @@ Alle Einstellungen gehen verloren!","确定要恢复出厂设置吗？
 T328,System update,Are you sure you want to reboot the system?,¿Seguro que desea reiniciar el sistema?,Möchten Sie das System wirklich neu starten?,确定要重启系统吗？,هل أنت متأكد من إعادة تشغيل النظام؟
 T329,System update,Automatic Updates,Actualizaciones automáticas,Automatische Updates,自动更新,التحديثات التلقائية
 T330,System update,Could not start USB update,No se pudo iniciar la actualización por USB,USB-Update konnte nicht gestartet werden,无法启动 USB 更新,تعذّر بدء التحديث عبر USB
-T331,System update,"Daily
-Weekly
-Monthly","Diaria
-Semanal
-Mensual","Täglich
-Wöchentlich
-Monatlich","每天
-每周
-每月","يوميًا
-أسبوعيًا
-شهريًا"
 T332,System update,Device update,Actualización del equipo,Geräteaktualisierung,设备更新,تحديث الجهاز
 T334,System update,Factory reset,Restablecer valores de fábrica,Werkseinstellungen,恢复出厂设置,إعادة ضبط المصنع
 T335,System update,Firmware Update,Actualización de firmware,Firmware-Update,固件更新,تحديث البرنامج الثابت
-T336,System update,"Firmware Update Available!
-
-Auto update is enabled.
-Do you want to proceed with the update?","¡Hay una actualización de firmware!
-
-La actualización automática está activada.
-¿Quiere continuar con la actualización?","Firmware-Update verfügbar!
-
-Automatische Updates sind aktiviert.
-Mit dem Update fortfahren?","有可用的固件更新！
-
-已启用自动更新。
-是否继续更新？","يتوفر تحديث للبرنامج الثابت!
-
-التحديث التلقائي مفعّل.
-هل تريد متابعة التحديث؟"
 T337,System update,No USB detected,No se detectó ningún USB,Kein USB erkannt,未检测到 USB,لم يتم اكتشاف USB
 T338,System update,"ON
 OFF","SÍ
@@ -707,3 +680,20 @@ T439,Date & Time,12-hour,12 horas,12 Stunden,12 小时制,12 ساعة
 T440,System update,Update from USB,Actualizar desde USB,Update von USB,从 USB 更新,تحديث من USB
 T441,Network setup,Saved password,Contraseña guardada,Gespeichertes Passwort,已保存的密码,كلمة المرور المحفوظة
 T442,Network setup,Enter the WiFi password,Introduzca la contraseña WiFi,WLAN-Passwort eingeben,请输入 WiFi 密码,أدخل كلمة مرور WiFi
+T443,System update,Daily,Diaria,Täglich,每天,يوميًا
+T444,System update,Weekly,Semanal,Wöchentlich,每周,أسبوعيًا
+T445,System update,Monthly,Mensual,Monatlich,每月,شهريًا
+T446,System update,Yearly,Anual,Jährlich,每年,سنويًا
+T447,System update,"Firmware Update Available!
+
+Do you want to install it now?","¡Hay una actualización de firmware!
+
+¿Quiere instalarla ahora?","Firmware-Update verfügbar!
+
+Jetzt installieren?","有可用的固件更新！
+
+是否立即安装？","يتوفر تحديث للبرنامج الثابت!
+
+هل تريد تثبيته الآن؟"
+T448,System update,Can not save the update settings,No se pueden guardar los ajustes de actualización,Update-Einstellungen können nicht gespeichert werden,无法保存更新设置,تعذر حفظ إعدادات التحديث
+T449,System update,Invalid update server. Enter an IP address or DNS name.,Servidor de actualización no válido. Introduzca una dirección IP o un nombre DNS.,Ungültiger Update-Server. Geben Sie eine IP-Adresse oder einen DNS-Namen ein.,更新服务器无效。请输入 IP 地址或 DNS 名称。,خادم التحديث غير صالح. أدخل عنوان IP أو اسم DNS.

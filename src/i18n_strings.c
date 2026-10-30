@@ -2303,13 +2303,6 @@ const i18n_entry_t I18N_STRINGS[] = {
 		"تعذّر بدء التحديث عبر USB",
 	},
 	{
-		"Daily\nWeekly\nMonthly",
-		"Diaria\nSemanal\nMensual",
-		"Täglich\nWöchentlich\nMonatlich",
-		"每天\n每周\n每月",
-		"يوميًا\nأسبوعيًا\nشهريًا",
-	},
-	{
 		"Device update",
 		"Actualización del equipo",
 		"Geräteaktualisierung",
@@ -2329,13 +2322,6 @@ const i18n_entry_t I18N_STRINGS[] = {
 		"Firmware-Update",
 		"固件更新",
 		"تحديث البرنامج الثابت",
-	},
-	{
-		"Firmware Update Available!\n\nAuto update is enabled.\nDo you want to proceed with the update?",
-		"¡Hay una actualización de firmware!\n\nLa actualización automática está activada.\n¿Quiere continuar con la actualización?",
-		"Firmware-Update verfügbar!\n\nAutomatische Updates sind aktiviert.\nMit dem Update fortfahren?",
-		"有可用的固件更新！\n\n已启用自动更新。\n是否继续更新？",
-		"يتوفر تحديث للبرنامج الثابت!\n\nالتحديث التلقائي مفعّل.\nهل تريد متابعة التحديث؟",
 	},
 	{
 		"No USB detected",
@@ -3078,6 +3064,55 @@ const i18n_entry_t I18N_STRINGS[] = {
 		"WLAN-Passwort eingeben",
 		"请输入 WiFi 密码",
 		"أدخل كلمة مرور WiFi",
+	},
+	{
+		"Daily",
+		"Diaria",
+		"Täglich",
+		"每天",
+		"يوميًا",
+	},
+	{
+		"Weekly",
+		"Semanal",
+		"Wöchentlich",
+		"每周",
+		"أسبوعيًا",
+	},
+	{
+		"Monthly",
+		"Mensual",
+		"Monatlich",
+		"每月",
+		"شهريًا",
+	},
+	{
+		"Yearly",
+		"Anual",
+		"Jährlich",
+		"每年",
+		"سنويًا",
+	},
+	{
+		"Firmware Update Available!\n\nDo you want to install it now?",
+		"¡Hay una actualización de firmware!\n\n¿Quiere instalarla ahora?",
+		"Firmware-Update verfügbar!\n\nJetzt installieren?",
+		"有可用的固件更新！\n\n是否立即安装？",
+		"يتوفر تحديث للبرنامج الثابت!\n\nهل تريد تثبيته الآن؟",
+	},
+	{
+		"Can not save the update settings",
+		"No se pueden guardar los ajustes de actualización",
+		"Update-Einstellungen können nicht gespeichert werden",
+		"无法保存更新设置",
+		"تعذر حفظ إعدادات التحديث",
+	},
+	{
+		"Invalid update server. Enter an IP address or DNS name.",
+		"Servidor de actualización no válido. Introduzca una dirección IP o un nombre DNS.",
+		"Ungültiger Update-Server. Geben Sie eine IP-Adresse oder einen DNS-Namen ein.",
+		"更新服务器无效。请输入 IP 地址或 DNS 名称。",
+		"خادم التحديث غير صالح. أدخل عنوان IP أو اسم DNS.",
 	},
 };
 

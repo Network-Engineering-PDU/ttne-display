@@ -948,15 +948,15 @@ static void* backend_worker(void* arg)
 			publish_update_status_from_models();
 			break;
 		case BACKEND_CMD_UPDATE_SET_AUTO:
-			controller_set_auto_update(cmd.status);
+			err = controller_set_auto_update(cmd.status);
 			publish_update_status_from_models();
 			break;
 		case BACKEND_CMD_UPDATE_SET_INTERVAL:
-			controller_set_update_check_interval(cmd.value);
+			err = controller_set_update_check_interval(cmd.value);
 			publish_update_status_from_models();
 			break;
 		case BACKEND_CMD_UPDATE_SET_SERVER:
-			controller_set_update_server(cmd.text);
+			err = controller_set_update_server(cmd.text);
 			publish_update_status_from_models();
 			break;
 		case BACKEND_CMD_SYSTEM_REBOOT:
