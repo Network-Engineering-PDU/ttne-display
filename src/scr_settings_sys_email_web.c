@@ -86,7 +86,7 @@ static lv_obj_t* create_field_group(lv_obj_t* parent, const char* label_text,
 	i18n_label_set_text(label, label_text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_width(label, LV_PCT(label_width));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return group;
 }
 
@@ -494,7 +494,7 @@ void scr_settings_sys_email_web_create(lv_obj_t* menu, lv_obj_t* btn)
 	}
 
 	row = create_row(main, 48);
-	tt_obj_btn_perc_create(row, ok_cb, "OK", 47);
+	tt_obj_btn_perc_create(row, ok_cb, tr("OK"), 47);
 	tt_obj_btn_perc_create(row, cancel_cb, tr("Cancel"), 47);
 
 	memset(&loaded_config, 0, sizeof(loaded_config));

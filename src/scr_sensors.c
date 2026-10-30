@@ -285,8 +285,8 @@ static void show_found_sensors_selection(void)
 				&snapshot.discovered_sensors[i];
 		const char* label = device->name[0] != '\0' ?
 				device->name : device->kind;
-		snprintf(btn_text, sizeof(btn_text), "#%d %s %s (%d dBm)",
-				i + 1, label, device->mac, device->rssi);
+		snprintf(btn_text, sizeof(btn_text), "#%d %s %s (%d %s)",
+				i + 1, label, device->mac, device->rssi, tr("dBm"));
 
 		btn_found_sensor[i] = tt_obj_btn_perc_create(selection_scr, NULL,
 				btn_text, 100);

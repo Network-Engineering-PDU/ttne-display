@@ -1,4 +1,5 @@
 #define _DEFAULT_SOURCE /* needed for usleep() */
+#include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
 #define SDL_MAIN_HANDLED /*To fix SDL's "undefined reference to WinMain" issue*/
@@ -144,6 +145,24 @@ static void hal_init(void)
 void reset_program()
 {
 	LV_LOG_USER("Reset");
+#ifndef SIMULATOR_ENABLED
+	/* The panel (ST7789V on SPI) gets the frame buffer some milliseconds
+	 * after it is drawn. The new program's first panel command ("display
+	 * on", see main()) must not go out in the middle of the last frame:
+	 * fsync() starts sending it now (without waiting) and a frame takes
+	 * about 25 ms at 52 MHz. main() waits again before that command. */
+	int fb = open(FBDEV_PATH, O_RDWR);
+	if (fb >= 0) {
+		fsync(fb);
+		close(fb);
+	}
+	usleep(200 * 1000);
+	/* The new program opens the frame buffer and the touch screen again:
+	 * close this one's, as they stay open across execv(). */
+	for (int fd = 3; fd < 1024; fd++) {
+		close(fd);
+	}
+#endif
 	char *args[] = {prog_name, NULL};
 	execv(args[0], args);
 }
@@ -172,6 +191,20 @@ int main(int argc, char **argv)
 
 	/* Initialize LVGL */
 	lv_init();
+
+#ifndef SIMULATOR_ENABLED
+	/* fbdev_init() sends the panel "display on". If the previous program
+	 * drew just before it ended, the kernel may still be sending that frame
+	 * to the panel: a command sent between its chunks turns the rest of the
+	 * frame into commands and leaves the panel black. Send the frame now
+	 * and give it time to finish. */
+	int fb = open(FBDEV_PATH, O_RDWR);
+	if (fb >= 0) {
+		fsync(fb);
+		close(fb);
+		usleep(200 * 1000);
+	}
+#endif
 
 	/* Initialize the HAL (display, input devices, tick) for LVGL */
 	hal_init();
@@ -209,6 +242,12 @@ int main(int argc, char **argv)
 				/* Picks up display settings changed from the web UI */
 				backend_config_reload(NULL, NULL);
 				last_config_check = now;
+				/* Translations uploaded from the web UI apply on a restart,
+				 * like a new language. */
+				if (i18n_file_changed()) {
+					LV_LOG_USER("Translation file changed");
+					reset_program();
+				}
 			}
 			if (now - last_inactivity_check >= 250) {
 				app_state_snapshot_t snapshot;

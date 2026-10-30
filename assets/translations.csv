@@ -1,0 +1,694 @@
+ID,Screen,English (en),Español (es),Deutsch (de),中文 (简体) (zh-hans),العربية (ar)
+T001,Alarms,Alarm data unavailable,Datos de alarmas no disponibles,Alarmdaten nicht verfügbar,报警数据不可用,بيانات الإنذارات غير متاحة
+T002,Alarms,Alarms,Alarmas,Alarme,报警,الإنذارات
+T003,Alarms,Could not acknowledge alarm,No se pudo reconocer la alarma,Alarm konnte nicht quittiert werden,无法确认报警,تعذّر الإقرار بالإنذار
+T004,Alarms,No alarm has been triggered,No se ha activado ninguna alarma,Kein Alarm ausgelöst,未触发任何报警,لم يتم تفعيل أي إنذار
+T005,Rated current,Could not save rated current,No se pudo guardar la corriente nominal,Nennstrom konnte nicht gespeichert werden,无法保存额定电流,تعذّر حفظ التيار المقنَّن
+T006,Rated current,Rated Current,Corriente nominal,Nennstrom,额定电流,التيار المقنَّن
+T007,Rated current,Rated current set to %d A,Corriente nominal fijada en %d A,Nennstrom auf %d A eingestellt,额定电流已设为 %d 安,تم ضبط التيار المقنَّن على %d أمبير
+T008,Diagnose,Diagnose system,Diagnóstico del sistema,Systemdiagnose,系统诊断,تشخيص النظام
+T009,Diagnose,No error found,No se encontraron errores,Keine Fehler gefunden,未发现错误,لم يتم العثور على أخطاء
+T010,Diagnose,Settings / Diagnose,Configuración / Diagnóstico,Einstellungen / Diagnose,设置 / 诊断,الإعدادات / التشخيص
+T011,Info,Controller,Controlador,Controller,控制器,المتحكم
+T012,Info,Display version,Versión pantalla,Display-Version,显示屏版本,إصدار الشاشة
+T013,Info,Information,Información,Informationen,信息,المعلومات
+T014,Info,Name,Nombre,Name,名称,الاسم
+T015,Info,OM version,Versión OM,OM-Version,OM 版本,إصدار OM
+T016,Info,PMB version,Versión PMB,PMB-Version,PMB 版本,إصدار PMB
+T017,Info,Rated current,Corriente nominal,Nennstrom,额定电流,التيار المقنَّن
+T018,Info,SW version,Versión SW,SW-Version,软件版本,إصدار البرنامج
+T019,Info,Uptime (DDD:HH:MM),Tiempo activo (DDD:HH:MM),Betriebszeit (TTT:HH:MM),运行时间 (天:时:分),مدة التشغيل (يوم:ساعة:دقيقة)
+T020,"Info, Network setup",Unknown,Desconocido,Unbekannt,未知,غير معروف
+T021,"Info, Outlets",Outlets,Salidas,Ausgänge,输出,المخارج
+T022,Start-up,Initializing system,Iniciando el sistema,System wird gestartet,系统初始化中,جارٍ تهيئة النظام
+T023,Start-up,Initializing system...,Iniciando el sistema...,System wird gestartet...,系统初始化中...,جارٍ تهيئة النظام...
+T024,Login,Don't request password again,No volver a pedir la contraseña,Passwort nicht mehr abfragen,不再要求输入密码,عدم طلب كلمة المرور مرة أخرى
+T025,Login,Enter Password,Introduzca la contraseña,Passwort eingeben,输入密码,أدخل كلمة المرور
+T026,Login,Invalid password,Contraseña incorrecta,Ungültiges Passwort,密码无效,كلمة مرور غير صحيحة
+T027,Login,LOG IN,INGRESAR,ANMELDEN,登录,تسجيل الدخول
+T028,Login,Login,Ingreso,Anmeldung,登录,تسجيل الدخول
+T029,Login,Login error,Error de ingreso,Anmeldefehler,登录错误,خطأ في تسجيل الدخول
+T030,Login,Login success.,Ingreso correcto.,Anmeldung erfolgreich.,登录成功。,تم تسجيل الدخول بنجاح.
+T031,Login,Login success. Password will not be requested again.,Ingreso correcto. No se volverá a pedir la contraseña.,Anmeldung erfolgreich. Das Passwort wird nicht mehr abgefragt.,登录成功。将不再要求输入密码。,تم تسجيل الدخول بنجاح. لن تُطلب كلمة المرور مرة أخرى.
+T032,Login,Password cannot be empty,La contraseña no puede estar vacía,Das Passwort darf nicht leer sein,密码不能为空,لا يمكن أن تكون كلمة المرور فارغة
+T033,Outlet detail,Active power: #%06X %.1f W#,Potencia activa: #%06X %.1f W#,Wirkleistung: #%06X %.1f W#,有功功率：#%06X %.1f 瓦#,القدرة الفعالة: #%06X %.1f# واط
+T034,Outlet detail,Apparent power: #%06X %.2f VA#,Potencia aparente: #%06X %.2f VA#,Scheinleistung: #%06X %.2f VA#,视在功率：#%06X %.2f 伏安#,القدرة الظاهرية: #%06X %.2f# فولت أمبير
+T035,Outlet detail,Are you sure you want to #A1C61A disable outlet %d#?,¿Seguro que quiere #A1C61A desactivar la salida %d#?,Ausgang #A1C61A %d wirklich deaktivieren#?,确定要 #A1C61A 禁用输出 %d# 吗？,هل أنت متأكد أنك تريد #A1C61A تعطيل المخرج %d#؟
+T036,Outlet detail,Are you sure you want to #A1C61A enable outlet %d#?,¿Seguro que quiere #A1C61A activar la salida %d#?,Ausgang #A1C61A %d wirklich aktivieren#?,确定要 #A1C61A 启用输出 %d# 吗？,هل أنت متأكد أنك تريد #A1C61A تفعيل المخرج %d#؟
+T037,Outlet detail,Connector: #%06X %s#,Conector: #%06X %s#,Anschluss: #%06X %s#,连接器：#%06X %s#,الموصل: #%06X %s#
+T038,Outlet detail,Control outlet upgrading your license,Controle la salida ampliando su licencia,Ausgang steuern: Lizenz erweitern,升级许可证以控制输出,قم بترقية الترخيص للتحكم في المخرج
+T039,Outlet detail,Could not read license,No se pudo leer la licencia,Lizenz konnte nicht gelesen werden,无法读取许可证,تعذّرت قراءة الترخيص
+T040,Outlet detail,Could not refresh outlet data,No se pudieron actualizar los datos de la salida,Ausgangsdaten konnten nicht aktualisiert werden,无法刷新输出数据,تعذّر تحديث بيانات المخرج
+T041,Outlet detail,Could not update outlet,No se pudo actualizar la salida,Ausgang konnte nicht aktualisiert werden,无法更新输出,تعذّر تحديث المخرج
+T042,Outlet detail,Current: #%06X %.1f A#,Corriente: #%06X %.1f A#,Strom: #%06X %.1f A#,电流：#%06X %.1f 安#,التيار: #%06X %.1f# أمبير
+T043,Outlet detail,Energy: #%06X %.1f Wh#,Energía: #%06X %.1f Wh#,Energie: #%06X %.1f Wh#,能量：#%06X %.1f 瓦时#,الطاقة: #%06X %.1f# واط ساعة
+T044,Outlet detail,Frequency: #%06X %.2f Hz#,Frecuencia: #%06X %.2f Hz#,Frequenz: #%06X %.2f Hz#,频率：#%06X %.2f 赫兹#,التردد: #%06X %.2f# هرتز
+T045,Outlet detail,FUSE ERROR,ERROR DE FUSIBLE,SICHERUNGSFEHLER,保险丝故障,خطأ في المصهر
+T046,Outlet detail,Fuse: #%06X %s#,Fusible: #%06X %s#,Sicherung: #%06X %s#,保险丝：#%06X %s#,المصهر: #%06X %s#
+T047,Outlet detail,NO VOLTAGE,SIN TENSIÓN,KEINE SPANNUNG,无电压,لا يوجد جهد
+T048,Outlet detail,NOT AVAILABLE,NO DISPONIBLE,NICHT VERFÜGBAR,不可用,غير متاح
+T049,Outlet detail,Outlet,Salida,Ausgang,输出,المخرج
+T050,Outlet detail,Outlet %d,Salida %d,Ausgang %d,输出 %d,المخرج %d
+T051,Outlet detail,Outlet data,Datos de la salida,Ausgangsdaten,输出数据,بيانات المخرج
+T052,Outlet detail,Outlets / Outlet %d,Salidas / Salida %d,Ausgänge / Ausgang %d,输出 / 输出 %d,المخارج / المخرج %d
+T053,Outlet detail,Phase: #%06X %.1f deg#,Fase: #%06X %.1f grados#,Phase: #%06X %.1f Grad#,相位：#%06X %.1f 度#,الطور: #%06X %.1f# درجة
+T054,Outlet detail,Power factor: #%06X %.2f#,Factor de potencia: #%06X %.2f#,Leistungsfaktor: #%06X %.2f#,功率因数：#%06X %.2f#,معامل القدرة: #%06X %.2f#
+T055,Outlet detail,PRESENT,PRESENTE,VORHANDEN,存在,موجود
+T056,Outlet detail,Reactive power: #%06X %.2f VAr#,Potencia reactiva: #%06X %.2f VAr#,Blindleistung: #%06X %.2f VAr#,无功功率：#%06X %.2f 乏#,القدرة غير الفعالة: #%06X %.2f# فولت أمبير مفاعل
+T057,Outlet detail,Read outlet data upgrading your license,Lea los datos de la salida ampliando su licencia,Ausgangsdaten lesen: Lizenz erweitern,升级许可证以读取输出数据,قم بترقية الترخيص لقراءة بيانات المخرج
+T058,Outlet detail,UNKNOWN,DESCONOCIDO,UNBEKANNT,未知,غير معروف
+T059,Outlet detail,Voltage: #%06X %.1f V#,Voltaje: #%06X %.1f V#,Spannung: #%06X %.1f V#,电压：#%06X %.1f 伏#,الجهد: #%06X %.1f# فولت
+T060,"Outlet detail, Outlets",Outlet update unavailable,Actualización de salida no disponible,Ausgangsaktualisierung nicht verfügbar,输出更新不可用,تحديث المخرج غير متاح
+T061,Outlets,Are you sure you want to #A1C61A disable all outlets#?,¿Seguro que quiere #A1C61A desactivar todas las salidas#?,#A1C61A Alle Ausgänge wirklich deaktivieren#?,确定要 #A1C61A 禁用所有输出# 吗？,هل أنت متأكد أنك تريد #A1C61A تعطيل جميع المخارج#؟
+T062,Outlets,Are you sure you want to #A1C61A enable all outlets#?,¿Seguro que quiere #A1C61A activar todas las salidas#?,#A1C61A Alle Ausgänge wirklich aktivieren#?,确定要 #A1C61A 启用所有输出# 吗？,هل أنت متأكد أنك تريد #A1C61A تفعيل جميع المخارج#؟
+T063,Outlets,Could not refresh outlets,No se pudieron actualizar las salidas,Ausgänge konnten nicht aktualisiert werden,无法刷新输出,تعذّر تحديث المخارج
+T064,Outlets,Could not update outlets,No se pudieron cambiar las salidas,Ausgänge konnten nicht geändert werden,无法更新输出,تعذّر تحديث المخارج
+T065,Outlets,DISABLE ALL,DESACTIVAR TODAS,ALLE DEAKTIVIEREN,全部禁用,تعطيل الكل
+T066,Outlets,Disabling all switches,Desactivando todas las salidas,Alle Ausgänge werden deaktiviert,正在禁用所有输出,جارٍ تعطيل جميع المخارج
+T067,Outlets,ENABLE ALL,ACTIVAR TODAS,ALLE AKTIVIEREN,全部启用,تفعيل الكل
+T068,Outlets,Enabling all switches,Activando todas las salidas,Alle Ausgänge werden aktiviert,正在启用所有输出,جارٍ تفعيل جميع المخارج
+T069,Outlets,No outlets found,No se encontraron salidas,Keine Ausgänge gefunden,未找到输出,لم يتم العثور على مخارج
+T070,Outlets,OUT %d,SAL %d,AUSG %d,输出 %d,مخرج %d
+T071,Outlets,Outlet refresh unavailable,Actualización de salidas no disponible,Aktualisierung der Ausgänge nicht verfügbar,输出刷新不可用,تحديث المخارج غير متاح
+T072,Power,AUX BRANCH,RAMA AUXILIAR,NEBENZWEIG,副分支,الفرع الفرعي
+T073,Power,Branch: #%06X ERROR#,Rama: #%06X ERROR#,Zweig: #%06X FEHLER#,分支：#%06X 错误#,الفرع: #%06X خطأ#
+T074,Power,Branch: #%06X Main and aux#,Rama: #%06X Principal y auxiliar#,Zweig: #%06X Haupt und Neben#,分支：#%06X 主和副#,الفرع: #%06X الرئيسي والفرعي#
+T075,Power,Branch: #%06X Main#,Rama: #%06X Principal#,Zweig: #%06X Haupt#,分支：#%06X 主#,الفرع: #%06X الرئيسي#
+T076,Power,Could not refresh power data,No se pudieron actualizar los datos de potencia,Leistungsdaten konnten nicht aktualisiert werden,无法刷新功率数据,تعذّر تحديث بيانات الطاقة
+T077,Power,E (Wh):,E (Wh):,E (Wh):,电能(瓦时)：,الطاقة (و.س):
+T078,Power,Energy: #%06X %.2f Wh#,Energía: #%06X %.2f Wh#,Energie: #%06X %.2f Wh#,能量：#%06X %.2f 瓦时#,الطاقة: #%06X %.2f# واط ساعة
+T079,Power,f (Hz):,f (Hz):,f (Hz):,频率(赫兹)：,التردد (هرتز):
+T080,Power,I (A):,I (A):,I (A):,电流(安)：,التيار (أمبير):
+T081,Power,MAIN BRANCH,RAMA PRINCIPAL,HAUPTZWEIG,主分支,الفرع الرئيسي
+T082,Power,P (W):,P (W):,P (W):,有功(瓦)：,الفعالة (واط):
+T083,Power,PF:,FP:,LF:,功率因数：,معامل القدرة:
+T084,Power,PH (deg):,Fase (°):,Phase (°):,相位(度)：,الطور (درجة):
+T085,Power,Power,Potencia,Leistung,功率,الطاقة
+T086,Power,Power info,Información de potencia,Leistungsinfo,功率信息,معلومات الطاقة
+T087,Power,Power: #%06X %.2f W#,Potencia: #%06X %.2f W#,Leistung: #%06X %.2f W#,功率：#%06X %.2f 瓦#,القدرة: #%06X %.2f# واط
+T088,Power,Q (VAr):,Q (VAr):,Q (VAr):,无功(乏)：,المفاعلة (فار):
+T089,Power,S (VA):,S (VA):,S (VA):,视在(伏安)：,الظاهرية (ف.أ):
+T090,Power,TOTAL,TOTAL,GESAMT,总计,الإجمالي
+T091,Power,Type: #%06X Bi-phase#,Tipo: #%06X Bifásica#,Typ: #%06X Zweiphasig#,类型：#%06X 两相#,النوع: #%06X ثنائي الطور#
+T092,Power,Type: #%06X ERROR#,Tipo: #%06X ERROR#,Typ: #%06X FEHLER#,类型：#%06X 错误#,النوع: #%06X خطأ#
+T093,Power,Type: #%06X Single-phase#,Tipo: #%06X Monofásica#,Typ: #%06X Einphasig#,类型：#%06X 单相#,النوع: #%06X أحادي الطور#
+T094,Power,Type: #%06X Three-phase with N#,Tipo: #%06X Trifásica con N#,Typ: #%06X Dreiphasig mit N#,类型：#%06X 三相带 N#,النوع: #%06X ثلاثي الطور مع N#
+T095,Power,Type: #%06X Three-phase without N#,Tipo: #%06X Trifásica sin N#,Typ: #%06X Dreiphasig ohne N#,类型：#%06X 三相无 N#,النوع: #%06X ثلاثي الطور بدون N#
+T096,Power,V (V):,V (V):,U (V):,电压(伏)：,الجهد (فولت):
+T097,Input detail,Active power,Potencia activa,Wirkleistung,有功功率,القدرة الفعالة
+T098,Input detail,Apparent power,Potencia aparente,Scheinleistung,视在功率,القدرة الظاهرية
+T099,Input detail,Current,Corriente,Strom,电流,التيار
+T100,Input detail,Energy,Energía,Energie,能量,الطاقة
+T101,Input detail,Frequency,Frecuencia,Frequenz,频率,التردد
+T102,Input detail,Phase,Fase,Phase,相位,الطور
+T103,Input detail,Power / Input x,Potencia / Entrada x,Leistung / Eingang x,功率 / 输入 x,الطاقة / المدخل x
+T104,Input detail,Power factor,Factor de potencia,Leistungsfaktor,功率因数,معامل القدرة
+T105,Input detail,Reactive power,Potencia reactiva,Blindleistung,无功功率,القدرة غير الفعالة
+T106,Input detail,Voltage,Voltaje,Spannung,电压,الجهد
+T107,"Input detail, Outlet detail",Input enabled,Entrada activada,Eingang aktiviert,输入已启用,الإدخال مفعّل
+T108,Sensors,ADD ALL,AÑADIR TODOS,ALLE HINZUFÜGEN,全部添加,إضافة الكل
+T109,Sensors,ADD SENSOR,AÑADIR SENSOR,SENSOR HINZUFÜGEN,添加传感器,إضافة مستشعر
+T110,Sensors,Could not register sensor,No se pudo registrar el sensor,Sensor konnte nicht registriert werden,无法注册传感器,تعذّر تسجيل المستشعر
+T111,Sensors,"Could not start BLE scan.
+Check Bluetooth service.","No se pudo iniciar la búsqueda BLE.
+Compruebe el servicio Bluetooth.","BLE-Suche konnte nicht gestartet werden.
+Bluetooth-Dienst prüfen.","无法启动 BLE 扫描。
+请检查蓝牙服务。","تعذّر بدء البحث عبر BLE.
+تحقق من خدمة Bluetooth."
+T112,Sensors,Max number of sensor reached,Se alcanzó el número máximo de sensores,Maximale Anzahl Sensoren erreicht,已达到传感器数量上限,تم بلوغ الحد الأقصى لعدد المستشعرات
+T113,Sensors,Nearest sensors (strongest signal):,Sensores más cercanos (mejor señal):,Nächste Sensoren (stärkstes Signal):,最近的传感器（信号最强）：,أقرب المستشعرات (أقوى إشارة):
+T114,Sensors,New sensor,Nuevo sensor,Neuer Sensor,新传感器,مستشعر جديد
+T115,Sensors,No BLE sensor found,No se encontró ningún sensor BLE,Kein BLE-Sensor gefunden,未找到 BLE 传感器,لم يتم العثور على مستشعر BLE
+T116,Sensors,No sensors found,No se encontraron sensores,Keine Sensoren gefunden,未找到传感器,لم يتم العثور على مستشعرات
+T117,Sensors,Searching nearest sensors...,Buscando sensores cercanos...,Suche nach Sensoren in der Nähe...,正在搜索附近的传感器...,جارٍ البحث عن أقرب المستشعرات...
+T118,Sensors,SENSOR %d,SENSOR %d,SENSOR %d,传感器 %d,المستشعر %d
+T119,Sensors,Sensor added,Sensor añadido,Sensor hinzugefügt,传感器已添加,تمت إضافة المستشعر
+T120,Sensors,"Sensor registered.
+Open it to view live data.","Sensor registrado.
+Ábralo para ver los datos en vivo.","Sensor registriert.
+Öffnen, um Live-Daten zu sehen.","传感器已注册。
+打开即可查看实时数据。","تم تسجيل المستشعر.
+افتحه لعرض البيانات المباشرة."
+T121,Sensors,Sensors added,Sensores añadidos,Sensoren hinzugefügt,传感器已添加,تمت إضافة المستشعرات
+T122,Sensors,"Sensors registered.
+Open one to view live data.","Sensores registrados.
+Abra uno para ver los datos en vivo.","Sensoren registriert.
+Einen öffnen, um Live-Daten zu sehen.","传感器已注册。
+打开任意一个即可查看实时数据。","تم تسجيل المستشعرات.
+افتح أحدها لعرض البيانات المباشرة."
+T123,Sensor detail,Could not refresh sensor data,No se pudieron actualizar los datos del sensor,Sensordaten konnten nicht aktualisiert werden,无法刷新传感器数据,تعذّر تحديث بيانات المستشعر
+T124,Sensor detail,N/A,N/D,k. A.,无,غير متاح
+T125,Sensor detail,Sensors / %s,Sensores / %s,Sensoren / %s,传感器 / %s,أجهزة الاستشعار / %s
+T126,Sensor detail,Sensors / Sensor %d,Sensores / Sensor %d,Sensoren / Sensor %d,传感器 / 传感器 %d,أجهزة الاستشعار / المستشعر %d
+T127,"Sensor detail, Sensors",Sensors,Sensores,Sensoren,传感器,أجهزة الاستشعار
+T128,Settings menu,Settings,Configuración,Einstellungen,设置,الإعدادات
+T129,Settings menu,Sys Setup,Sistema,System,系统设置,إعداد النظام
+T130,Settings menu,Sys Update,Actualizar,Update,系统更新,تحديث النظام
+T131,Settings menu,Visual,Visual,Anzeige,显示,العرض
+T132,Bluetooth,%s connected,%s conectado,%s verbunden,%s 已连接,%s متصل
+T133,Bluetooth,%s disconnected,%s desconectado,%s getrennt,%s 已断开,%s غير متصل
+T134,Bluetooth,%s wants to pair,%s quiere emparejarse,%s möchte sich koppeln,%s 请求配对,%s يريد الإقران
+T135,Bluetooth,"%s wants to pair
+Passkey: %s","%s quiere emparejarse
+Clave: %s","%s möchte sich koppeln
+Schlüssel: %s","%s 请求配对
+配对码：%s","%s يريد الإقران
+رمز المرور: %s"
+T136,Bluetooth,%s: connect failed,%s: no se pudo conectar,%s: Verbindung fehlgeschlagen,%s：连接失败,%s: فشل الاتصال
+T137,Bluetooth,%s: disconnect failed,%s: no se pudo desconectar,%s: Trennen fehlgeschlagen,%s：断开失败,%s: فشل قطع الاتصال
+T138,Bluetooth,Available,Disponible,Verfügbar,可用,متاح
+T139,Bluetooth,Bluetooth action failed,La acción Bluetooth ha fallado,Bluetooth-Aktion fehlgeschlagen,蓝牙操作失败,فشل إجراء Bluetooth
+T140,Bluetooth,Bluetooth pairing,Emparejamiento Bluetooth,Bluetooth-Kopplung,蓝牙配对,إقران Bluetooth
+T141,Bluetooth,Connected,Conectado,Verbunden,已连接,متصل
+T142,Bluetooth,Discoverable,Visible,Sichtbar,可被发现,قابل للاكتشاف
+T143,Bluetooth,Hidden,Oculto,Verborgen,隐藏,مخفي
+T144,Bluetooth,No devices,No hay dispositivos,Keine Geräte,无设备,لا توجد أجهزة
+T145,Bluetooth,Not pairable,No emparejable,Nicht koppelbar,不可配对,غير قابل للإقران
+T146,Bluetooth,Off,Apagado,Aus,关闭,متوقف
+T147,Bluetooth,On,Encendido,Ein,开启,يعمل
+T148,Bluetooth,Pairable,Emparejable,Koppelbar,可配对,قابل للإقران
+T149,Bluetooth,Paired,Emparejado,Gekoppelt,已配对,مقترن
+T150,Bluetooth,Refresh,Actualizar,Aktualisieren,刷新,تحديث
+T151,Bluetooth,Start scan,Buscar,Suchen,扫描,بحث
+T152,Bluetooth,Stop scan,Detener,Stopp,停止,إيقاف
+T153,Network setup,"Applying network settings...
+Please wait a moment.","Aplicando la configuración de red...
+Espere un momento.","Netzwerkeinstellungen werden übernommen...
+Bitte einen Moment warten.","正在应用网络设置...
+请稍候。","جارٍ تطبيق إعدادات الشبكة...
+يرجى الانتظار قليلًا."
+T154,Network setup,"Are you sure you want to save this network settings?
+
+Type: #A1C61A %s
+DHCP: #A1C61A %s
+","¿Seguro que quiere guardar esta configuración de red?
+
+Tipo: #A1C61A %s
+DHCP: #A1C61A %s
+","Diese Netzwerkeinstellungen wirklich speichern?
+
+Typ: #A1C61A %s
+DHCP: #A1C61A %s
+","确定要保存此网络设置吗？
+
+类型：#A1C61A %s
+DHCP：#A1C61A %s
+","هل أنت متأكد من حفظ إعدادات الشبكة هذه؟
+
+النوع: #A1C61A %s
+DHCP: #A1C61A %s
+"
+T155,Network setup,Can not apply network configuration,No se puede aplicar la configuración de red,Netzwerkkonfiguration kann nicht übernommen werden,无法应用网络配置,تعذّر تطبيق إعدادات الشبكة
+T156,Network setup,Can not connect to Internet,No se puede conectar a Internet,Keine Verbindung zum Internet,无法连接到互联网,تعذّر الاتصال بالإنترنت
+T157,Network setup,"Checking network connection...
+Please wait a moment.","Comprobando la conexión de red...
+Espere un momento.","Netzwerkverbindung wird geprüft...
+Bitte einen Moment warten.","正在检查网络连接...
+请稍候。","جارٍ التحقق من اتصال الشبكة...
+يرجى الانتظار قليلًا."
+T158,Network setup,Connecting to internet...,Conectando a Internet...,Verbindung zum Internet...,正在连接互联网...,جارٍ الاتصال بالإنترنت...
+T159,Network setup,Connection type,Tipo de conexión,Verbindungstyp,连接类型,نوع الاتصال
+T160,Network setup,Disabled,Desactivado,Deaktiviert,已禁用,معطّل
+T161,Network setup,Dual LAN,LAN dual,Dual-LAN,双局域网,شبكتان محليتان
+T162,Network setup,Enabled,Activado,Aktiviert,已启用,مفعّل
+T163,Network setup,Ethernet and WiFi IP must be different,Las IP de Ethernet y WiFi deben ser distintas,Ethernet- und WLAN-IP müssen verschieden sein,以太网和 WiFi 的 IP 必须不同,يجب أن يختلف عنوانا IP لـ Ethernet وWiFi
+T164,Network setup,Ethernet Configuration,Configuración Ethernet,Ethernet-Konfiguration,以太网配置,إعدادات Ethernet
+T165,Network setup,Ethernet DNS,DNS Ethernet,Ethernet-DNS,以太网 DNS,DNS لـ Ethernet
+T166,Network setup,Ethernet Gateway,Puerta de enlace Ethernet,Ethernet-Gateway,以太网网关,بوابة Ethernet
+T167,Network setup,Ethernet IP Address,Dirección IP Ethernet,Ethernet-IP-Adresse,以太网 IP 地址,عنوان IP لـ Ethernet
+T168,Network setup,"Ethernet IP: #A1C61A %s
+Ethernet Mask: #A1C61A %s
+Ethernet Gateway: #A1C61A %s
+Ethernet DNS: #A1C61A %s
+WiFi IP: #A1C61A %s
+WiFi Mask: #A1C61A %s
+WiFi Gateway: #A1C61A %s
+WiFi DNS: #A1C61A %s","IP Ethernet: #A1C61A %s
+Máscara Ethernet: #A1C61A %s
+Puerta de enlace Ethernet: #A1C61A %s
+DNS Ethernet: #A1C61A %s
+IP WiFi: #A1C61A %s
+Máscara WiFi: #A1C61A %s
+Puerta de enlace WiFi: #A1C61A %s
+DNS WiFi: #A1C61A %s","Ethernet-IP: #A1C61A %s
+Ethernet-Maske: #A1C61A %s
+Ethernet-Gateway: #A1C61A %s
+Ethernet-DNS: #A1C61A %s
+WLAN-IP: #A1C61A %s
+WLAN-Maske: #A1C61A %s
+WLAN-Gateway: #A1C61A %s
+WLAN-DNS: #A1C61A %s","以太网 IP：#A1C61A %s
+以太网掩码：#A1C61A %s
+以太网网关：#A1C61A %s
+以太网 DNS：#A1C61A %s
+WiFi IP：#A1C61A %s
+WiFi 掩码：#A1C61A %s
+WiFi 网关：#A1C61A %s
+WiFi DNS：#A1C61A %s","عنوان IP لـ Ethernet: #A1C61A %s
+قناع Ethernet: #A1C61A %s
+بوابة Ethernet: #A1C61A %s
+DNS لـ Ethernet: #A1C61A %s
+عنوان IP لشبكة WiFi: #A1C61A %s
+قناع WiFi: #A1C61A %s
+بوابة WiFi: #A1C61A %s
+DNS لشبكة WiFi: #A1C61A %s"
+T169,Network setup,Ethernet Subnet Mask,Máscara de subred Ethernet,Ethernet-Subnetzmaske,以太网子网掩码,قناع الشبكة الفرعية لـ Ethernet
+T170,Network setup,Gateway IP,IP de la puerta de enlace,Gateway-IP,网关 IP,عنوان IP للبوابة
+T171,Network setup,IP Address,Dirección IP,IP-Adresse,IP 地址,عنوان IP
+T172,Network setup,"IP: #A1C61A %s
+Mask: #A1C61A %s
+Gateway: #A1C61A %s
+DNS: #A1C61A %s","IP: #A1C61A %s
+Máscara: #A1C61A %s
+Puerta de enlace: #A1C61A %s
+DNS: #A1C61A %s","IP: #A1C61A %s
+Maske: #A1C61A %s
+Gateway: #A1C61A %s
+DNS: #A1C61A %s","IP：#A1C61A %s
+掩码：#A1C61A %s
+网关：#A1C61A %s
+DNS：#A1C61A %s","عنوان IP: #A1C61A %s
+القناع: #A1C61A %s
+البوابة: #A1C61A %s
+DNS: #A1C61A %s"
+T173,Network setup,LAN + WiFi,LAN + WiFi,LAN + WLAN,局域网 + WiFi,شبكة محلية + WiFi
+T174,Network setup,LAN1 and LAN2 gateways are required,Las puertas de enlace de LAN1 y LAN2 son obligatorias,LAN1- und LAN2-Gateway sind erforderlich,LAN1 和 LAN2 网关为必填项,بوابتا LAN1 وLAN2 مطلوبتان
+T175,Network setup,LAN1 and LAN2 IP must be different,Las IP de LAN1 y LAN2 deben ser distintas,LAN1- und LAN2-IP müssen verschieden sein,LAN1 和 LAN2 的 IP 必须不同,يجب أن يختلف عنوانا IP لـ LAN1 وLAN2
+T176,Network setup,LAN1 Gateway,Puerta de enlace LAN1,LAN1-Gateway,LAN1 网关,بوابة LAN1
+T177,Network setup,LAN1 Interface,Interfaz LAN1,LAN1-Schnittstelle,LAN1 接口,واجهة LAN1
+T178,Network setup,LAN1 IP Address,Dirección IP LAN1,LAN1-IP-Adresse,LAN1 IP 地址,عنوان IP لـ LAN1
+T179,Network setup,"LAN1 IP: #A1C61A %s
+LAN1 Mask: #A1C61A %s
+LAN1 Gateway: #A1C61A %s
+LAN2 IP: #A1C61A %s
+LAN2 Mask: #A1C61A %s
+LAN2 Gateway: #A1C61A %s
+","IP LAN1: #A1C61A %s
+Máscara LAN1: #A1C61A %s
+Puerta de enlace LAN1: #A1C61A %s
+IP LAN2: #A1C61A %s
+Máscara LAN2: #A1C61A %s
+Puerta de enlace LAN2: #A1C61A %s
+","LAN1-IP: #A1C61A %s
+LAN1-Maske: #A1C61A %s
+LAN1-Gateway: #A1C61A %s
+LAN2-IP: #A1C61A %s
+LAN2-Maske: #A1C61A %s
+LAN2-Gateway: #A1C61A %s
+","LAN1 IP：#A1C61A %s
+LAN1 掩码：#A1C61A %s
+LAN1 网关：#A1C61A %s
+LAN2 IP：#A1C61A %s
+LAN2 掩码：#A1C61A %s
+LAN2 网关：#A1C61A %s
+","عنوان IP لـ LAN1: #A1C61A %s
+قناع LAN1: #A1C61A %s
+بوابة LAN1: #A1C61A %s
+عنوان IP لـ LAN2: #A1C61A %s
+قناع LAN2: #A1C61A %s
+بوابة LAN2: #A1C61A %s
+"
+T180,Network setup,LAN1 Subnet Mask,Máscara de subred LAN1,LAN1-Subnetzmaske,LAN1 子网掩码,قناع الشبكة الفرعية لـ LAN1
+T181,Network setup,LAN2 Gateway,Puerta de enlace LAN2,LAN2-Gateway,LAN2 网关,بوابة LAN2
+T182,Network setup,LAN2 Interface,Interfaz LAN2,LAN2-Schnittstelle,LAN2 接口,واجهة LAN2
+T183,Network setup,LAN2 IP Address,Dirección IP LAN2,LAN2-IP-Adresse,LAN2 IP 地址,عنوان IP لـ LAN2
+T184,Network setup,LAN2 Subnet Mask,Máscara de subred LAN2,LAN2-Subnetzmaske,LAN2 子网掩码,قناع الشبكة الفرعية لـ LAN2
+T185,Network setup,Network settings,Configuración de red,Netzwerkeinstellungen,网络设置,إعدادات الشبكة
+T186,Network setup,Network settings applied,Configuración de red aplicada,Netzwerkeinstellungen übernommen,网络设置已应用,تم تطبيق إعدادات الشبكة
+T187,Network setup,"Network settings applied
+Connected to Internet","Configuración de red aplicada
+Conectado a Internet","Netzwerkeinstellungen übernommen
+Mit dem Internet verbunden","网络设置已应用
+已连接到互联网","تم تطبيق إعدادات الشبكة
+متصل بالإنترنت"
+T188,Network setup,Network Setup,Configuración de red,Netzwerkeinrichtung,网络设置,إعداد الشبكة
+T189,Network setup,Save settings,Guardar configuración,Einstellungen speichern,保存设置,حفظ الإعدادات
+T190,Network setup,Show WiFi password,Mostrar contraseña WiFi,WLAN-Passwort anzeigen,显示 WiFi 密码,إظهار كلمة مرور WiFi
+T191,Network setup,Single LAN,LAN única,Einzelnes LAN,单局域网,شبكة محلية واحدة
+T192,Network setup,"Single LAN
+WiFi Only
+Dual LAN
+LAN + WiFi","LAN única
+Solo WiFi
+LAN dual
+LAN + WiFi","Einzelnes LAN
+Nur WLAN
+Dual-LAN
+LAN + WLAN","单局域网
+仅 WiFi
+双局域网
+局域网 + WiFi","شبكة محلية واحدة
+WiFi فقط
+شبكتان محليتان
+شبكة محلية + WiFi"
+T193,Network setup,Subnet Mask,Máscara de subred,Subnetzmaske,子网掩码,قناع الشبكة الفرعية
+T194,Network setup,WiFi Configuration,Configuración WiFi,WLAN-Konfiguration,WiFi 配置,إعدادات WiFi
+T195,Network setup,WiFi DNS,DNS WiFi,WLAN-DNS,WiFi DNS,DNS لشبكة WiFi
+T196,Network setup,WiFi Gateway,Puerta de enlace WiFi,WLAN-Gateway,WiFi 网关,بوابة WiFi
+T197,Network setup,WiFi IP Address,Dirección IP WiFi,WLAN-IP-Adresse,WiFi IP 地址,عنوان IP لشبكة WiFi
+T198,Network setup,WiFi IP and subnet mask are required,La IP y la máscara WiFi son obligatorias,WLAN-IP und Subnetzmaske sind erforderlich,WiFi IP 和子网掩码为必填项,عنوان IP وقناع الشبكة الفرعية لشبكة WiFi مطلوبان
+T199,Network setup,WiFi Only,Solo WiFi,Nur WLAN,仅 WiFi,WiFi فقط
+T200,Network setup,WiFi password,Contraseña WiFi,WLAN-Passwort,WiFi 密码,كلمة مرور WiFi
+T201,Network setup,WiFi SSID,SSID WiFi,WLAN-SSID,WiFi SSID,SSID لشبكة WiFi
+T202,Network setup,"WiFi SSID: #A1C61A %s
+WiFi Pass: #A1C61A *******
+","SSID WiFi: #A1C61A %s
+Contraseña WiFi: #A1C61A *******
+","WLAN-SSID: #A1C61A %s
+WLAN-Passwort: #A1C61A *******
+","WiFi SSID：#A1C61A %s
+WiFi 密码：#A1C61A *******
+","SSID لشبكة WiFi: #A1C61A %s
+كلمة مرور WiFi: #A1C61A *******
+"
+T203,Network setup,WiFi Subnet Mask,Máscara de subred WiFi,WLAN-Subnetzmaske,WiFi 子网掩码,قناع الشبكة الفرعية لشبكة WiFi
+T204,Networks menu,NTP-SNTP,NTP-SNTP,NTP-SNTP,NTP-SNTP,NTP-SNTP
+T205,Networks menu,NW Setup,Red,Netzwerk,网络设置,إعداد الشبكة
+T206,"Networks menu, Settings menu",Networks,Redes,Netzwerke,网络,الشبكات
+T207,Modbus,"1 missed
+2 missed
+3 missed
+5 missed
+10 missed","1 sin respuesta
+2 sin respuesta
+3 sin respuesta
+5 sin respuesta
+10 sin respuesta","1 ohne Antwort
+2 ohne Antwort
+3 ohne Antwort
+5 ohne Antwort
+10 ohne Antwort","1 次无响应
+2 次无响应
+3 次无响应
+5 次无响应
+10 次无响应","1 دون رد
+2 دون رد
+3 دون رد
+5 دون رد
+10 دون رد"
+T208,Modbus,485 port 1,Puerto 485 1,485-Anschluss 1,485 端口 1,منفذ 485 رقم 1
+T209,Modbus,485 port 2,Puerto 485 2,485-Anschluss 2,485 端口 2,منفذ 485 رقم 2
+T210,Modbus,Baud rate,Velocidad (baudios),Baudrate,波特率,معدل الباود
+T211,Modbus,Can not apply Modbus settings,No se puede aplicar la configuración Modbus,Modbus-Einstellungen können nicht übernommen werden,无法应用 Modbus 设置,تعذّر تطبيق إعدادات Modbus
+T212,Modbus,Can not change the Modbus service,No se pudo cambiar el servicio Modbus,Der Modbus-Dienst konnte nicht geändert werden,无法更改 Modbus 服务,تعذّر تغيير خدمة Modbus
+T213,Modbus,Can not load Modbus settings,No se puede cargar la configuración Modbus,Modbus-Einstellungen können nicht geladen werden,无法加载 Modbus 设置,تعذّر تحميل إعدادات Modbus
+T214,Modbus,Daisy chain,Cadena de PDUs,PDU-Kette,PDU 菊花链,سلسلة وحدات PDU
+T215,Modbus,Daisy chain settings,Cadena de PDUs,PDU-Kette,菊花链设置,إعدادات السلسلة
+T216,Modbus,First ID,Primer ID,Erste ID,起始 ID,أول معرّف
+T217,Modbus,Last ID,Último ID,Letzte ID,结束 ID,آخر معرّف
+T218,Modbus,Modbus service,Servicio Modbus,Modbus-Dienst,Modbus 服务,خدمة Modbus
+T219,Modbus,"None
+Even
+Odd","Ninguna
+Par
+Impar","Keine
+Gerade
+Ungerade","无
+偶校验
+奇校验","بدون
+زوجي
+فردي"
+T220,Modbus,Offline after,Desconectado tras,Offline nach,离线判定,غير متصل بعد
+T221,Modbus,Parity,Paridad,Parität,校验,التماثل
+T222,Modbus,PDU number,Número de PDU,PDU-Nummer,PDU 编号,رقم PDU
+T223,Modbus,PDU number must be between 1 and 247,El número de PDU debe estar entre 1 y 247,Die PDU-Nummer muss zwischen 1 und 247 liegen,PDU 编号必须在 1 到 247 之间,يجب أن يكون رقم PDU بين 1 و247
+T224,Modbus,PDUs connected to this jack will lose contact with the chain,Los PDUs conectados a este puerto perderán el contacto con la cadena.,An diesen Anschluss angeschlossene PDUs verlieren die Verbindung zur Kette.,连接到此端口的 PDU 将与菊花链断开联系。,ستفقد وحدات PDU المتصلة بهذا المنفذ الاتصال بالسلسلة.
+T225,Modbus,Poll every,Consultar cada,Abfrage alle,轮询间隔,الاستعلام كل
+T226,Modbus,POLLING,CONSULTA,ABFRAGE,轮询,الاستعلام
+T227,Modbus,Reply timeout,Tiempo de espera,Antwort-Timeout,响应超时,مهلة الرد
+T228,Modbus,Role,Función,Rolle,角色,الدور
+T229,Modbus,SCAN,BÚSQUEDA,SUCHE,扫描,البحث
+T230,Modbus,"Scan IDs must be between 1 and 247, with the first ID not above the last","Los IDs a buscar deben estar entre 1 y 247, y el primero no puede ser mayor que el último","Die Such-IDs müssen zwischen 1 und 247 liegen, die erste nicht größer als die letzte",扫描 ID 必须在 1 到 247 之间，且起始 ID 不能大于结束 ID,يجب أن تكون معرّفات البحث بين 1 و247، ولا يكون الأول أكبر من الأخير
+T231,Modbus,Scan range includes this PDU's own number (%d). Change one of them.,El rango de búsqueda incluye el número de este PDU (%d). Cambie uno de los dos.,Der Suchbereich enthält die Nummer dieser PDU (%d). Eines davon ändern.,扫描范围包含此 PDU 自己的编号 (%d)，请修改其中之一。,يتضمن نطاق البحث رقم وحدة PDU هذه (%d). غيّر أحدهما.
+T232,Modbus,Settings saved. The Modbus service restarts if it is on.,Configuración guardada. El servicio Modbus se reinicia si está activado.,"Einstellungen gespeichert. Der Modbus-Dienst startet neu, wenn er aktiviert ist.",设置已保存。如果 Modbus 服务已启用，将重新启动。,تم حفظ الإعدادات. تتم إعادة تشغيل خدمة Modbus إذا كانت مفعّلة.
+T233,Modbus,"Slave
+Master","Esclavo
+Maestro","Slave
+Master","从站
+主站","تابع
+رئيسي"
+T234,Modbus,Slave address,Dirección Modbus,Modbus-Adresse,Modbus 地址,عنوان Modbus
+T235,Modbus,Slave address must be between 1 and 247,La dirección Modbus debe estar entre 1 y 247,Die Modbus-Adresse muss zwischen 1 und 247 liegen,Modbus 地址必须在 1 到 247 之间,يجب أن يكون عنوان Modbus بين 1 و247
+T236,Modbus,Stop bits,Bits de parada,Stoppbits,停止位,بتات التوقف
+T237,Modbus,Switching each 485 port needs a board revision,Activar cada puerto 485 por separado requiere una nueva revisión de la placa,Für einzeln schaltbare 485-Anschlüsse ist eine neuere Platinenrevision nötig,单独开关每个 485 端口需要更新版本的电路板,يتطلب تشغيل كل منفذ 485 على حدة مراجعة أحدث للوحة
+T238,Modbus,This PDU will stop answering Modbus RTU on its 485 jacks. Modbus TCP keeps working.,Este PDU dejará de responder a Modbus RTU en sus puertos 485. Modbus TCP sigue funcionando.,Diese PDU beantwortet Modbus RTU an ihren 485-Anschlüssen nicht mehr. Modbus TCP funktioniert weiterhin.,此 PDU 将不再在其 485 端口上响应 Modbus RTU。Modbus TCP 仍可正常使用。,ستتوقف وحدة PDU هذه عن الرد على Modbus RTU في منافذ 485. يستمر Modbus TCP في العمل.
+T239,Modbus,Tick at least one 485 port so the master can reach the chain,Active al menos un puerto 485 para que el maestro llegue a la cadena,"Mindestens einen 485-Anschluss aktivieren, damit der Master die Kette erreicht",请至少启用一个 485 端口，以便主站能访问菊花链,فعّل منفذ 485 واحدًا على الأقل ليتمكن الرئيسي من الوصول إلى السلسلة
+T240,"Modbus, SNMP",Save,Guardar,Speichern,保存,حفظ
+T241,NTP / SNTP,Can not apply NTP settings,No se puede aplicar la configuración NTP,NTP-Einstellungen können nicht übernommen werden,无法应用 NTP 设置,تعذّر تطبيق إعدادات NTP
+T242,NTP / SNTP,Can not load NTP settings,No se puede cargar la configuración NTP,NTP-Einstellungen können nicht geladen werden,无法加载 NTP 设置,تعذّر تحميل إعدادات NTP
+T243,NTP / SNTP,NTP / SNTP enable,Activar NTP / SNTP,NTP / SNTP aktivieren,启用 NTP / SNTP,تفعيل NTP / SNTP
+T244,NTP / SNTP,Server,Servidor,Server,服务器,الخادم
+T245,NTP / SNTP,Server address can not be empty,La dirección del servidor no puede estar vacía,Die Serveradresse darf nicht leer sein,服务器地址不能为空,لا يمكن أن يكون عنوان الخادم فارغًا
+T246,NTP / SNTP,Settings saved. Time synchronization may take a few moments.,Configuración guardada. La sincronización horaria puede tardar unos momentos.,Einstellungen gespeichert. Die Zeitsynchronisierung kann einen Moment dauern.,设置已保存。时间同步可能需要片刻。,تم حفظ الإعدادات. قد تستغرق مزامنة الوقت بضع لحظات.
+T247,NTP / SNTP,Time offset,Desfase horario,Zeitversatz,时差,فرق التوقيت
+T248,SNMP,"Applying SNMP settings...
+Please wait a moment.","Aplicando la configuración SNMP...
+Espere un momento.","SNMP-Einstellungen werden übernommen...
+Bitte einen Moment warten.","正在应用 SNMP 设置...
+请稍候。","جارٍ تطبيق إعدادات SNMP...
+يرجى الانتظار قليلًا."
+T249,SNMP,Authentication,Autenticación,Authentifizierung,认证,المصادقة
+T250,SNMP,Authentication password,Contraseña de autenticación,Authentifizierungspasswort,认证密码,كلمة مرور المصادقة
+T251,SNMP,Can not apply SNMP settings,No se puede aplicar la configuración SNMP,SNMP-Einstellungen können nicht übernommen werden,无法应用 SNMP 设置,تعذّر تطبيق إعدادات SNMP
+T252,SNMP,Can not load SNMP settings,No se puede cargar la configuración SNMP,SNMP-Einstellungen können nicht geladen werden,无法加载 SNMP 设置,تعذّر تحميل إعدادات SNMP
+T253,SNMP,Community,Comunidad,Community,团体名,اسم المجتمع
+T254,SNMP,"Community must use 1-64 letters, numbers, '.', '-' or '_'","La comunidad debe tener 1-64 letras, números, '.', '-' o '_'","Die Community muss aus 1-64 Buchstaben, Ziffern, '.', '-' oder '_' bestehen",团体名须为 1-64 个字母、数字、'.'、'-' 或 '_',يجب أن يتكون اسم المجتمع من 1-64 حرفًا أو رقمًا أو '.' أو '-' أو '_'
+T255,SNMP,Destination %d,Destino %d,Ziel %d,目标 %d,الوجهة %d
+T256,SNMP,Enable traps,Activar traps,Traps aktivieren,启用陷阱,تفعيل التنبيهات
+T257,SNMP,Enter at least one trap IP or DNS name,Introduzca al menos una IP o un nombre DNS para los traps,Mindestens eine Trap-IP oder einen DNS-Namen eingeben,请至少输入一个陷阱 IP 或 DNS 名称,أدخل عنوان IP أو اسم DNS واحدًا على الأقل للتنبيهات
+T258,SNMP,GENERAL,GENERAL,ALLGEMEIN,常规,عام
+T259,SNMP,New password,Nueva contraseña,Neues Passwort,新密码,كلمة مرور جديدة
+T260,SNMP,Privacy,Privacidad,Verschlüsselung,加密,الخصوصية
+T261,SNMP,Privacy password,Contraseña de privacidad,Verschlüsselungspasswort,加密密码,كلمة مرور الخصوصية
+T262,SNMP,SECURITY,SEGURIDAD,SICHERHEIT,安全,الأمان
+T263,SNMP,Security level,Nivel de seguridad,Sicherheitsstufe,安全级别,مستوى الأمان
+T264,SNMP,SET commands,Comandos SET,SET-Befehle,SET 命令,أوامر SET
+T265,SNMP,SNMP enabled,SNMP activado,SNMP aktiviert,已启用 SNMP,SNMP مفعّل
+T266,SNMP,SNMP settings applied,Configuración SNMP aplicada,SNMP-Einstellungen übernommen,SNMP 设置已应用,تم تطبيق إعدادات SNMP
+T267,SNMP,Trap target must be a valid IPv4 address or DNS name,El destino del trap debe ser una dirección IPv4 o un nombre DNS válido,Das Trap-Ziel muss eine gültige IPv4-Adresse oder ein DNS-Name sein,陷阱目标必须是有效的 IPv4 地址或 DNS 名称,يجب أن تكون وجهة التنبيه عنوان IPv4 أو اسم DNS صالحًا
+T268,SNMP,TRAPS,TRAPS,TRAPS,陷阱,التنبيهات
+T269,SNMP,V3 authentication password must be at least 8 characters,La contraseña de autenticación V3 debe tener al menos 8 caracteres,Das V3-Authentifizierungspasswort muss mindestens 8 Zeichen haben,V3 认证密码至少需要 8 个字符,يجب أن تتكون كلمة مرور المصادقة V3 من 8 أحرف على الأقل
+T270,SNMP,V3 privacy password must be at least 8 characters,La contraseña de privacidad V3 debe tener al menos 8 caracteres,Das V3-Verschlüsselungspasswort muss mindestens 8 Zeichen haben,V3 加密密码至少需要 8 个字符,يجب أن تتكون كلمة مرور الخصوصية V3 من 8 أحرف على الأقل
+T271,SNMP,V3 user,Usuario V3,V3-Benutzer,V3 用户,مستخدم V3
+T272,SNMP,"V3 user must use 1-32 letters, numbers, '.', '-' or '_'","El usuario V3 debe tener 1-32 letras, números, '.', '-' o '_'","Der V3-Benutzer muss aus 1-32 Buchstaben, Ziffern, '.', '-' oder '_' bestehen",V3 用户须为 1-32 个字母、数字、'.'、'-' 或 '_',يجب أن يتكون مستخدم V3 من 1-32 حرفًا أو رقمًا أو '.' أو '-' أو '_'
+T273,SNMP,Version,Versión,Version,版本,الإصدار
+T274,SSH,Are you sure you want to #A1C61A disable# SSH?,¿Seguro que quiere #A1C61A desactivar# SSH?,SSH wirklich #A1C61A deaktivieren#?,确定要 #A1C61A 禁用# SSH 吗？,هل أنت متأكد أنك تريد #A1C61A تعطيل# SSH؟
+T275,SSH,Are you sure you want to #A1C61A enable# SSH?,¿Seguro que quiere #A1C61A activar# SSH?,SSH wirklich #A1C61A aktivieren#?,确定要 #A1C61A 启用# SSH 吗？,هل أنت متأكد أنك تريد #A1C61A تفعيل# SSH؟
+T276,SSH,SSH service,Servicio SSH,SSH-Dienst,SSH 服务,خدمة SSH
+T277,System setup menu," Rated 
+Current","Corriente
+nominal","Nenn-
+strom","额定
+电流","التيار
+المقنَّن"
+T278,System setup menu,System Setup,Configuración del sistema,Systemeinrichtung,系统设置,إعداد النظام
+T279,"System setup menu, Users",Users,Usuarios,Benutzer,用户,المستخدمون
+T280,Email / Web,Addresses to,Destinatarios,Empfänger,收件人,المرسل إليهم
+T281,Email / Web,Auth,Autenticación,Auth,认证,المصادقة
+T282,Email / Web,Can not load settings,No se puede cargar la configuración,Einstellungen können nicht geladen werden,无法加载设置,تعذّر تحميل الإعدادات
+T283,Email / Web,Can not save settings,No se puede guardar la configuración,Einstellungen können nicht gespeichert werden,无法保存设置,تعذّر حفظ الإعدادات
+T284,Email / Web,Email / Web,Email / Web,E-Mail / Web,邮件 / Web,البريد / الويب
+T285,Email / Web,email SMTP,Email SMTP,E-Mail SMTP,邮件 SMTP,البريد SMTP
+T286,Email / Web,Email/Web,Email/Web,E-Mail/Web,邮件/Web,البريد/الويب
+T287,Email / Web,From,De,Von,发件人,من
+T288,Email / Web,From address,Dirección del remitente,Absenderadresse,发件人地址,عنوان المرسل
+T289,Email / Web,Invalid From address,Dirección del remitente no válida,Ungültige Absenderadresse,发件人地址无效,عنوان المرسل غير صالح
+T290,Email / Web,Invalid recipient address,Dirección de destinatario no válida,Ungültige Empfängeradresse,收件人地址无效,عنوان المستلم غير صالح
+T291,Email / Web,Invalid SMTP server,Servidor SMTP no válido,Ungültiger SMTP-Server,SMTP 服务器无效,خادم SMTP غير صالح
+T292,Email / Web,"None
+Login","Ninguna
+Usuario","Keine
+Login","无
+登录","بدون
+تسجيل الدخول"
+T293,Email / Web,Port,Puerto,Port,端口,المنفذ
+T294,Email / Web,Ports must be between 1 and 65535,Los puertos deben estar entre 1 y 65535,Ports müssen zwischen 1 und 65535 liegen,端口必须在 1 到 65535 之间,يجب أن تكون المنافذ بين 1 و65535
+T295,Email / Web,Recipient,Destinatario,Empfänger,收件人,المستلم
+T296,Email / Web,Saved - enter new,Guardada - introduzca una nueva,Gespeichert - neues eingeben,已保存 - 输入新密码,محفوظة - أدخل جديدة
+T297,Email / Web,Settings saved,Configuración guardada,Einstellungen gespeichert,设置已保存,تم حفظ الإعدادات
+T298,Email / Web,SMTP login password is required,La contraseña de SMTP es obligatoria,Das SMTP-Passwort ist erforderlich,需要 SMTP 登录密码,كلمة مرور SMTP مطلوبة
+T299,Email / Web,SMTP server,Servidor SMTP,SMTP-Server,SMTP 服务器,خادم SMTP
+T300,Email / Web,"SMTP server, From and recipient are required","El servidor SMTP, el remitente y el destinatario son obligatorios","SMTP-Server, Absender und Empfänger sind erforderlich",SMTP 服务器、发件人和收件人为必填项,خادم SMTP والمرسل والمستلم مطلوبة
+T301,"Email / Web, Login",Password,Contraseña,Passwort,密码,كلمة المرور
+T302,"Email / Web, Users",Can not prepare settings,No se puede preparar la configuración,Einstellungen können nicht vorbereitet werden,无法准备设置,تعذّر تجهيز الإعدادات
+T303,System info,Model: PowerIT Easy,Modelo: PowerIT Easy,Modell: PowerIT Easy,型号：PowerIT Easy,الطراز: PowerIT Easy
+T304,System info,System Info,Información del sistema,Systeminformationen,系统信息,معلومات النظام
+T305,Users,Access level already exists,El nivel de acceso ya existe,Die Zugriffsstufe existiert bereits,访问级别已存在,مستوى الوصول موجود بالفعل
+T306,Users,Add level,Añadir nivel,Stufe hinzufügen,添加级别,إضافة مستوى
+T307,Users,Add user,Añadir usuario,Benutzer hinzufügen,添加用户,إضافة مستخدم
+T308,Users,Can not load users and levels,No se pueden cargar los usuarios y niveles,Benutzer und Stufen können nicht geladen werden,无法加载用户和级别,تعذّر تحميل المستخدمين والمستويات
+T309,Users,Can not save users and levels,No se pueden guardar los usuarios y niveles,Benutzer und Stufen können nicht gespeichert werden,无法保存用户和级别,تعذّر حفظ المستخدمين والمستويات
+T310,Users,Control,Control,Steuerung,控制,التحكم
+T311,Users,Full edit,Edición completa,Vollzugriff,完全编辑,تعديل كامل
+T312,Users,Level,Nivel,Stufe,级别,المستوى
+T313,Users,Level name,Nombre del nivel,Stufenname,级别名称,اسم المستوى
+T314,Users,Level name must contain 1-24 safe characters,El nombre del nivel debe tener 1-24 caracteres válidos,Der Stufenname muss 1-24 zulässige Zeichen haben,级别名称须包含 1-24 个有效字符,يجب أن يتكون اسم المستوى من 1-24 حرفًا صالحًا
+T315,Users,Maximum 16 users,Máximo 16 usuarios,Maximal 16 Benutzer,最多 16 个用户,16 مستخدمًا كحد أقصى
+T316,Users,Maximum 8 access levels,Máximo 8 niveles de acceso,Maximal 8 Zugriffsstufen,最多 8 个访问级别,8 مستويات وصول كحد أقصى
+T317,Users,No levels,No hay niveles,Keine Stufen,无级别,لا توجد مستويات
+T318,Users,No users,No hay usuarios,Keine Benutzer,无用户,لا يوجد مستخدمون
+T319,Users,Read only,Solo lectura,Nur lesen,只读,قراءة فقط
+T320,Users,"Read only
+Control
+Full edit","Solo lectura
+Control
+Edición completa","Nur lesen
+Steuerung
+Vollzugriff","只读
+控制
+完全编辑","قراءة فقط
+التحكم
+تعديل كامل"
+T321,Users,Select a valid access level,Seleccione un nivel de acceso válido,Eine gültige Zugriffsstufe wählen,请选择有效的访问级别,اختر مستوى وصول صالحًا
+T322,Users,User name,Nombre de usuario,Benutzername,用户名,اسم المستخدم
+T323,Users,User name already exists,El nombre de usuario ya existe,Der Benutzername existiert bereits,用户名已存在,اسم المستخدم موجود بالفعل
+T324,Users,User name must contain 1-24 safe characters,El nombre de usuario debe tener 1-24 caracteres válidos,Der Benutzername muss 1-24 zulässige Zeichen haben,用户名须包含 1-24 个有效字符,يجب أن يتكون اسم المستخدم من 1-24 حرفًا صالحًا
+T325,Users,Users and levels saved,Usuarios y niveles guardados,Benutzer und Stufen gespeichert,用户和级别已保存,تم حفظ المستخدمين والمستويات
+T326,System update,"  Update
+From USB","Actualizar
+desde USB","Update
+von USB","从 USB
+更新","تحديث
+من USB"
+T327,System update,"Are you sure you want to perform a factory reset?
+All settings will be lost!","¿Seguro que quiere restablecer los valores de fábrica?
+¡Se perderá toda la configuración!","Werkseinstellungen wirklich wiederherstellen?
+Alle Einstellungen gehen verloren!","确定要恢复出厂设置吗？
+所有设置都将丢失！","هل أنت متأكد من إعادة ضبط المصنع؟
+ستُفقد جميع الإعدادات!"
+T328,System update,Are you sure you want to reboot the system?,¿Seguro que desea reiniciar el sistema?,Möchten Sie das System wirklich neu starten?,确定要重启系统吗？,هل أنت متأكد من إعادة تشغيل النظام؟
+T329,System update,Automatic Updates,Actualizaciones automáticas,Automatische Updates,自动更新,التحديثات التلقائية
+T330,System update,Could not start USB update,No se pudo iniciar la actualización por USB,USB-Update konnte nicht gestartet werden,无法启动 USB 更新,تعذّر بدء التحديث عبر USB
+T331,System update,"Daily
+Weekly
+Monthly","Diaria
+Semanal
+Mensual","Täglich
+Wöchentlich
+Monatlich","每天
+每周
+每月","يوميًا
+أسبوعيًا
+شهريًا"
+T332,System update,Device update,Actualización del equipo,Geräteaktualisierung,设备更新,تحديث الجهاز
+T333,System update,"Factory
+ Reset","Valores de
+fábrica","Werks-
+zustand","恢复
+出厂设置","ضبط
+المصنع"
+T334,System update,Factory reset,Restablecer valores de fábrica,Werkseinstellungen,恢复出厂设置,إعادة ضبط المصنع
+T335,System update,Firmware Update,Actualización de firmware,Firmware-Update,固件更新,تحديث البرنامج الثابت
+T336,System update,"Firmware Update Available!
+
+Auto update is enabled.
+Do you want to proceed with the update?","¡Hay una actualización de firmware!
+
+La actualización automática está activada.
+¿Quiere continuar con la actualización?","Firmware-Update verfügbar!
+
+Automatische Updates sind aktiviert.
+Mit dem Update fortfahren?","有可用的固件更新！
+
+已启用自动更新。
+是否继续更新？","يتوفر تحديث للبرنامج الثابت!
+
+التحديث التلقائي مفعّل.
+هل تريد متابعة التحديث؟"
+T337,System update,No USB detected,No se detectó ningún USB,Kein USB erkannt,未检测到 USB,لم يتم اكتشاف USB
+T338,System update,"ON
+OFF","SÍ
+NO","EIN
+AUS","开
+关","تشغيل
+إيقاف"
+T339,System update,OTA Periodic Checks,Comprobación periódica OTA,Regelmäßige OTA-Prüfung,OTA 定期检查,فحص OTA الدوري
+T340,System update,Reboot,Reiniciar,Neustart,重启,إعادة التشغيل
+T341,System update,Rebooting Device...,Reiniciando el equipo...,Gerät wird neu gestartet...,正在重启设备...,جارٍ إعادة تشغيل الجهاز...
+T342,System update,Remote server update file location I.P / DNS,Servidor de actualizaciones (IP / DNS),Update-Server (IP / DNS),更新服务器 (IP / DNS),خادم التحديثات (IP / DNS)
+T343,System update,Resetting Device...,Restableciendo el equipo...,Gerät wird zurückgesetzt...,正在重置设备...,جارٍ إعادة ضبط الجهاز...
+T344,System update,Resetting to factory defaults...,Restableciendo valores de fábrica...,Werkseinstellungen werden wiederhergestellt...,正在恢复出厂设置...,جارٍ استعادة ضبط المصنع...
+T345,System update,System reboot,Reinicio del sistema,Systemneustart,系统重启,إعادة تشغيل النظام
+T346,System update,System Update,Actualización del sistema,Systemaktualisierung,系统更新,تحديث النظام
+T347,System update,Updating Device...,Actualizando el equipo...,Gerät wird aktualisiert...,正在更新设备...,جارٍ تحديث الجهاز...
+T348,System update,Updating device...,Actualizando el equipo...,Gerät wird aktualisiert...,正在更新设备...,جارٍ تحديث الجهاز...
+T349,System update,USB device #A1C61A %s detected. Update?,Dispositivo USB #A1C61A %s detectado. ¿Actualizar?,USB-Gerät #A1C61A %s erkannt. Aktualisieren?,检测到 USB 设备 #A1C61A %s。是否更新？,تم اكتشاف جهاز USB #A1C61A %s. هل تريد التحديث؟
+T350,Visualization,"Are you sure you want to save screen orientation?
+Orientation: #A1C61A %s#
+(changes will be reverted in 7 seconds)","¿Seguro que quiere guardar la orientación de la pantalla?
+Orientación: #A1C61A %s#
+(los cambios se revertirán en 7 segundos)","Bildschirmausrichtung wirklich speichern?
+Ausrichtung: #A1C61A %s#
+(Änderungen werden in 7 Sekunden zurückgesetzt)","确定要保存屏幕方向吗？
+方向：#A1C61A %s#
+（更改将在 7 秒后还原）","هل أنت متأكد من حفظ اتجاه الشاشة؟
+الاتجاه: #A1C61A %s#
+(سيتم التراجع عن التغييرات خلال 7 ثوانٍ)"
+T351,Visualization,"Change the screen language to #A1C61A %s#?
+The screen restarts.","¿Cambiar el idioma de la pantalla a #A1C61A %s#?
+La pantalla se reinicia.","Bildschirmsprache auf #A1C61A %s# ändern?
+Der Bildschirm startet neu.","将屏幕语言更改为 #A1C61A %s#？
+屏幕将重新启动。","هل تريد تغيير لغة الشاشة إلى #A1C61A %s#؟
+ستتم إعادة تشغيل الشاشة."
+T352,Visualization,Circuit Breaker,Interruptor automático,Leitungsschutzschalter,断路器,قاطع الدائرة
+T353,Visualization,Company name,Empresa,Firmenname,公司名称,اسم الشركة
+T354,Visualization,Electrical board,Cuadro eléctrico,Schaltschrank,配电柜,اللوحة الكهربائية
+T355,Visualization,Horizontal,Horizontal,Querformat,横屏,أفقي
+T356,Visualization,Language,Idioma,Sprache,语言,اللغة
+T357,Visualization,PDU location information,Ubicación del PDU,Standort der PDU,PDU 位置信息,معلومات موقع وحدة PDU
+T358,Visualization,Rack,Rack,Rack,机柜,الرف
+T359,Visualization,Screen rotation,Rotación de pantalla,Bildschirmdrehung,屏幕旋转,تدوير الشاشة
+T360,Visualization,Screen saver (min),Salvapantallas (min),Bildschirmschoner (min),屏幕保护（分钟）,شاشة التوقف (دقيقة)
+T361,Visualization,Service,Servicio,Dienst,服务,الخدمة
+T362,Visualization,System A - B,Sistema A - B,System A - B,系统 A - B,النظام أ - ب
+T363,Visualization,Text,Texto,Text,文本,نص
+T364,Visualization,Time must be [1-300],El tiempo debe estar entre 1 y 300,Die Zeit muss zwischen 1 und 300 liegen,时间必须在 1 到 300 之间,يجب أن يكون الوقت بين 1 و300
+T365,Visualization,UPS A - B,SAI A - B,USV A - B,不间断电源 A - B,يو بي إس أ - ب
+T366,Visualization,Vertical,Vertical,Hochformat,竖屏,عمودي
+T367,Visualization,"Vertical
+Horizontal","Vertical
+Horizontal","Hochformat
+Querformat","竖屏
+横屏","عمودي
+أفقي"
+T368,Visualization,Visualization,Visualización,Anzeige,显示,العرض
+T369,Support,Contact with us:,Contacte con nosotros:,Kontaktieren Sie uns:,联系我们：,تواصل معنا:
+T370,"Support, System setup menu",Support,Soporte,Support,支持,الدعم
+T371,Home,ALARMS,ALARMAS,ALARME,报警,الإنذارات
+T372,Home,INFO,INFO,INFO,信息,معلومات
+T373,Home,OUTLETS,SALIDAS,AUSGÄNGE,输出,المخارج
+T374,Home,POWER,POTENCIA,LEISTUNG,功率,الطاقة
+T375,Home,SENSORS,SENSORES,SENSOREN,传感器,المستشعرات
+T376,Home,SETTINGS,AJUSTES,OPTIONEN,设置,الإعدادات
+T377,"Common (buttons, popups, alarms)",CANCEL,CANCELAR,ABBRECHEN,取消,إلغاء
+T378,"Common (buttons, popups, alarms)",Critical error,Error crítico,Kritischer Fehler,严重错误,خطأ حرج
+T379,"Common (buttons, popups, alarms)",Current above rated current,Corriente superior a la nominal,Strom über dem Nennstrom,电流超过额定电流,التيار يتجاوز التيار المقنَّن
+T380,"Common (buttons, popups, alarms)",Current close to rated current,Corriente cercana a la nominal,Strom nahe am Nennstrom,电流接近额定电流,التيار قريب من التيار المقنَّن
+T381,"Common (buttons, popups, alarms)",Error,Error,Fehler,错误,خطأ
+T382,"Common (buttons, popups, alarms)",Network disconnected,Red desconectada,Netzwerk getrennt,网络已断开,الشبكة غير متصلة
+T383,"Common (buttons, popups, alarms)",NO,NO,NEIN,否,لا
+T384,"Common (buttons, popups, alarms)",No voltage on input,Sin tensión en la entrada,Keine Spannung am Eingang,输入无电压,لا يوجد جهد على المدخل
+T385,"Common (buttons, popups, alarms)",OFF,NO,AUS,关,إيقاف
+T386,"Common (buttons, popups, alarms)",ON,SÍ,EIN,开,تشغيل
+T387,"Common (buttons, popups, alarms)",Power data unavailable,Datos de potencia no disponibles,Leistungsdaten nicht verfügbar,功率数据不可用,بيانات الطاقة غير متوفرة
+T388,"Common (buttons, popups, alarms)",Warning,Aviso,Warnung,警告,تحذير
+T389,"Common (buttons, popups, alarms)",YES,SÍ,JA,是,نعم
+T390,Several screens,Cancel,Cancelar,Abbrechen,取消,إلغاء
+T391,Several screens,ERROR,ERROR,FEHLER,错误,خطأ
+T392,Several screens,Info,Info,Info,信息,معلومات
+T393,"Common (buttons, popups, alarms)",OK,Aceptar,OK,确定,موافق
+T394,Info,PN,Ref.,Teilenr.,部件号,رقم القطعة
+T395,Info,SN,N.º de serie,Seriennr.,序列号,الرقم التسلسلي
+T396,Units,V,,,伏,فولت
+T397,Units,A,,,安,أمبير
+T398,Units,W,,,瓦,واط
+T399,Units,Wh,,,瓦时,واط ساعة
+T400,Units,VA,,,伏安,فولت أمبير
+T401,Units,VAr,,,乏,فولت أمبير مفاعل
+T402,Units,Hz,,,赫兹,هرتز
+T403,Units,deg,°,°,度,درجة
+T404,Units,°C,,,℃,درجة
+T405,Units,RH,HR,rF,相对湿度, رطوبة
+T406,Units,hPa,,,百帕,مليبار
+T407,Units,dBm,,,分贝毫瓦,ديسيبل م
+T408,Home,Dashboard,Panel,Übersicht,仪表板,لوحة التحكم

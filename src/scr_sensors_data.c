@@ -99,17 +99,17 @@ static void sensor_data_apply(const app_state_sensor_data_t* sensor_data)
 
 	i18n_label_set_text(lbl_mac, sensor_data->mac);
 
-	snprintf(txt, sizeof(txt), "#%06X %s# C", TT_COLOR_GREEN_NE,
-			f_float(buff, sensor_data->temp, "%.2f"));
+	snprintf(txt, sizeof(txt), "#%06X %s# %s", TT_COLOR_GREEN_NE,
+			f_float(buff, sensor_data->temp, "%.2f"), tr("°C"));
 	tt_obj_card_set_text(card_temp, txt);
-	snprintf(txt, sizeof(txt), "#%06X %s# %%RH", TT_COLOR_GREEN_NE,
-			f_float(buff, sensor_data->humd, "%.1f"));
+	snprintf(txt, sizeof(txt), "#%06X %s# %%%s", TT_COLOR_GREEN_NE,
+			f_float(buff, sensor_data->humd, "%.1f"), tr("RH"));
 	tt_obj_card_set_text(card_humd, txt);
-	snprintf(txt, sizeof(txt), "#%06X %s# hPa", TT_COLOR_GREEN_NE,
-			f_float(buff, sensor_data->pres, "%.1f"));
+	snprintf(txt, sizeof(txt), "#%06X %s# %s", TT_COLOR_GREEN_NE,
+			f_float(buff, sensor_data->pres, "%.1f"), tr("hPa"));
 	tt_obj_card_set_text(card_pres, txt);
-	snprintf(txt, sizeof(txt), "#%06X %s# dBm", TT_COLOR_GREEN_NE,
-			f_int(buff, sensor_data->rssi, 0, -200));
+	snprintf(txt, sizeof(txt), "#%06X %s# %s", TT_COLOR_GREEN_NE,
+			f_int(buff, sensor_data->rssi, 0, -200), tr("dBm"));
 	tt_obj_card_set_text(card_rssi, txt);
 
 	bat_pct = sensor_battery_percent(sensor_data);
@@ -197,7 +197,7 @@ const char* f_int(char* buffer, int num, int max, int min)
 	if (num > min && num < max) {
 		snprintf(buffer, 50, "%d", num);
 	} else {
-		strcpy(buffer, "N/A");
+		snprintf(buffer, 50, "%s", tr("N/A"));
 	}
 	return buffer;
 }
@@ -207,7 +207,7 @@ const char* f_float(char* buffer, float num, const char* format)
 	if (num == num) {
 		snprintf(buffer, 50, format, num);
 	} else {
-		strcpy(buffer, "N/A");
+		snprintf(buffer, 50, "%s", tr("N/A"));
 	}
 	return buffer;
 }

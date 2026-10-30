@@ -46,7 +46,7 @@ static lv_obj_t* create_row(lv_obj_t* parent, const char* label_text,
 	lv_obj_t* label = lv_label_create(row);
 	i18n_label_set_text(label, label_text);
 	lv_obj_set_width(label, LV_PCT(label_width));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return row;
 }
 
@@ -98,7 +98,7 @@ static void server_cb(lv_event_t* e)
 {
 	if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
 		lv_obj_t* keyboard = scr_keyboard_create(
-				lv_scr_act(), lv_event_get_target(e), KB_ABC);
+				lv_scr_act(), lv_event_get_target(e), KB_LATIN);
 		lv_scr_load(keyboard);
 	}
 }
@@ -185,11 +185,14 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_label_set_long_mode(offset_label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_height(offset_label, LV_SIZE_CONTENT);
 	dd_offset = tt_obj_dropdown_create(offset_row, (char*)OFFSET_OPTIONS, NULL);
+	/* "UTC+01:00" is a code: ASCII digits in every language */
+	i18n_western_digits(dd_offset);
+	i18n_western_digits(lv_dropdown_get_list(dd_offset));
 	lv_obj_set_size(dd_offset, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_dropdown_set_selected(dd_offset, 12);
 
 	lv_obj_t* server_row = create_row(main, tr("Server"), NTP_LABEL_WIDTH);
-	txt_server = tt_obj_txt_create(server_row, "IP / DNS", server_cb);
+	txt_server = tt_obj_address_txt_create(server_row, "IP / DNS", server_cb);
 	lv_obj_set_size(txt_server, LV_PCT(NTP_CONTROL_WIDTH), 34);
 	lv_textarea_set_max_length(txt_server, APP_STATE_NW_TEXT_LEN - 1);
 	lv_textarea_set_accepted_chars(txt_server,
@@ -207,7 +210,7 @@ void scr_settings_nw_ntp_sntp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_flex_flow(button_row, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(button_row, LV_FLEX_ALIGN_SPACE_BETWEEN,
 			LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	tt_obj_btn_perc_create(button_row, ok_cb, "OK", 47);
+	tt_obj_btn_perc_create(button_row, ok_cb, tr("OK"), 47);
 	tt_obj_btn_perc_create(button_row, cancel_cb, tr("Cancel"), 47);
 
 	apply_snapshot();

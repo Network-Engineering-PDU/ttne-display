@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Checks the touchscreen translations (src/i18n_strings.c).
+"""Checks the touchscreen translations (assets/translations.csv).
 
+- src/i18n_strings.c is up to date (tools/gen_i18n_strings.py).
 - Every tr("...") and N_("...") text in the sources has an entry.
 - Every translation keeps the printf conversions (%s, %d, %.1f...) of the
   English text in the same order: a mismatch would crash the program.
@@ -11,8 +12,12 @@
 Run from the repository root: python3 tools/check_i18n.py
 """
 import glob
+import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gen_i18n_strings  # noqa: E402
 
 MACROS = {"TT_COLOR_GREEN_NE_STR": '"#A1C61A"'}
 LITERAL = r'"(?:[^"\\]|\\.)*"'
@@ -41,18 +46,15 @@ def source_keys():
 
 
 def table():
-    text = open("src/i18n_strings.c", encoding="utf-8").read()
-    body = text[text.index("I18N_STRINGS[] = {"):]
-    entries = []
-    for block in re.findall(r'\{((?:\s*' + SEQUENCE + r'\s*,){5})\s*\}', body):
-        cols = [join_literals(c) for c in re.findall(SEQUENCE + r'(?=\s*,)', block)]
-        entries.append(cols)
-    return entries
+    return gen_i18n_strings.read_rows()
 
 
 def main():
     errors = []
     entries = table()
+    with open(gen_i18n_strings.C_FILE, encoding="utf-8") as f:
+        if f.read() != gen_i18n_strings.render(entries):
+            errors.append(f"{gen_i18n_strings.C_FILE} is out of date: run tools/gen_i18n_strings.py")
     keys = {e[0]: e for e in entries}
     if len(keys) != len(entries):
         errors.append("duplicate English keys in the table")
@@ -64,6 +66,8 @@ def main():
     for e in entries:
         conv = CONVERSION.findall(e[0])
         for name, text in zip(names, e[1:]):
+            if not text:
+                continue
             if CONVERSION.findall(text) != conv:
                 errors.append(f"{name}: conversions differ from English in {e[0]!r}")
             if text.count("#") != e[0].count("#"):

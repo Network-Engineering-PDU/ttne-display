@@ -79,12 +79,12 @@ void scr_settings_update_create(lv_obj_t* menu, lv_obj_t* btn) {
     lbl_server = tt_obj_label_create(main,
             tr("Remote server update file location I.P / DNS"));
     lv_label_set_long_mode(lbl_server, LV_LABEL_LONG_SCROLL);
-    lv_obj_set_style_text_align(lbl_server, LV_TEXT_ALIGN_LEFT, 0);
+    lv_obj_set_style_text_align(lbl_server, LV_TEXT_ALIGN_AUTO, 0);
     lv_obj_set_width(lbl_server, LV_PCT(100));
     lv_obj_set_scrollbar_mode(lbl_server, LV_SCROLLBAR_MODE_OFF);
 
     /* 3. Large Text Area (Text VRB) */
-    txt_server = tt_obj_txt_create(main, "IP / DNS", txt_server_cb);
+    txt_server = tt_obj_address_txt_create(main, "IP / DNS", txt_server_cb);
     lv_obj_set_width(txt_server, LV_PCT(100));
     lv_obj_set_height(txt_server, 45); // Height to match the boxy look
     lv_textarea_set_text(txt_server, DEFAULT_UPDATE_SERVER);

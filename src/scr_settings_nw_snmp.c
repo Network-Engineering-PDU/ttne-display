@@ -107,7 +107,7 @@ static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 		lv_obj_t* label = lv_label_create(section);
 		i18n_label_set_text(label, title);
 		lv_obj_set_width(label, LV_PCT(100));
-		lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+		lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	}
 	return section;
 }
@@ -118,7 +118,7 @@ static lv_obj_t* create_row_label(lv_obj_t* row, const char* text)
 	i18n_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_flex_grow(label, 1);
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return label;
 }
 
@@ -127,14 +127,14 @@ static lv_obj_t* create_field_label(lv_obj_t* parent, const char* text)
 	lv_obj_t* label = lv_label_create(parent);
 	i18n_label_set_text(label, text);
 	lv_obj_set_width(label, LV_PCT(100));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return label;
 }
 
 static lv_obj_t* create_full_width_text(lv_obj_t* parent,
 		const char* placeholder)
 {
-	lv_obj_t* text = tt_obj_txt_create(parent, (char*)placeholder, text_cb);
+	lv_obj_t* text = tt_obj_address_txt_create(parent, (char*)placeholder, text_cb);
 	lv_obj_set_size(text, LV_PCT(100), 32);
 	return text;
 }
@@ -266,7 +266,7 @@ static void text_cb(lv_event_t* e)
 {
 	if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
 		lv_obj_t* keyboard = scr_keyboard_create(
-				lv_scr_act(), lv_event_get_target(e), KB_ABC);
+				lv_scr_act(), lv_event_get_target(e), KB_LATIN);
 		lv_scr_load(keyboard);
 	}
 }
@@ -513,6 +513,9 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	row = create_row(section_general, SNMP_ROW_HEIGHT);
 	create_row_label(row, tr("Version"));
 	dd_version = tt_obj_dropdown_create(row, "V1\nV2c\nV3", version_cb);
+	/* Names (V2c, MD5), not numbers: ASCII digits in every language */
+	i18n_western_digits(dd_version);
+	i18n_western_digits(lv_dropdown_get_list(dd_version));
 	lv_obj_set_size(dd_version, LV_PCT(52), 32);
 
 	row = create_row(section_general, SNMP_ROW_HEIGHT);
@@ -541,6 +544,8 @@ void scr_settings_nw_snmp_create(lv_obj_t* menu, lv_obj_t* btn)
 	lv_obj_set_style_pad_row(row_v3_auth, 3, 0);
 	create_field_label(row_v3_auth, tr("Authentication"));
 	dd_v3_auth = tt_obj_dropdown_create(row_v3_auth, "MD5\nSHA", NULL);
+	i18n_western_digits(dd_v3_auth);
+	i18n_western_digits(lv_dropdown_get_list(dd_v3_auth));
 	lv_obj_set_size(dd_v3_auth, LV_PCT(100), 32);
 	lv_dropdown_set_selected(dd_v3_auth, 1);
 	create_field_label(row_v3_auth, tr("Authentication password"));

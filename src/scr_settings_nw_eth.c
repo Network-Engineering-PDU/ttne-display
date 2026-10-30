@@ -733,7 +733,7 @@ static void txt_cb(lv_event_t* e)
 	lv_obj_t* obj = lv_event_get_target(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_ABC);
+		lv_obj_t* kb_scr = scr_keyboard_create(lv_scr_act(), obj, KB_LATIN);
 		lv_scr_load(kb_scr);
 	}
 	if (code == LV_EVENT_READY) {
@@ -916,22 +916,22 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	/* Single LAN fields */
 	lbl_ip = tt_obj_label_create(cont_single_lan, tr("IP Address"));
-	txt_ip = tt_obj_txt_create(cont_single_lan, tr("IP Address"), txt_num_cb);
+	txt_ip = tt_obj_address_txt_create(cont_single_lan, tr("IP Address"), txt_num_cb);
 	lv_textarea_set_text(txt_ip,
 			default_if_empty(nw_if->ip, DEFAULT_LAN1_IP));
 
 	lbl_mask = tt_obj_label_create(cont_single_lan, tr("Subnet Mask"));
-	txt_mask = tt_obj_txt_create(cont_single_lan, tr("Subnet Mask"), txt_num_cb);
+	txt_mask = tt_obj_address_txt_create(cont_single_lan, tr("Subnet Mask"), txt_num_cb);
 	lv_textarea_set_text(txt_mask,
 			default_if_empty(nw_if->mask, DEFAULT_SUBNET_MASK));
 
 	lbl_gw = tt_obj_label_create(cont_single_lan, tr("Gateway IP"));
-	txt_gw = tt_obj_txt_create(cont_single_lan, tr("Gateway IP"), txt_num_cb);
+	txt_gw = tt_obj_address_txt_create(cont_single_lan, tr("Gateway IP"), txt_num_cb);
 	lv_textarea_set_text(txt_gw,
 			default_if_empty(nw_if->gw, DEFAULT_GATEWAY));
 
 	lbl_dns = tt_obj_label_create(cont_single_lan, "DNS");
-	txt_dns = tt_obj_txt_create(cont_single_lan, "DNS", txt_num_cb);
+	txt_dns = tt_obj_address_txt_create(cont_single_lan, "DNS", txt_num_cb);
 	lv_textarea_set_accepted_chars(txt_dns, "0123456789.");
 	lv_textarea_set_text(txt_dns,
 			sanitize_dns(default_if_empty(nw_if->dns, DEFAULT_DNS)));
@@ -941,11 +941,11 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 
 	/* WiFi only fields */
 	lbl_wifi_ssid = tt_obj_label_create(cont_wifi_only, tr("WiFi SSID"));
-	txt_wifi_ssid = tt_obj_txt_create(cont_wifi_only, tr("WiFi SSID"), txt_cb);
+	txt_wifi_ssid = tt_obj_address_txt_create(cont_wifi_only, tr("WiFi SSID"), txt_cb);
 	lv_textarea_set_text(txt_wifi_ssid, nw_if->ssid);
 
 	lbl_wifi_pass = tt_obj_label_create(cont_wifi_only, tr("WiFi password"));
-	txt_wifi_pass = tt_obj_txt_create(cont_wifi_only, tr("WiFi password"), txt_cb);
+	txt_wifi_pass = tt_obj_address_txt_create(cont_wifi_only, tr("WiFi password"), txt_cb);
 	lv_textarea_set_text(txt_wifi_pass, nw_if->pass);
 	cbx_pass = tt_obj_checkbox_create(cont_wifi_only, tr("Show WiFi password"), cbx_pass_cb);
 	lv_textarea_set_password_mode(txt_wifi_pass, true);
@@ -955,16 +955,16 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet Configuration"));
 
 	lbl_lw_eth_ip = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet IP Address"));
-	txt_lw_eth_ip = tt_obj_txt_create(cont_lan_wifi_eth,
+	txt_lw_eth_ip = tt_obj_address_txt_create(cont_lan_wifi_eth,
 			tr("Ethernet IP Address"), txt_num_cb);
 	lbl_lw_eth_mask = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet Subnet Mask"));
-	txt_lw_eth_mask = tt_obj_txt_create(cont_lan_wifi_eth,
+	txt_lw_eth_mask = tt_obj_address_txt_create(cont_lan_wifi_eth,
 			tr("Ethernet Subnet Mask"), txt_num_cb);
 	lbl_lw_eth_gw = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet Gateway"));
-	txt_lw_eth_gw = tt_obj_txt_create(cont_lan_wifi_eth,
+	txt_lw_eth_gw = tt_obj_address_txt_create(cont_lan_wifi_eth,
 			tr("Ethernet Gateway"), txt_num_cb);
 	lbl_lw_eth_dns = tt_obj_label_create(cont_lan_wifi_eth, tr("Ethernet DNS"));
-	txt_lw_eth_dns = tt_obj_txt_create(cont_lan_wifi_eth,
+	txt_lw_eth_dns = tt_obj_address_txt_create(cont_lan_wifi_eth,
 			tr("Ethernet DNS"), txt_num_cb);
 	lv_textarea_set_accepted_chars(txt_lw_eth_dns, "0123456789.");
 
@@ -973,23 +973,23 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi Configuration"));
 
 	lbl_lw_wifi_ip = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi IP Address"));
-	txt_lw_wifi_ip = tt_obj_txt_create(cont_lan_wifi_wifi,
+	txt_lw_wifi_ip = tt_obj_address_txt_create(cont_lan_wifi_wifi,
 			tr("WiFi IP Address"), txt_num_cb);
 	lbl_lw_wifi_mask = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi Subnet Mask"));
-	txt_lw_wifi_mask = tt_obj_txt_create(cont_lan_wifi_wifi,
+	txt_lw_wifi_mask = tt_obj_address_txt_create(cont_lan_wifi_wifi,
 			tr("WiFi Subnet Mask"), txt_num_cb);
 	lbl_lw_wifi_gw = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi Gateway"));
-	txt_lw_wifi_gw = tt_obj_txt_create(cont_lan_wifi_wifi,
+	txt_lw_wifi_gw = tt_obj_address_txt_create(cont_lan_wifi_wifi,
 			tr("WiFi Gateway"), txt_num_cb);
 	lbl_lw_wifi_dns = tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi DNS"));
-	txt_lw_wifi_dns = tt_obj_txt_create(cont_lan_wifi_wifi,
+	txt_lw_wifi_dns = tt_obj_address_txt_create(cont_lan_wifi_wifi,
 			tr("WiFi DNS"), txt_num_cb);
 	lv_textarea_set_accepted_chars(txt_lw_wifi_dns, "0123456789.");
 	tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi SSID"));
-	txt_lw_wifi_ssid = tt_obj_txt_create(cont_lan_wifi_wifi,
+	txt_lw_wifi_ssid = tt_obj_address_txt_create(cont_lan_wifi_wifi,
 			tr("WiFi SSID"), txt_cb);
 	tt_obj_label_create(cont_lan_wifi_wifi, tr("WiFi password"));
-	txt_lw_wifi_pass = tt_obj_txt_create(cont_lan_wifi_wifi,
+	txt_lw_wifi_pass = tt_obj_address_txt_create(cont_lan_wifi_wifi,
 			tr("WiFi password"), txt_cb);
 	cbx_lw_wifi_pass = tt_obj_checkbox_create(cont_lan_wifi_wifi,
 			tr("Show WiFi password"), cbx_pass_cb);
@@ -1021,21 +1021,21 @@ void scr_settings_nw_eth_create(lv_obj_t* menu, lv_obj_t* btn)
 	/* Dual LAN fields */
 	lbl_lan1 = tt_obj_label_create(cont_dual_lan, tr("LAN1 Interface"));
 	lbl_lan1_ip = tt_obj_label_create(cont_dual_lan, tr("LAN1 IP Address"));
-	txt_lan1_ip = tt_obj_txt_create(cont_dual_lan, tr("LAN1 IP Address"), txt_num_cb);
+	txt_lan1_ip = tt_obj_address_txt_create(cont_dual_lan, tr("LAN1 IP Address"), txt_num_cb);
 
 	lbl_lan1_mask = tt_obj_label_create(cont_dual_lan, tr("LAN1 Subnet Mask"));
-	txt_lan1_mask = tt_obj_txt_create(cont_dual_lan, tr("LAN1 Subnet Mask"), txt_num_cb);
+	txt_lan1_mask = tt_obj_address_txt_create(cont_dual_lan, tr("LAN1 Subnet Mask"), txt_num_cb);
 	lbl_lan1_gateway = tt_obj_label_create(cont_dual_lan, tr("LAN1 Gateway"));
-	txt_lan1_gateway = tt_obj_txt_create(cont_dual_lan, tr("LAN1 Gateway"), txt_num_cb);
+	txt_lan1_gateway = tt_obj_address_txt_create(cont_dual_lan, tr("LAN1 Gateway"), txt_num_cb);
 
 	lbl_lan2 = tt_obj_label_create(cont_dual_lan, tr("LAN2 Interface"));
 	lbl_lan2_ip = tt_obj_label_create(cont_dual_lan, tr("LAN2 IP Address"));
-	txt_lan2_ip = tt_obj_txt_create(cont_dual_lan, tr("LAN2 IP Address"), txt_num_cb);
+	txt_lan2_ip = tt_obj_address_txt_create(cont_dual_lan, tr("LAN2 IP Address"), txt_num_cb);
 
 	lbl_lan2_mask = tt_obj_label_create(cont_dual_lan, tr("LAN2 Subnet Mask"));
-	txt_lan2_mask = tt_obj_txt_create(cont_dual_lan, tr("LAN2 Subnet Mask"), txt_num_cb);
+	txt_lan2_mask = tt_obj_address_txt_create(cont_dual_lan, tr("LAN2 Subnet Mask"), txt_num_cb);
 	lbl_lan2_gateway = tt_obj_label_create(cont_dual_lan, tr("LAN2 Gateway"));
-	txt_lan2_gateway = tt_obj_txt_create(cont_dual_lan, tr("LAN2 Gateway"), txt_num_cb);
+	txt_lan2_gateway = tt_obj_address_txt_create(cont_dual_lan, tr("LAN2 Gateway"), txt_num_cb);
 
 	tt_obj_btn_std_create(nw_cont2, btn_nw_settings_cb, tr("Save settings"));
 

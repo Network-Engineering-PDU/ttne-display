@@ -122,7 +122,7 @@ static lv_obj_t* create_section(lv_obj_t* parent, const char* title)
 	lv_obj_t* label = lv_label_create(section);
 	i18n_label_set_text(label, title);
 	lv_obj_set_width(label, LV_PCT(100));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return section;
 }
 
@@ -132,7 +132,7 @@ static lv_obj_t* create_row_label(lv_obj_t* parent, const char* text)
 	i18n_label_set_text(label, text);
 	lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL);
 	lv_obj_set_flex_grow(label, 1);
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return label;
 }
 
@@ -665,7 +665,7 @@ void scr_settings_nw_modbus_create(lv_obj_t* menu, lv_obj_t* btn)
 			tr("Switching each 485 port needs a board revision"));
 	lv_label_set_long_mode(lbl_port_note, LV_LABEL_LONG_WRAP);
 	lv_obj_set_width(lbl_port_note, LV_PCT(100));
-	lv_obj_set_style_text_font(lbl_port_note, &lv_font_montserrat_12, 0);
+	lv_obj_set_style_text_font(lbl_port_note, i18n_font(12), 0);
 	lv_obj_set_style_text_color(lbl_port_note,
 			lv_palette_main(LV_PALETTE_GREY), 0);
 	create_dropdown_row(rtu_section, tr("Role"), ROLE_OPTIONS, &dd_role, role_cb);

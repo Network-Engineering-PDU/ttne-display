@@ -609,7 +609,7 @@
 #if LV_USE_FREETYPE
     /*Memory used by FreeType to cache characters [bytes] (-1: no caching)
      *Chinese uses many distinct glyphs, so the cache is larger than usual.*/
-    #define LV_FREETYPE_CACHE_SIZE (256 * 1024)
+    #define LV_FREETYPE_CACHE_SIZE (512 * 1024)
     #if LV_FREETYPE_CACHE_SIZE >= 0
         /* 1: bitmap cache use the sbit cache, 0:bitmap cache use the image cache. */
         /* sbit cache:it is much more memory efficient for small bitmaps(font size < 256) */
@@ -645,6 +645,15 @@
 
 /*1: Enable grid navigation*/
 #define LV_USE_GRIDNAV  1
+
+/*1: Enable Pinyin input method: the Chinese keyboard. Its dictionary is
+ *src/pinyin_dict.c (Simplified Chinese), not LVGL's default one*/
+#define LV_USE_IME_PINYIN 1
+#if LV_USE_IME_PINYIN
+    #define LV_IME_PINYIN_USE_DEFAULT_DICT 0
+    #define LV_IME_PINYIN_CAND_TEXT_NUM 6
+    #define LV_IME_PINYIN_USE_K9_MODE 0
+#endif
 
 /*==================
 * EXAMPLES

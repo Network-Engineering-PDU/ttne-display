@@ -91,7 +91,7 @@ void ttne_display(void)
 	lv_obj_set_style_text_font(icon, &lv_font_montserrat_28, 0);
 	lv_obj_align(icon, LV_ALIGN_CENTER, 0, 0);
 
-	lv_menu_set_page_title_static(main_page, "Network Engineering");
+	lv_menu_set_page_title_static(main_page, tr("Dashboard"));
 
 	lv_obj_t* btn_info = tt_obj_btn_mtx_create(main_cont, NULL, tr("INFO"),
 			ASSET("menu.png"));

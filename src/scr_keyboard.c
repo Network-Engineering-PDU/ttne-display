@@ -1,5 +1,8 @@
+#include <string.h>
+
 #include "lvgl/lvgl.h"
 
+#include "i18n.h"
 #include "scr_keyboard.h"
 #include "tt_keyboard.h"
 #include "tt_obj.h"
@@ -66,16 +69,13 @@ lv_obj_t* scr_keyboard_create(lv_obj_t* prev_scr, lv_obj_t* prev_txt,
 	keyboard->prev_scr = prev_scr;
 
 	lv_obj_t* kb = tt_keyboard_create(obj);
+	tt_keyboard_set_type(kb, type);
 
-	if (type == KB_NUM) {
-		lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_USER_1);
-	} else if (type == KB_PASS) {
-		lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_USER_2);
-	}
 	lv_obj_t* txt_kb = lv_textarea_create(obj);
 	lv_obj_align(txt_kb, LV_ALIGN_TOP_MID, 0, 10);
 	lv_textarea_set_placeholder_text(txt_kb,
 			lv_textarea_get_placeholder_text(prev_txt));
+	i18n_textarea_fix_placeholder(txt_kb);
 	lv_textarea_set_text(txt_kb, lv_textarea_get_text(prev_txt));
 	lv_textarea_set_password_mode(txt_kb,
 			lv_textarea_get_password_mode(prev_txt));
@@ -84,16 +84,26 @@ lv_obj_t* scr_keyboard_create(lv_obj_t* prev_scr, lv_obj_t* prev_txt,
 		lv_textarea_set_accepted_chars(txt_kb, "0123456789");
 		lv_textarea_set_max_length(txt_kb, 6);
 	}
+	/* Addresses (IP fields) keep ASCII digits while typed too */
+	if (i18n_has_western_digits(prev_txt)) {
+		i18n_western_digits(txt_kb);
+		i18n_western_digits(kb);
+	}
+	/* Chinese: room for the candidate bar between field and keyboard */
+	int ime_room = strcmp(i18n_lang_code(i18n_current_lang()), "zh-hans") == 0 &&
+			type != KB_NUM && type != KB_PASS ? 34 : 0;
 	if (screen_is_landscape()) {
-		lv_obj_set_style_height(kb, type == KB_PASS ? 170 : 180, 0);
+		lv_obj_set_style_height(kb, (type == KB_PASS ? 170 : 180) - ime_room, 0);
 		lv_obj_set_size(txt_kb, lv_pct(95), type == KB_PASS ? 58 : 40);
 	} else {
 		lv_obj_set_size(txt_kb, lv_pct(95), 100);
-		lv_obj_set_style_height(kb, type == KB_PASS ? 240 : 200, 0);
+		lv_obj_set_style_height(kb, (type == KB_PASS ? 240 : 200) - ime_room, 0);
 	}
 	lv_obj_add_event_cb(txt_kb, txt_event_cb, LV_EVENT_ALL, NULL);
 	lv_obj_move_foreground(kb);
 	lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 0);
+	lv_obj_update_layout(obj);
+	tt_keyboard_place_ime(kb);
 
 	lv_keyboard_set_textarea(kb, txt_kb);
 	lv_indev_reset(NULL, txt_kb);

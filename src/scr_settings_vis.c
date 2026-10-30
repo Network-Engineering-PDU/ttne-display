@@ -100,8 +100,8 @@ static void language_cb(lv_event_t* e)
     if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) {
         return;
     }
-    i18n_lang_t lang = (i18n_lang_t)lv_dropdown_get_selected(dd_language);
-    if (lang == i18n_get_lang()) {
+    int lang = (int)lv_dropdown_get_selected(dd_language);
+    if (lang == i18n_current_lang()) {
         return;
     }
     if (msg_box_lang) {
@@ -124,10 +124,10 @@ static void msg_box_lang_cb(lv_event_t* e)
         return;
     }
     if (lv_msgbox_get_active_btn(obj) == 0) { // YES
-        i18n_lang_t lang = (i18n_lang_t)lv_dropdown_get_selected(dd_language);
+        int lang = (int)lv_dropdown_get_selected(dd_language);
         backend_visual_save_language_and_restart(i18n_lang_code(lang), NULL, NULL);
     } else {
-        lv_dropdown_set_selected(dd_language, (uint16_t)i18n_get_lang());
+        lv_dropdown_set_selected(dd_language, (uint16_t)i18n_current_lang());
     }
     lv_msgbox_close(obj);
     msg_box_lang = NULL;
@@ -311,7 +311,7 @@ void scr_settings_vis_create(lv_obj_t* menu, lv_obj_t* btn)
     lv_obj_t* row_lang = create_setting_row(cont, tr("Language"));
     dd_language = tt_obj_dropdown_create(row_lang, i18n_dropdown_options(), language_cb);
     lv_obj_set_width(dd_language, LV_PCT(50));
-    lv_dropdown_set_selected(dd_language, (uint16_t)i18n_get_lang());
+    lv_dropdown_set_selected(dd_language, (uint16_t)i18n_current_lang());
 
     // 2. Screen Rotation Row
     lv_obj_t* row_rot = create_setting_row(cont, tr("Screen rotation"));

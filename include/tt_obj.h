@@ -219,6 +219,14 @@ lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, const char* placeholder,
 		lv_event_cb_t cb);
 
 /**
+ * @brief Creates a text area for an address, name or password typed in
+ * Latin script (IP address, server, SSID): it shows ASCII digits in every
+ * language, as the address is typed elsewhere.
+ */
+lv_obj_t* tt_obj_address_txt_create(lv_obj_t* parent, const char* placeholder,
+		lv_event_cb_t cb);
+
+/**
  * @brief Creates a dropdown.
  *
  * @param[in] parent    Pointer to the parent object.

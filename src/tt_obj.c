@@ -418,9 +418,18 @@ lv_obj_t* tt_obj_txt_create(lv_obj_t* parent, const char* placeholder,
 	lv_obj_align(txt, LV_ALIGN_TOP_MID, 0, 10);
 	lv_obj_add_style(txt, &txt_style, LV_STATE_DEFAULT);
 	lv_textarea_set_placeholder_text(txt, placeholder);
+	i18n_textarea_fix_placeholder(txt);
 	lv_obj_set_size(txt, lv_pct(100), 36);
 	lv_obj_add_event_cb(txt, cb, LV_EVENT_ALL, NULL);
 
+	return txt;
+}
+
+lv_obj_t* tt_obj_address_txt_create(lv_obj_t* parent, const char* placeholder,
+		lv_event_cb_t cb)
+{
+	lv_obj_t* txt = tt_obj_txt_create(parent, placeholder, cb);
+	i18n_western_digits(txt);
 	return txt;
 }
 

@@ -23,14 +23,8 @@ static lv_obj_t* menu;
 
 static lv_obj_t* current_btns[6];
 static const int rated_currents[6] = {10, 15, 16, 20, 30, 32};
-static const char* rated_current_labels[6] = {
-    "10 A",
-    "15 A",
-    "16 A",
-    "20 A",
-    "30 A",
-    "32 A",
-};
+/* "10 A"..., the unit in the language: filled when the screen is made */
+static char rated_current_labels[6][32];
 
 static void rated_current_cb(int err, void* userdata)
 {
@@ -101,8 +95,10 @@ void scr_current_create(lv_obj_t* l_menu, lv_obj_t* btn)
 
     /* Create 2x3 grid buttons with fixed 31% width to force 3 columns */
     for (int i = 0; i < 6; ++i) {
+        snprintf(rated_current_labels[i], sizeof(rated_current_labels[i]),
+                "%d %s", rated_currents[i], tr("A"));
         lv_obj_t* btn = tt_obj_btn_create(current_page, NULL,
-                (char*)rated_current_labels[i], NULL,
+                rated_current_labels[i], NULL,
                 LV_PCT(31), 88, LV_ALIGN_CENTER);
         lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
         lv_obj_add_style(btn, &btn_press_style, LV_STATE_CHECKED);

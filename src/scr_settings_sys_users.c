@@ -446,7 +446,7 @@ static lv_obj_t* create_section_label(lv_obj_t* parent, const char* text)
 	lv_obj_t* label = lv_label_create(parent);
 	i18n_label_set_text(label, text);
 	lv_obj_set_width(label, LV_PCT(100));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_AUTO, 0);
 	return label;
 }
 

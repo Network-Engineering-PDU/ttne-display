@@ -14,6 +14,7 @@
 #define MAX_PHASES 3
 #define TIMER_REFRESH_RATE 2000 // ms
 #define POWER_PARAM_WIDTH 62
+#define POWER_PARAM_MAX_WIDTH 96
 
 /* Global variables ***********************************************************/
 
@@ -113,6 +114,28 @@ static lv_obj_t* power_branch_column_create(lv_obj_t* parent)
 	return col;
 }
 
+/* Width of the reading names ("V (V):"): the widest in the language, so
+ * that languages writing them in words (Arabic, Chinese) fit, up to
+ * POWER_PARAM_MAX_WIDTH; longer names scroll. */
+static lv_coord_t param_width = POWER_PARAM_WIDTH;
+
+static void update_param_width(void)
+{
+	static const char* const PARAMS[] = {
+		N_("V (V):"), N_("I (A):"), N_("S (VA):"), N_("PH (deg):"), N_("E (Wh):"),
+		N_("P (W):"), N_("Q (VAr):"), N_("PF:"), N_("f (Hz):"),
+	};
+	const lv_font_t* font = i18n_font(14);
+	param_width = POWER_PARAM_WIDTH;
+	for (size_t i = 0; i < sizeof(PARAMS) / sizeof(PARAMS[0]); i++) {
+		lv_coord_t width = lv_txt_get_width(tr(PARAMS[i]), strlen(tr(PARAMS[i])),
+				font, 0, LV_TEXT_FLAG_NONE) + 2;
+		if (width > param_width) {
+			param_width = width < POWER_PARAM_MAX_WIDTH ? width : POWER_PARAM_MAX_WIDTH;
+		}
+	}
+}
+
 static lv_obj_t* power_reading_create(lv_obj_t* parent, const char* param)
 {
 	lv_obj_t* row = lv_obj_create(parent);
@@ -127,7 +150,7 @@ static lv_obj_t* power_reading_create(lv_obj_t* parent, const char* param)
 	lv_obj_set_style_pad_column(row, 2, 0);
 
 	lv_obj_t* name = tt_obj_label_create(row, param);
-	lv_obj_set_width(name, POWER_PARAM_WIDTH);
+	lv_obj_set_width(name, param_width);
 	lv_label_set_long_mode(name, LV_LABEL_LONG_SCROLL);
 
 	lv_obj_t* value = tt_obj_label_color_create(row, "");
@@ -332,6 +355,7 @@ void scr_power_create(lv_obj_t* menu, lv_obj_t* btn)
 	tt_obj_label_create(power_line_cont[1], tr("AUX BRANCH"));
 	lv_obj_add_flag(power_line_cont[1], LV_OBJ_FLAG_HIDDEN);
 
+	update_param_width();
 	for (int i = 0; i < MAX_BRANCHES; i++) {
 		lv_obj_t* branch_cols = lv_obj_create(power_line_cont[i]);
 		lv_obj_set_size(branch_cols, LV_PCT(100), LV_SIZE_CONTENT);

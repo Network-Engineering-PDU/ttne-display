@@ -61,9 +61,9 @@ static void refresh_info_display(void)
 
 	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("Name"), TT_COLOR_GREEN_NE, "PowerIT Easy");
 	i18n_label_set_text(lbl_name, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s#", "PN", TT_COLOR_GREEN_NE, info->product_pn);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("PN"), TT_COLOR_GREEN_NE, info->product_pn);
 	i18n_label_set_text(lbl_pn, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %s#", "SN", TT_COLOR_GREEN_NE, info->product_sn);
+	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("SN"), TT_COLOR_GREEN_NE, info->product_sn);
 	i18n_label_set_text(lbl_sn, str);
 	snprintf(str, sizeof(str), "  %s: #%06X %s#", "LAN MAC", TT_COLOR_GREEN_NE, info->lan_mac);
 	i18n_label_set_text(lbl_mac, str);
@@ -72,7 +72,11 @@ static void refresh_info_display(void)
 
 	snprintf(str, sizeof(str), "  %s: #%06X %d#", tr("Outlets"), TT_COLOR_GREEN_NE, pdu_info->n_outlets);
 	i18n_label_set_text(lbl_outlets, str);
-	snprintf(str, sizeof(str), "  %s: #%06X %d A#", tr("Rated current"), TT_COLOR_GREEN_NE, pdu_info->rated_current);
+	char value[16];
+	char colored[64];
+	snprintf(value, sizeof(value), "%d", pdu_info->rated_current);
+	i18n_format_value(colored, sizeof(colored), TT_COLOR_GREEN_NE, value, tr("A"));
+	snprintf(str, sizeof(str), "  %s: %s", tr("Rated current"), colored);
 	i18n_label_set_text(lbl_rated_curr, str);
 	snprintf(str, sizeof(str), "  %s: #%06X %s#", tr("Controller"), TT_COLOR_GREEN_NE, pdu_info->controller);
 	i18n_label_set_text(lbl_controller, str);

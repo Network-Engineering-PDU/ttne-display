@@ -32,9 +32,11 @@ void scr_settings_menu_create(lv_obj_t* l_menu, lv_obj_t* btn)
        that can act as containers.
     */
     lv_obj_set_flex_flow(settings_page, LV_FLEX_FLOW_ROW_WRAP);
+    /* Right to left, LVGL loses a centered wrapped row (the 4th button):
+     * those rows start at the right edge instead, like the other menus. */
     lv_obj_set_flex_align(
         settings_page,
-        LV_FLEX_ALIGN_CENTER,
+        i18n_is_rtl() ? LV_FLEX_ALIGN_START : LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER,
         LV_FLEX_ALIGN_CENTER
     );
